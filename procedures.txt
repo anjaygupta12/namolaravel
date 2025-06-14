@@ -1,0 +1,2500 @@
+USE [TradeView]
+GO
+
+/****** Object:  StoredProcedure [dbo].[sp_AddNewBroker]    Script Date: 11-06-2025 23:03:35 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+-- Create Stored Procedure for Adding New Broker
+CREATE PROCEDURE [dbo].[sp_AddNewBroker]
+    @FirstName NVARCHAR(100),
+    @LastName NVARCHAR(100),
+    @Username NVARCHAR(50),
+    @Password NVARCHAR(100),
+    @TransactionPassword NVARCHAR(100),
+    @RefCode NVARCHAR(50),
+    @UserType NVARCHAR(20),
+    @AccountStatus BIT,
+    @AutoSquareOffPercentage DECIMAL(5,2),
+    @NotifyPercentage DECIMAL(5,2),
+    @ProfitShare DECIMAL(5,2),
+    @BrokerageShare DECIMAL(5,2),
+    @ClientsLimit INT,
+    @SubBrokersLimit INT,
+    @SubBrokerTasksAllowed BIT,
+    @PayinAllowed BIT,
+    @PayoutAllowed BIT,
+    @CreateClientAllowed BIT,
+    @ClientTasksAllowed BIT,
+    @TradeActivityAllowed BIT,
+    @NotificationsAllowed BIT,
+    @MCXEnabled BIT,
+    @MCXBrokerageType NVARCHAR(20),
+    @MCXBrokerage DECIMAL(10,2),
+    @MCXExposureType NVARCHAR(20),
+    @MCXIntradayMargin DECIMAL(10,2),
+    @MCXHoldingMargin DECIMAL(10,2),
+    @NSEEnabled BIT,
+    @NSEBrokerage DECIMAL(10,2),
+    @NSEIntradayMargin DECIMAL(10,2),
+    @NSEHoldingMargin DECIMAL(10,2),
+    @AdminId INT,
+    @AdminTransPass NVARCHAR(100)
+AS
+BEGIN
+    -- First validate admin transaction password
+    DECLARE @ValidTransPass NVARCHAR(100)
+    SELECT @ValidTransPass = TransPass 
+    FROM AdminLogin 
+    WHERE pk_id = @AdminId
+
+    IF @ValidTransPass IS NULL OR @ValidTransPass != @AdminTransPass
+    BEGIN
+        RAISERROR('Invalid Transaction Password', 16, 1)
+        RETURN
+    END
+
+    -- If transaction password is valid, proceed with insert
+    INSERT INTO Brokers (
+        FirstName, LastName, Username, Password, TransactionPassword,
+        RefCode, UserType, AccountStatus, AutoSquareOffPercentage,
+        NotifyPercentage, ProfitShare, BrokerageShare, ClientsLimit,
+        SubBrokersLimit, SubBrokerTasksAllowed, PayinAllowed,
+        PayoutAllowed, CreateClientAllowed, ClientTasksAllowed,
+        TradeActivityAllowed, NotificationsAllowed, MCXEnabled,
+        MCXBrokerageType, MCXBrokerage, MCXExposureType,
+        MCXIntradayMargin, MCXHoldingMargin, NSEEnabled,
+        NSEBrokerage, NSEIntradayMargin, NSEHoldingMargin,
+        CreatedBy
+    )
+    VALUES (
+        @FirstName, @LastName, @Username, @Password, @TransactionPassword,
+        @RefCode, @UserType, @AccountStatus, @AutoSquareOffPercentage,
+        @NotifyPercentage, @ProfitShare, @BrokerageShare, @ClientsLimit,
+        @SubBrokersLimit, @SubBrokerTasksAllowed, @PayinAllowed,
+        @PayoutAllowed, @CreateClientAllowed, @ClientTasksAllowed,
+        @TradeActivityAllowed, @NotificationsAllowed, @MCXEnabled,
+        @MCXBrokerageType, @MCXBrokerage, @MCXExposureType,
+        @MCXIntradayMargin, @MCXHoldingMargin, @NSEEnabled,
+        @NSEBrokerage, @NSEIntradayMargin, @NSEHoldingMargin,
+        @AdminId
+    )
+    
+    SELECT SCOPE_IDENTITY() as BrokerId
+END
+
+GO
+
+/****** Object:  StoredProcedure [dbo].[SP_AdminLogin]    Script Date: 11-06-2025 23:03:36 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+create proc [dbo].[SP_AdminLogin]
+(
+@UserId nvarchar(15),
+@Password nvarchar(100)
+)
+as
+
+
+begin
+    select * from AdminLogin where userid=@UserId and  Password COLLATE Latin1_General_CS_AS = @Password
+end
+GO
+
+/****** Object:  StoredProcedure [dbo].[SP_BankMaster]    Script Date: 11-06-2025 23:03:37 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE proc [dbo].[SP_BankMaster]
+(
+@PK_ID numeric=0,
+@AdminID numeric=0,
+@AccountHolder nvarchar(100)=null,
+@AccountNumber nvarchar(100)=null,
+@BankName nvarchar(100)=null,
+@IFSC nvarchar(100)=null,
+@PhonePe nvarchar(100)=null,
+@GooglePay nvarchar(100)=null,
+@Paytm nvarchar(100)=null,
+@UPIID nvarchar(100)=null,
+@QRCode nvarchar(100)=null,
+@OPTION char(1)
+)
+
+AS
+
+BEGIN
+  BEGIN TRANSACTION
+     IF(@OPTION='I')
+	 BEGIN
+	  INSERT INTO [dbo].[BankMaster]([AdminID],[AccountHolder],[AccountNumber],[BankName],[IFSC],[PhonePe],[GooglePay],[Paytm],[UPIID],[QRCode])
+     VALUES
+           (@AdminID,@AccountHolder,@AccountNumber,@BankName,@IFSC,@PhonePe,@GooglePay,@Paytm,@UPIID,@QRCode)
+	 END
+	 ELSE IF(@OPTION='U')
+	 BEGIN
+		 UPDATE [dbo].[BankMaster]
+		 SET [AccountHolder] =@AccountHolder
+		 ,[AccountNumber]=@AccountNumber
+		 ,[BankName]=@BankName
+		 ,[IFSC]=@IFSC
+		 ,[PhonePe]=@PhonePe
+		 ,[GooglePay]=@GooglePay
+		 ,[Paytm]=@Paytm
+		 ,[UPIID]=@UPIID
+		 ,[QRCode]=@QRCode
+		  WHERE  adminid = @AdminID
+
+	 END
+	 ELSE IF(@OPTION='S')
+	 BEGIN
+		SELECT * FROM BankMaster where adminid = @AdminID
+	 END
+
+  IF @@ERROR <> 0
+  BEGIN
+      ROLLBACK
+  END
+  ELSE
+  BEGIN
+   COMMIT
+  END
+END
+
+GO
+
+/****** Object:  StoredProcedure [dbo].[SP_ChangePass]    Script Date: 11-06-2025 23:03:38 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+create proc [dbo].[SP_ChangePass]
+(
+@PK_ID numeric,
+@NewPass nvarchar(50),
+@PasswordType varchar(10)
+)
+as
+begin
+ if(@PasswordType='Login')    
+ begin
+        update    AdminLogin  set Password=@NewPass ,LasmtModify=getdate() where PK_ID=@PK_ID
+ end
+
+ else if(@PasswordType='Trans')
+ begin
+ update    AdminLogin  set transPass=@NewPass ,LasmtModify=getdate() where PK_ID=@PK_ID
+ end
+end
+GO
+
+/****** Object:  StoredProcedure [dbo].[SP_Changepassword]    Script Date: 11-06-2025 23:03:39 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+create proc [dbo].[SP_Changepassword]
+(
+@UserId numeric,
+@Password nvarchar(50)
+)
+as
+
+begin
+   update [TradeView].[dbo].[TradeUser] set password=@Password where UserId=@UserId
+
+end
+GO
+
+/****** Object:  StoredProcedure [dbo].[SP_ClientSubscription]    Script Date: 11-06-2025 23:03:40 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+create proc [dbo].[SP_ClientSubscription]
+(
+@Symbol nvarchar(50)=null, 
+@UserId numeric(10)=0
+)
+as
+begin
+    if (select count(1) from ClientSubscription where  Symbol=@Symbol and UserId=@UserId) > 0
+	begin
+	  delete from ClientSubscription where  Symbol=@Symbol and UserId=@UserId
+	end
+	else
+	begin
+	INSERT INTO [dbo].[ClientSubscription]([Symbol],[UserId])VALUES(@Symbol,@UserId)
+	end
+end
+GO
+
+/****** Object:  StoredProcedure [dbo].[SP_CloseMarketPlaceMaster]    Script Date: 11-06-2025 23:03:41 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE proc [dbo].[SP_CloseMarketPlaceMaster]
+(
+
+@Pk_id numeric(18, 0)=0,
+@Fk_Id numeric=0,
+@TransactionId nvarchar(50) =null,
+@Mode varchar(50) =null,
+@ToAmount numeric(18, 2) =null,
+@TransactionMode varchar(10) =null,
+@Bid numeric(18, 2) =null,
+@Ask numeric(18, 2) =null,
+@High numeric(18, 2) =null,
+@Low numeric(18, 2) =null,
+@TradeLast numeric(18, 2) =null,
+@Change numeric(18, 2) =null,
+@TradeOpen numeric(18, 2) =null,
+@Volume numeric(18, 2) =null,
+@LastTradeQty numeric(18, 2) =null,
+@Atp numeric(18, 2) =null,
+@LotSize numeric(18, 2) =null,
+@OpenInterest numeric(18, 2) =null,
+@BidQty numeric(18, 2) =null,
+@AskQty numeric(18, 2) =null,
+@PrevClose numeric(18, 2) =null,
+@UpperCircuit numeric(18, 2) =null,
+@LowerCircuit numeric(18, 2) =null,
+@UserId varchar(100) =null,
+@Symbol nvarchar(50) =null,
+@IsMin char(1) =null,
+@IsMega char(1) =null,
+@SalePrice numeric(18,2)=0,
+@BuyPrice numeric(18,2)=0,
+@Lots numeric(18, 2) =null,
+@Price numeric(18, 2) =null,
+@Status_Exec nvarchar(50) =null,
+@Exitrate numeric(18, 2) =null,
+@OPTION char(1),
+@Response varchar(100) OUT
+)
+
+AS
+BEGIN
+   BEGIN  TRANSACTION
+
+   IF	(@OPTION='I')
+   BEGIN
+
+   IF EXISTS(SELECT PK_ID FROM MarketPlaceMaster WHERE PK_ID=@Fk_Id)
+   BEGIN
+
+  select @SalePrice=SELLPRICE, @BuyPrice=BUYPRICE, @TransactionId=TransactionId ,@Mode=Mode ,@ToAmount =ToAmount ,@TransactionMode=TransactionMode ,@Bid=Bid ,@Ask=Ask ,@High=High,@Low=Low ,@TradeLast=TradeLast ,
+			@Change=Change ,@TradeOpen=TradeOpen ,@Volume=Volume ,@LastTradeQty=LastTradeQty ,@Atp=Atp ,@LotSize=LotSize ,@OpenInterest=OpenInterest ,@BidQty=BidQty ,@AskQty=AskQty ,
+			@PrevClose=PrevClose ,@UpperCircuit=UpperCircuit ,@LowerCircuit=LowerCircuit ,@UserId=UserId ,@Symbol=Symbol ,@IsMin=IsMin ,@IsMega=IsMega,@Lots=Lots ,
+			@Status_Exec=Status_Exec ,@Exitrate=Exitrate FROM MarketPlaceMaster  WHERE PK_ID=@Fk_Id
+
+   INSERT INTO [dbo].[CloseMarketPlaceMaster]
+           ([Fk_Id],[TransactionId],[Mode],[ToAmount],[TransactionMode],[Bid],[Ask],[High],[Low],[TradeLast],[Change],[TradeOpen]
+		   ,[Volume],[LastTradeQty],[Atp],[LotSize],[OpenInterest],[BidQty],[AskQty],[PrevClose],[UpperCircuit],[LowerCircuit],[UserId],[Symbol],
+		   [IsMin],[IsMega],[Lots],[Price],[Status_Exec],[Exitrate],SELLPRICE,BUYPRICE)
+     VALUES(@Fk_Id,@TransactionId,@Mode,@ToAmount,@TransactionMode,@Bid,@Ask,@High,@Low,@TradeLast,@Change,@TradeOpen,@Volume,@LastTradeQty,@Atp,@LotSize,@OpenInterest,
+			 @BidQty,@AskQty,@PrevClose,@UpperCircuit,@LowerCircuit,@UserId,@Symbol,@IsMin,@IsMega,@Lots,@Price,@Status_Exec,@Exitrate,@SalePrice,@BuyPrice)
+			 update MarketPlaceMaster set Status_Exec ='Close' WHERE PK_ID=@Fk_Id
+			 SET @Response='RECORD SAVED'
+	  END
+	  ELSE
+	  BEGIN
+	    SET @Response='NO RECORD FOUND'
+
+	  END
+   END
+
+   IF @@ERROR <> 0
+   BEGIN
+      ROLLBACK
+	  SET @Response='ERROR FOUND'
+
+   END
+   ELSE
+   BEGIN
+      COMMIT
+   END
+
+END
+GO
+
+/****** Object:  StoredProcedure [dbo].[SP_copyTradeuser]    Script Date: 11-06-2025 23:03:41 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE proc [dbo].[SP_copyTradeuser]
+(
+@AdminId numeric=0,
+@UserId numeric(20)=0,
+@FullName nvarchar(100)=null,
+@Mobile varchar(15)=null,
+@UserName nvarchar(50)=null,
+@Password nvarchar(50)=null,
+@City nvarchar(100)=null,
+@Transpass  nvarchar(100)=null,
+@RESPONSE VARCHAR(150) OUT
+)
+as
+
+begin
+    BEGIN TRANSACTION
+
+	  IF(SELECT count(1) FROM ADMINLOGIN WHERE PK_ID=@AdminId and Transpass=@Transpass)=1
+	  BEGIN
+	       --select * from TradeUser order by 1 desc
+
+		   IF(SELECT COUNT(1) FROM TradeUser WHERE USERNAME=@UserName)=0
+		   BEGIN
+		   INSERT INTO [dbo].[TradeUser]
+           ([FullName]
+           ,[Username]
+           ,[Password]
+           ,[Email]
+           ,[Mobile]
+           ,[Address]
+           ,[City]
+           ,[State]
+           ,[PinCode]
+           ,[PAN]
+           ,[Aadhar]
+           ,[BankName]
+           ,[AccountNumber]
+           ,[IFSCCode]
+           ,[AccountHolderName]
+           ,[IsActive]
+           ,[IsDemo]
+           ,[AllowOrdersBeyondHighLow]
+           ,[AllowOrdersBetweenHighLow]
+           ,[TradeEquityAsUnits]
+           ,[AutoSquareOff]
+           ,[AutoSquareOffPercentage]
+           ,[NotifyPercentage]
+           ,[MCXLotMarginJSON]
+           ,[MCXLotBrokerageJSON]
+           ,[MCXBidGapJSON]
+           ,[NSEFuturesEnabled]
+           ,[NSEOptionsEnabled]
+           ,[MCXOptionsEnabled]
+           ,[NSEFuturesMaxLotPerScrip]
+           ,[NSEOptionsMaxLotPerScrip]
+           ,[MCXOptionsMaxLotPerScrip]
+           ,[NSEFuturesBrokerage]
+           ,[NSEOptionsBrokerage]
+           ,[MCXOptionsBrokerage]
+           ,[NSEFuturesHoldingMargin]
+           ,[NSEOptionsHoldingMargin]
+           ,[MCXOptionsHoldingMargin]
+           ,[NSEFuturesShortSellingAllowed]
+           ,[NSEOptionsShortSellingAllowed]
+           ,[MCXOptionsShortSellingAllowed]
+           ,[CreatedBy]
+           ,[CreatedDate]
+           ,[ModifiedBy]
+           ,[ModifiedDate]
+           ,[TransPass])
+
+		   select @FullName,@UserName	,@Password,Email,@Mobile,Address	,@City,
+			State	,
+			PinCode	,
+			PAN	,
+			Aadhar	,
+			BankName,	
+			AccountNumber	,
+			IFSCCode	,
+			AccountHolderName	,
+			IsActive	,
+			IsDemo	,
+			AllowOrdersBeyondHighLow	,
+			AllowOrdersBetweenHighLow	,
+			TradeEquityAsUnits	,
+			AutoSquareOff	,
+			AutoSquareOffPercentage	,
+			NotifyPercentage	,
+			MCXLotMarginJSON	,
+			MCXLotBrokerageJSON	,
+			MCXBidGapJSON	,
+			NSEFuturesEnabled,	
+			NSEOptionsEnabled,	
+			MCXOptionsEnabled,	
+			NSEFuturesMaxLotPerScrip	,
+			NSEOptionsMaxLotPerScrip	,
+			MCXOptionsMaxLotPerScrip	,
+			NSEFuturesBrokerage	,
+			NSEOptionsBrokerage	,
+			MCXOptionsBrokerage	,
+			NSEFuturesHoldingMargin,	
+			NSEOptionsHoldingMargin	,
+			MCXOptionsHoldingMargin	,
+			NSEFuturesShortSellingAllowed	,
+			NSEOptionsShortSellingAllowed	,
+			MCXOptionsShortSellingAllowed	,
+			CreatedBy	,
+			GETDATE()	,
+			ModifiedBy	,
+			GETDATE(),
+			@Transpass FROM TradeUser WHERE USERID=@UserId
+			SET @RESPONSE='RECORD SAVE SUCCESSFULLY.!'
+			END
+			ELSE
+
+			BEGIN
+			   SET @RESPONSE='USERNAME ALREADY EXISTS'
+			END
+
+
+	  END
+
+	  ELSE
+
+	  BEGIN
+          SET @RESPONSE='INVALID TRANSACTION PASSWORD'
+	  END
+
+
+	IF @@ERROR <> 0
+	BEGIN
+	       ROLLBACK
+		   SET @RESPONSE='ERROR FOUND'
+	END
+
+	ELSE
+	BEGIN
+	  COMMIT
+	END
+
+
+end
+GO
+
+/****** Object:  StoredProcedure [dbo].[sp_DeleteBroker]    Script Date: 11-06-2025 23:03:42 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+-- Create stored procedure for broker deletion
+CREATE PROCEDURE [dbo].[sp_DeleteBroker]
+    @BrokerId INT,
+    @AdminId INT,
+    @AdminTransPass NVARCHAR(100)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    -- First validate admin transaction password
+    DECLARE @ValidTransPass NVARCHAR(100)
+    SELECT @ValidTransPass = TransPass 
+    FROM AdminLogin 
+    WHERE pk_id = @AdminId
+
+    IF @ValidTransPass IS NULL OR @ValidTransPass != @AdminTransPass
+    BEGIN
+        RAISERROR('Invalid Transaction Password', 16, 1)
+        RETURN
+    END
+
+    BEGIN TRY
+        BEGIN TRANSACTION
+
+        -- Insert into delete history before deleting
+        INSERT INTO broker_deletehistory (
+            BrokerId,
+            Username,
+            FirstName,
+            LastName,
+            RefCode,
+            UserType,
+            DeletedBy
+        )
+        SELECT 
+            BrokerId,
+            Username,
+            FirstName,
+            LastName,
+            RefCode,
+            UserType,
+            @AdminId
+        FROM Brokers 
+        WHERE BrokerId = @BrokerId
+
+        -- Delete the broker
+        DELETE FROM Brokers 
+        WHERE BrokerId = @BrokerId
+
+        COMMIT TRANSACTION
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION
+
+        DECLARE @ErrorMsg NVARCHAR(4000) = ERROR_MESSAGE()
+        RAISERROR(@ErrorMsg, 16, 1)
+    END CATCH
+END
+
+GO
+
+/****** Object:  StoredProcedure [dbo].[SP_Deposit]    Script Date: 11-06-2025 23:03:43 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+create proc [dbo].[SP_Deposit]
+(
+@Id numeric(10),
+@Type nvarchar(50),
+@Response nvarchar(100) out
+)
+AS
+
+BEGIN
+DECLARE @UserId NUMERIC
+DECLARE @Amount NUMERIC(18,2)
+DECLARE @addremark VARCHAR(100)
+  BEGIN  TRANSACTION
+    IF(@Type='APPROOVED')
+	BEGIN
+	SELECT  @UserId=UserId ,@Amount=Amount  FROM DepositeMaster WHERE PK_ID=@Id
+		SET @addremark='REJECT BY ADMIN'
+
+
+	          INSERT INTO TRANSDETAIL(MemberId,TransType,TransPage,Type,TransDate,Amount,AmountS,
+            Remark,LoginId,Pass,Expass,CounterId,eWalletBit,AddRemark,TransId,RefTransId)
+         VALUES(@UserId,'Main Wallet','Deposite approove','+',getdate(),@Amount,@Amount,
+			'Wallet Deposite',@UserId,'','',0,1,@addremark,0,0) 
+
+
+	      
+			 UPDATE DepositeMaster SET Approve_Status='APPROOVED' , Approve_date=getdate() where PK_ID=@Id
+
+
+		   SET @Response='Deposit approoved successfully'	
+	END
+
+	ELSE IF(@Type='REJECT')
+	BEGIN
+
+			update DepositeMaster set Approve_Status='REJECT' , Approve_date=getdate() where PK_ID=@Id
+
+		    SET @Response='Deposit reject successfully'	
+	END
+
+
+
+
+  IF @@ERROR <> 0
+  BEGIN 
+     ROLLBACK
+	 SET @Response='error found'	
+  END
+  ELSE
+  BEGIN
+    COMMIT
+  END
+
+END
+GO
+
+/****** Object:  StoredProcedure [dbo].[SP_DepositeMaster]    Script Date: 11-06-2025 23:03:44 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE proc [dbo].[SP_DepositeMaster]
+(
+@PK_Id numeric =0,
+@UserId numeric=0,
+@Amount numeric(18,2)=0,
+@ScreenShot nvarchar(100)=null,
+@Approve_Status nvarchar(50)=null,
+@OPTION CHAR(1),
+@RESPONSE NVARCHAR(100) OUT
+)
+AS
+BEGIN
+      BEGIN TRANSACTION
+	      
+		  IF (@OPTION ='I')
+		  BEGIN
+		  INSERT INTO [dbo].[DepositeMaster]
+           (UserId,Amount,ScreenShot,Approve_Status)VALUES(@UserId,@Amount,@ScreenShot,'PENDING')
+		   SET @RESPONSE = 'Record saved'
+		  END
+	  IF @@ERROR <> 0
+	  BEGIN
+	     ROLLBACK
+	  END
+	  ELSE
+	  BEGIN
+	    COMMIT
+	  END
+END
+GO
+
+/****** Object:  StoredProcedure [dbo].[sp_GetBrokerById]    Script Date: 11-06-2025 23:03:45 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+-- Create stored procedure for getting broker details
+CREATE PROCEDURE [dbo].[sp_GetBrokerById]
+    @BrokerId INT
+AS
+BEGIN
+    SELECT 
+        BrokerId, FirstName, LastName, Username, RefCode, UserType,
+        AccountStatus, AutoSquareOffPercentage, NotifyPercentage,
+        ProfitShare, BrokerageShare, ClientsLimit, SubBrokersLimit,
+        SubBrokerTasksAllowed, PayinAllowed, PayoutAllowed,
+        CreateClientAllowed, ClientTasksAllowed, TradeActivityAllowed,
+        NotificationsAllowed, MCXEnabled, MCXBrokerageType,
+        MCXBrokerage, MCXExposureType, MCXIntradayMargin,
+        MCXHoldingMargin, NSEEnabled, NSEBrokerage,
+        NSEIntradayMargin, NSEHoldingMargin
+    FROM Brokers 
+    WHERE BrokerId = @BrokerId
+END
+
+GO
+
+/****** Object:  StoredProcedure [dbo].[sp_getmarketwatch]    Script Date: 11-06-2025 23:03:46 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+--EXEC [sp_getmarketwatch] @ID=20078, @segment='MCX'
+CREATE proc [dbo].[sp_getmarketwatch]
+(
+@Id nvarchar(10)=null,
+@script nvarchar(100)=null,
+@segment nvarchar(100)=null,
+@userid nvarchar(100)=null,
+@Lots numeric(18,4)=null,
+@buyrate numeric(18,4)=0,
+@sellrate numeric(18,4)=0
+)
+
+AS
+
+BEGIN
+    
+	DECLARE @SQL AS  VARCHAR(500)
+	DECLARE @COMPLETE_SQL AS  VARCHAR(500)
+	DECLARE @WHERE_SQL AS  VARCHAR(500)
+	DECLARE @ORDERBY_SQL AS  VARCHAR(500)
+
+	SET @SQL=''
+	SET @WHERE_SQL=''
+	SET @ORDERBY_SQL = ''
+	SET @COMPLETE_SQL=''
+	SET @ORDERBY_SQL = '  order by M.timestamp desc'
+	SET @SQL='select * from MarketBidMaster M with(nolock) join TradeUser L with(nolock) on L.Userid=M.UserId '
+	-------------------------ID----------------------------------
+	IF(@Id <> '')
+	BEGIN
+	 IF (@WHERE_SQL='')
+	 BEGIN
+	   SET @WHERE_SQL +=' WHERE M.PK_ID=' +CAST(@Id AS nvarchar(10))
+	 END
+	 ELSE
+
+	 BEGIN
+	   SET @WHERE_SQL +=' AND  M.PK_ID=' +CAST(@Id AS nvarchar(10))
+	 END
+
+	END
+---------------------------------------------------------------
+
+
+-------------------------@script----------------------------------
+	IF(@script <> '')
+	BEGIN
+	 IF (@WHERE_SQL='')
+	 BEGIN
+	   SET @WHERE_SQL +=' WHERE M.SYMBOL=''' +CAST(@script AS nvarchar(100))+''''
+	 END
+	 ELSE
+
+	 BEGIN
+	   SET @WHERE_SQL +=' AND  M.SYMBOL=''' +CAST(@script AS nvarchar(100))+''''
+	 END
+
+	END
+---------------------------------------------------------------
+-------------------------@segment----------------------------------
+	IF(@segment <> '')
+	BEGIN
+	 IF (@WHERE_SQL='')
+	 BEGIN
+	   SET @WHERE_SQL +=' WHERE M.TransactionMode=''' +CAST(@segment AS nvarchar(100))+''''
+	 END
+	 ELSE
+
+	 BEGIN
+	   SET @WHERE_SQL +=' AND  M.TransactionMode=''' +CAST(@segment AS nvarchar(100))+''''
+	 END
+
+	END
+---------------------------------------------------------------
+-------------------------@userid----------------------------------
+	IF(@userid <> '')
+	BEGIN
+	 IF (@WHERE_SQL='')
+	 BEGIN
+	   SET @WHERE_SQL +=' WHERE L.USERID=''' +CAST(@userid AS nvarchar(10))+''''
+	 END
+	 ELSE
+
+	 BEGIN
+	   SET @WHERE_SQL +=' AND  L.USERID=''' +CAST(@userid AS nvarchar(10))+''''
+	 END
+
+	END
+---------------------------------------------------------------
+-------------------------@buyrate----------------------------------
+	IF(@buyrate >  0)
+	BEGIN
+	 IF (@WHERE_SQL='')
+	 BEGIN
+	   SET @WHERE_SQL +=' WHERE M.BUYPRICE=' +CAST(@buyrate AS nvarchar(100))
+	 END
+	 ELSE
+
+	 BEGIN
+	   SET @WHERE_SQL +=' AND  M.BUYPRICE=' +CAST(@buyrate AS nvarchar(100))
+	 END
+
+	END
+---------------------------------------------------------------
+
+
+-------------------------@SELLrate----------------------------------
+	IF(@sellrate > 0)
+	BEGIN
+	 IF (@WHERE_SQL='')
+	 BEGIN
+	   SET @WHERE_SQL +=' WHERE M.SALEPRICE=' +CAST(@sellrate AS nvarchar(100))
+	 END
+	 ELSE
+
+	 BEGIN
+	   SET @WHERE_SQL +=' AND  M.SALEPRICE=' +CAST(@sellrate AS nvarchar(100))
+	 END
+
+	END
+---------------------------------------------------------------
+
+-------------------------@lot----------------------------------
+	IF(@Lots > 0)
+	BEGIN
+	 IF (@WHERE_SQL='')
+	 BEGIN
+	   SET @WHERE_SQL +=' WHERE M.Lots=' +CAST(@Lots AS nvarchar(100))
+	 END
+	 ELSE
+
+	 BEGIN
+	   SET @WHERE_SQL +=' AND  M.Lots=' +CAST(@Lots AS nvarchar(100))
+	 END
+
+	END
+---------------------------------------------------------------
+
+	
+	SET @COMPLETE_SQL= (@SQL + @WHERE_SQL + @ORDERBY_SQL)
+	PRINT @COMPLETE_SQL
+	EXEC(@COMPLETE_SQL)
+
+
+END
+GO
+
+/****** Object:  StoredProcedure [dbo].[sp_GetSymbols]    Script Date: 11-06-2025 23:03:46 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+ CREATE PROCEDURE [dbo].[sp_GetSymbols] 
+ AS BEGIN   WITH NextExpiry AS (  
+    SELECT  
+        ExName,  
+        Description,  
+        SymbolShortName,  
+        ExpiryDate,  
+        Symbol,  
+        ROW_NUMBER() OVER (PARTITION BY ExName, SymbolShortName ORDER BY ExpiryDate) AS rn  
+    FROM  
+        ForexOptions  
+    WHERE  
+        --CAST(ExpiryDate as date) >= CAST(GETDATE() AS DATE)   -- Only future expiry dates  
+  CAST(ExpiryDate as date) >= CAST(GETDATE() AS DATE)  and   instrument='FUT' and CAST(ExpiryDate as date) >= DATEADD(day, 10, CAST(GETDATE() AS DATE))  -- Only future expiry dates  
+)  
+SELECT   
+    ExName,  
+    Description,  
+    SymbolShortName,  
+    ExpiryDate,  
+    Symbol  
+FROM  
+    NextExpiry  
+ WHERE rn = 1   
+ --Only the first upcoming expiry for each (ExName + SymbolShortName)  
+ORDER BY  
+    SymbolShortName asc  END 
+GO
+
+/****** Object:  StoredProcedure [dbo].[sp_GetSymbolsOptions]    Script Date: 11-06-2025 23:03:47 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+  
+--exec [sp_GetSymbolsOptions]'NIFTY'   
+CREATE  PROCEDURE [dbo].[sp_GetSymbolsOptions]    
+(  
+@p_UnderlyingPattern VARCHAR(255)   
+ )  
+AS    
+    
+BEGIN    
+    
+  
+  WITH NextExpiry AS (  
+    SELECT   
+        ExName,  
+        Description,  
+        SymbolShortName,  
+        ExpiryDate,  
+        Symbol,  
+        ROW_NUMBER() OVER (PARTITION BY ExName, SymbolShortName ORDER BY ExpiryDate) AS rn  
+    FROM  
+        ForexOptions  
+    WHERE  
+        --CAST(ExpiryDate as date) >= CAST(GETDATE() AS DATE)   -- Only future expiry dates  
+  CAST(ExpiryDate as date) >= DATEADD(day, 10, CAST(GETDATE() AS DATE))  and   instrument<>'FUT' and  symbol like '%'+@p_UnderlyingPattern+'%' -- Only future expiry dates  
+)  
+SELECT top 100  
+    ExName,  
+    Description,  
+    SymbolShortName,  
+    ExpiryDate,  
+    Symbol  
+FROM  
+    NextExpiry  
+ WHERE rn = 1   
+ --Only the first upcoming expiry for each (ExName + SymbolShortName)  
+ORDER BY  
+    SymbolShortName asc   
+  
+  
+  
+END 
+GO
+
+/****** Object:  StoredProcedure [dbo].[SP_Login]    Script Date: 11-06-2025 23:03:48 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+create proc [dbo].[SP_Login]
+(
+@UserId nvarchar(15),
+@Password nvarchar(100)
+)
+as
+
+
+begin
+    select * from Loginmaster where userid=@UserId and  Password COLLATE Latin1_General_CS_AS = @Password
+end
+GO
+
+/****** Object:  StoredProcedure [dbo].[SP_LoginNew]    Script Date: 11-06-2025 23:03:49 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+create proc [dbo].[SP_LoginNew]  
+(  
+@UserId nvarchar(15),  
+@Password nvarchar(100)  
+)  
+as  
+  
+  
+begin  
+    select * from TradeUser where Username=@UserId and  Password COLLATE Latin1_General_CS_AS = @Password  
+end  
+GO
+
+/****** Object:  StoredProcedure [dbo].[SP_LoginTrade]    Script Date: 11-06-2025 23:03:50 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+create proc [dbo].[SP_LoginTrade]
+(
+@UserId nvarchar(15),
+@Password nvarchar(100)
+)
+as
+
+
+begin
+    select * from TradeUser where username=@UserId and  Password COLLATE Latin1_General_CS_AS = @Password
+end
+GO
+
+/****** Object:  StoredProcedure [dbo].[SP_MarketBidMaster]    Script Date: 11-06-2025 23:03:50 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE proc [dbo].[SP_MarketBidMaster]  
+(  
+  
+@Mode varchar(50)='',  
+@ToAmount numeric(18,2)=0,  
+@TransactionMode varchar(10)=0,  
+@SalePrice numeric(18,2)=0,  
+@BuyPrice numeric(18,2)=0,  
+@Bid numeric(18,2)=0,  
+@Ask numeric(18,2)=0,  
+@High numeric(18,2)=0,  
+@Low numeric(18,2)=0,  
+@TradeLast numeric(18,2)=0,  
+@Change numeric(18,2)=0,  
+@TradeOpen numeric(18,2)=0,  
+@Volume numeric(18,2)=0,  
+@LastTradeQty numeric(18,2)=0,  
+@Atp numeric(18,2)=0,  
+@LotSize numeric(18,2)=0,  
+@OpenInterest numeric(18,2)=0,  
+@BidQty numeric(18,2)=0,  
+@AskQty numeric(18,2)=0,  
+@PrevClose numeric(18,2)=0,  
+@UpperCircuit numeric(18,2)=0,  
+@LowerCircuit numeric(18,2)=0,  
+@UserId varchar(100)=null,  
+@OPTION CHAR(1),  
+@Symbol nvarchar(50),  
+@Min char(1),  
+@Mega char(1),  
+@Lots numeric(18,2)=0,  
+@Price numeric(18,2)=0,  
+@IpAddress nvarchar(100)=null,
+@RESPONSE VARCHAR(100) OUT  
+)  
+AS  
+  
+BEGIN  
+DECLARE @TransactionId NVARCHAR(50)  
+DECLARE @LASTID NUMERIC(30)  
+   BEGIN  TRANSACTION  
+  
+   IF(@OPTION='I')  
+   BEGIN  
+   IF(@SalePrice <=0 AND  @BuyPrice <= 0)  
+   BEGIN  
+    set @RESPONSE  = 'Sell & buy price should be greater then zero'  
+   END  
+  
+   ELSE  
+   BEGIN  
+    SELECT @LASTID=ISNULL(MAX(PK_ID),0) + 1 FROM MarketBidMaster  
+  SET @TransactionId = 'CF' +cast( @LASTID AS VARCHAR)  
+             INSERT INTO dbo.MarketBidMaster  
+           ( IpAddress, IsMin, IsMega, Lots, Price,Symbol,UserId,TransactionId,Mode,ToAmount,TransactionMode,SalePrice,BuyPrice,Bid,Ask,High,Low,TradeLast,Change,TradeOpen,Volume,LastTradeQty,Atp,LotSize,OpenInterest,BidQty,AskQty,PrevClose,UpperCircuit,LowerCircuit)  
+     VALUES  
+           (@IpAddress,@Min,@Mega,@Lots,@Price,@Symbol,@UserId,@TransactionId ,@Mode,@ToAmount,@TransactionMode,@SalePrice,@BuyPrice,@Bid,@Ask,@High,@Low,@TradeLast,@Change,@TradeOpen,@Volume,@LastTradeQty,@Atp,@LotSize,@OpenInterest,@BidQty,@AskQty,@PrevClose,@UpperCircuit,@LowerCircuit)   
+   
+  set @RESPONSE  = 'Record saved ' +  CAST(@TransactionId AS VARCHAR(50))  
+   END  
+  
+    
+   END  
+  
+  
+   IF @@ERROR <> 0  
+   BEGIN  
+     ROLLBACK  
+   END  
+   ELSE  
+   BEGIN  
+    COMMIT  
+   END  
+END
+GO
+
+/****** Object:  StoredProcedure [dbo].[sp_MarketMaster]    Script Date: 11-06-2025 23:03:51 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE PROCEDURE [dbo].[sp_MarketMaster]
+    @ScriptId INT = NULL,
+    @ScriptName NVARCHAR(100) = NULL,
+    @MarketType NVARCHAR(50) = NULL, -- NSE/MCX
+    @LotSize INT = NULL,
+    @TickSize DECIMAL(18,2) = NULL,
+    @IsActive BIT = NULL,
+    @AdminId INT = NULL,
+    @Option CHAR(1) -- 'I' for Insert, 'U' for Update, 'D' for Delete, 'S' for Search, 'T' for Toggle Status
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF @Option = 'I'
+    BEGIN
+        INSERT INTO MarketMaster (
+            ScriptName,
+            MarketType,
+            LotSize,
+            TickSize,
+            IsActive,
+            CreatedBy,
+            CreatedAt
+        )
+        VALUES (
+            @ScriptName,
+            @MarketType,
+            @LotSize,
+            @TickSize,
+            @IsActive,
+            @AdminId,
+            GETDATE()
+        )
+    END
+    ELSE IF @Option = 'U'
+    BEGIN
+        UPDATE MarketMaster
+        SET 
+            ScriptName = @ScriptName,
+            MarketType = @MarketType,
+            LotSize = @LotSize,
+            TickSize = @TickSize,
+            IsActive = @IsActive,
+            UpdatedBy = @AdminId,
+            UpdatedAt = GETDATE()
+        WHERE ScriptId = @ScriptId
+    END
+    ELSE IF @Option = 'D'
+    BEGIN
+        DELETE FROM MarketMaster
+        WHERE ScriptId = @ScriptId
+    END
+    ELSE IF @Option = 'T'
+    BEGIN
+        UPDATE MarketMaster
+        SET 
+            IsActive = ~IsActive,
+            UpdatedBy = @AdminId,
+            UpdatedAt = GETDATE()
+        WHERE ScriptId = @ScriptId
+
+        SELECT IsActive
+        FROM MarketMaster
+        WHERE ScriptId = @ScriptId
+    END
+    ELSE IF @Option = 'S'
+    BEGIN
+        SELECT 
+            ScriptId,
+            ScriptName,
+            MarketType,
+            LotSize,
+            TickSize,
+            IsActive,
+            CreatedBy,
+            CreatedAt,
+            UpdatedBy,
+            UpdatedAt
+        FROM MarketMaster
+        WHERE 
+            (@ScriptId IS NULL OR ScriptId = @ScriptId)
+            AND (@ScriptName IS NULL OR ScriptName LIKE '%' + @ScriptName + '%')
+            AND (@MarketType IS NULL OR MarketType = @MarketType)
+            AND (@IsActive IS NULL OR IsActive = @IsActive)
+        ORDER BY ScriptName
+    END
+END
+
+GO
+
+/****** Object:  StoredProcedure [dbo].[SP_MarketPlaceMaster]    Script Date: 11-06-2025 23:03:52 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE proc [dbo].[SP_MarketPlaceMaster]    
+(    
+    
+@Mode varchar(50)='',    
+@ToAmount numeric(18,2)=0,    
+@TransactionMode varchar(10)=0,    
+@Bid numeric(18,2)=0,    
+@Ask numeric(18,2)=0,    
+@High numeric(18,2)=0,    
+@Low numeric(18,2)=0,    
+@TradeLast numeric(18,2)=0,    
+@Change numeric(18,2)=0,    
+@TradeOpen numeric(18,2)=0,    
+@Volume numeric(18,2)=0,    
+@LastTradeQty numeric(18,2)=0,    
+@Atp numeric(18,2)=0,    
+@LotSize numeric(18,2)=0,    
+@OpenInterest numeric(18,2)=0,    
+@BidQty numeric(18,2)=0,    
+@AskQty numeric(18,2)=0,    
+@PrevClose numeric(18,2)=0,    
+@UpperCircuit numeric(18,2)=0,    
+@LowerCircuit numeric(18,2)=0,    
+@UserId varchar(100)=null,    
+@OPTION CHAR(1),    
+@SalePrice numeric(18,2)=0,    
+@BuyPrice numeric(18,2)=0,    
+@Symbol nvarchar(50),    
+@Min char(1),    
+@Mega char(1),    
+@Lots numeric(18,2)=0,    
+@Price numeric(18,2)=0,  
+@IpAddress nvarchar(100)=null,
+@RESPONSE VARCHAR(100) OUT    
+)    
+AS    
+    
+BEGIN    
+DECLARE @TransactionId NVARCHAR(50)    
+DECLARE @LASTID NUMERIC(30)    
+   BEGIN  TRANSACTION    
+    
+   IF(@OPTION='I')    
+   BEGIN    
+    
+   SELECT @LASTID=ISNULL(MAX(PK_ID),0) + 1 FROM [dbo].[MarketPlaceMaster]    
+  SET @TransactionId = 'PF' +cast( @LASTID AS VARCHAR)    
+             INSERT INTO dbo.[MarketPlaceMaster]    
+           ( IpAddress,BUYPRICE,SELLPRICE,IsMin, IsMega, Lots, Price,Symbol,UserId,TransactionId,Mode,ToAmount,TransactionMode,Bid,Ask,High,Low,TradeLast,Change,TradeOpen,Volume,LastTradeQty,Atp,LotSize,OpenInterest,BidQty,AskQty,PrevClose,UpperCircuit,LowerCircuit    )    
+     VALUES    
+           (@IpAddress,@BuyPrice,@SalePrice,@Min,@Mega,@Lots,@Price,@Symbol,@UserId,@TransactionId ,@Mode,@ToAmount,@TransactionMode,@Bid,@Ask,@High,@Low,@TradeLast,@Change,@TradeOpen,@Volume,@LastTradeQty,@Atp,@LotSize,@OpenInterest,@BidQty,@AskQty,@PrevClose,@UpperCircuit,@LowerCircuit)    
+  set @RESPONSE  = 'Record saved ' +  CAST(@TransactionId AS VARCHAR(50))    
+   END    
+    
+    
+   IF @@ERROR <> 0    
+   BEGIN    
+     ROLLBACK    
+   END    
+   ELSE    
+   BEGIN    
+    COMMIT    
+   END    
+END
+GO
+
+/****** Object:  StoredProcedure [dbo].[SP_registration]    Script Date: 11-06-2025 23:03:53 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE PROCEDURE [dbo].[SP_registration]
+(
+    @PK_ID NUMERIC = 0,
+    @FullName NVARCHAR(100),
+    @Mobile NVARCHAR(15),
+    @Password NVARCHAR(100),
+    @RefferalCode NVARCHAR(15) = NULL,
+    @Response NVARCHAR(100) OUTPUT
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @ErrorMessage NVARCHAR(255);
+
+    BEGIN TRANSACTION;
+
+    BEGIN TRY
+       
+        IF EXISTS (SELECT 1 FROM LoginMaster WHERE Mobile = @Mobile)
+        BEGIN
+            SET @Response = 'This mobile number already exists.';
+            ROLLBACK TRANSACTION;
+            RETURN;
+        END
+
+       
+        IF ISNULL(@RefferalCode, '') = ''
+        BEGIN
+            SET @RefferalCode = '7081735076';  
+        END
+
+       
+        IF @RefferalCode IS NOT NULL
+        BEGIN
+            IF NOT EXISTS (SELECT 1 FROM LoginMaster WHERE Mobile = @RefferalCode)
+            BEGIN
+                SET @Response = 'Invalid Referral Code.';
+                ROLLBACK TRANSACTION;
+                RETURN;
+            END
+        END
+
+       
+        INSERT INTO [dbo].[LoginMaster] (FullName, Mobile, UserId, Password, RefferalCode)
+        VALUES (@FullName, @Mobile, @Mobile, @Password, @RefferalCode);
+
+       
+        SET @Response = 'Registered successfully!';
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+      
+        SET @ErrorMessage = ERROR_MESSAGE();
+        ROLLBACK TRANSACTION;
+        SET @Response = 'Server error: ' + @ErrorMessage;
+    END CATCH
+END;
+
+GO
+
+/****** Object:  StoredProcedure [dbo].[SP_registrationNew]    Script Date: 11-06-2025 23:03:54 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE PROCEDURE [dbo].[SP_registrationNew] 
+(  
+    @PK_ID NUMERIC = 0,  
+    @FullName NVARCHAR(100),  
+    @Mobile NVARCHAR(15),  
+    @Password NVARCHAR(100),  
+	@EmailId NVARCHAR(100),
+    @RefferalCode NVARCHAR(15) = NULL,  
+    @Response NVARCHAR(100) OUTPUT  
+)  
+AS  
+BEGIN  
+    SET NOCOUNT ON;  
+  
+    DECLARE @ErrorMessage NVARCHAR(255);  
+  
+    BEGIN TRANSACTION;  
+  
+    BEGIN TRY  
+         
+        IF EXISTS (SELECT 1 FROM TradeUser WHERE Mobile = @Mobile)  
+        BEGIN  
+            SET @Response = 'This mobile number already exists.';  
+            ROLLBACK TRANSACTION;  
+            RETURN;  
+        END  
+		 IF EXISTS (SELECT 1 FROM TradeUser WHERE Email = @EmailId)  
+        BEGIN  
+            SET @Response = 'This Email id already exists.';  
+            ROLLBACK TRANSACTION;  
+            RETURN;  
+        END  
+  
+         
+        IF ISNULL(@RefferalCode, '') = ''  
+        BEGIN  
+            SET @RefferalCode = 'TradeClient';    
+        END  
+  
+         
+        IF (@RefferalCode IS NOT NULL  OR @RefferalCode='')
+        BEGIN  
+            IF NOT EXISTS (SELECT 1 FROM TradeUser WHERE Mobile = @RefferalCode)  
+            BEGIN  
+                SET @Response = 'Invalid Referral Code.';  
+                ROLLBACK TRANSACTION;  
+                RETURN;  
+            END  
+        END  
+  
+         
+        INSERT INTO [dbo].[TradeUser] (FullName, Mobile, Username, Password, RefferalCode,Email)  
+        VALUES (@FullName, @Mobile, @Mobile, @Password, @RefferalCode,@EmailId);  
+  
+         
+        SET @Response = 'Registered successfully!';  
+        COMMIT TRANSACTION;  
+    END TRY  
+    BEGIN CATCH  
+        
+        SET @ErrorMessage = ERROR_MESSAGE();  
+        ROLLBACK TRANSACTION;  
+        SET @Response = 'Server error: ' + @ErrorMessage;  
+    END CATCH  
+END;  
+  
+GO
+
+/****** Object:  StoredProcedure [dbo].[sp_SearchBrokers]    Script Date: 11-06-2025 23:03:55 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+-- Create Stored Procedure for Searching Brokers
+CREATE PROCEDURE [dbo].[sp_SearchBrokers]
+    @SearchTerm NVARCHAR(100) = NULL
+AS
+BEGIN
+    SELECT 
+        BrokerId,
+        FirstName,
+        LastName,
+        Username,
+        RefCode,
+        UserType,
+        AccountStatus,
+        ProfitShare,
+        BrokerageShare,
+        CreatedDate
+    FROM Brokers
+    WHERE 
+        (@SearchTerm IS NULL) OR
+        (Username LIKE '%' + @SearchTerm + '%') OR
+        (RefCode LIKE '%' + @SearchTerm + '%')
+    ORDER BY CreatedDate DESC
+END
+
+GO
+
+/****** Object:  StoredProcedure [dbo].[SP_SocialLink]    Script Date: 11-06-2025 23:03:56 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE proc [dbo].[SP_SocialLink]
+(
+@Pk_Id numeric =0,
+@Telegram nvarchar(100)=null ,
+@Facebook nvarchar(100)=null ,
+@Whatsapp nvarchar(100) =null,
+@Youtube  nvarchar(100)=null ,
+@Instragram nvarchar(100) =null,
+@TransPassword nvarchar(100)=null,
+@ADMINID NUMERIC
+)
+
+AS
+BEGIN
+
+
+IF (SELECT COUNT(1) FROM AdminLogin WHERE PK_ID=@ADMINID AND TransPass=@TransPassword) = 1
+	BEGIN
+	IF(SELECT COUNT(1) FROM  [SocialLink]) > 0
+	BEGIN
+
+
+		UPDATE [dbo].[SocialLink] SET [Telegram] = @Telegram ,[Facebook] = @Facebook,[Whatsapp] = @Whatsapp,[Youtube] = @Youtube,[Instragram] = @Instragram,[Lastmodify] = GETDATE()
+		END
+		ELSE
+		BEGIN
+		
+INSERT INTO [dbo].[SocialLink]
+           ([Telegram]
+           ,[Facebook]
+           ,[Whatsapp]
+           ,[Youtube]
+           ,[Instragram])
+     VALUES
+           (@Telegram
+           ,@Facebook
+           ,@Whatsapp
+           ,@Youtube
+           ,@Instragram)
+
+		END
+  END
+
+END
+
+
+
+GO
+
+/****** Object:  StoredProcedure [dbo].[SP_TradeAccountDetail]    Script Date: 11-06-2025 23:03:56 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE PROC [dbo].[SP_TradeAccountDetail]
+(
+    @PK_Id numeric(18, 0) = NULL,
+    @UserId numeric(18, 0) = NULL,
+    @FullName nvarchar(100) = NULL,
+    @Mobile nvarchar(15) = NULL,
+    @OptionalMobile nvarchar(15) = NULL,
+    @Username nvarchar(100) = NULL,
+    @Password nvarchar(100) = NULL,
+    @OptionalPassword nvarchar(100) = NULL,
+    @City nvarchar(100) = NULL,
+    @OptionalCity nvarchar(100) = NULL,
+    @ConfigRemark nvarchar(250) = NULL,
+    @ConfigdemoAccount bit = NULL,
+    @ConfigAllowFreshEntryOrder bit = NULL,
+    @ConfigAllowOrdersbetweenHighLow bit = NULL,
+    @ConfigTradeequityasunits bit = NULL,
+    @ConfigAccountStatus bit = NULL,
+    @ConfigAutoCloseTrades bit = NULL,
+    @ConfigautoCloseall numeric(10, 2) = NULL,
+    @ConfigNotifyclient numeric(10, 2) = NULL,
+    @ConfigMinTimeprofit numeric(10, 2) = NULL,
+    @MCXTrading bit = NULL,
+    @MCXMinimumlotsize numeric(10, 2) = NULL,
+    @MCXMaximumlotsize numeric(10, 2) = NULL,
+    @MCXMaximumlotsizeactively numeric(10, 2) = NULL,
+    @MCXMaxSizeAllCommodity numeric(10, 2) = NULL,
+    @MCXBrokerageType nvarchar(100) = NULL,
+    @MCXbrokerage numeric(10, 2) = NULL,
+    @MCXExposure nvarchar(100) = NULL,
+    @MCXIntradayExposure numeric(10, 2) = NULL,
+    @MCXHoldingExposure numeric(10, 2) = NULL,
+    @MCXGOLDM numeric(10, 2) = NULL,
+    @MCXSILVERM numeric(10, 2) = NULL,
+    @MCXBULLDEX numeric(10, 2) = NULL,
+    @MCXGOLD numeric(10, 2) = NULL,
+    @MCXSILVER numeric(10, 2) = NULL,
+    @MCXCRUDEOIL numeric(10, 2) = NULL,
+    @MCXCOPPER numeric(10, 2) = NULL,
+    @MCXNICKEL numeric(10, 2) = NULL,
+    @MCXZINC numeric(10, 2) = NULL,
+    @MCXLEAD numeric(10, 2) = NULL,
+    @MCXNATURALGAS numeric(10, 2) = NULL,
+    @MCXNATURALGASMINI numeric(10, 2) = NULL,
+    @MCXALUMINIUM numeric(10, 2) = NULL,
+    @MCXMENTHAOIL numeric(10, 2) = NULL,
+    @MCXCOTTON numeric(10, 2) = NULL,
+    @MCXSILVERMIC numeric(10, 2) = NULL,
+    @MCXZINCMINI numeric(10, 2) = NULL,
+    @MCXALUMINI numeric(10, 2) = NULL,
+    @MCXLEADMINI numeric(10, 2) = NULL,
+    @MCXCRUDEOILMINI numeric(10, 2) = NULL,
+    @EquityTrading bit = NULL,
+    @EquityEquitybrokeragez numeric(10, 2) = NULL,
+    @EquityMinimumpersingletradeofEquity numeric(10, 2) = NULL,
+    @EquityMaximumallowedEquity numeric(10, 2) = NULL,
+    @EquityMinimumsingleEquityINDEX numeric(10, 2) = NULL,
+    @EquityMaximumallowedEquityINDEX numeric(10, 2) = NULL,
+    @EquityMaximumEquitytobeactivelyopen numeric(10, 2) = NULL,
+    @EquityMaximumEquityINDEX numeric(10, 2) = NULL,
+    @EquityMaxSizeAllEquity numeric(10, 2) = NULL,
+    @EquityMaxSizeAllIndex numeric(10, 2) = NULL,
+    @EquityIntradayExposureMarginEquity numeric(10, 2) = NULL,
+    @EquityHoldingExposureMarginEquity numeric(10, 2) = NULL,
+    @EquityOrderscurrentpriceEquity numeric(10, 2) = NULL,
+    @OptionsIndexOptionsTrading bit = NULL,
+    @OptionsEquityTrading bit = NULL,
+    @OptionsMCXTrading bit = NULL,
+    @OptionsIndexBrokerageType nvarchar(100) = NULL,
+    @OptionsIndexbrokerage numeric(10, 2) = NULL,
+    @OptionsEquityBrokerageType nvarchar(100) = NULL,
+    @OptionsEquitybrokerage numeric(10, 2) = NULL,
+    @OptionsMCXBrokerageType nvarchar(100) = NULL,
+    @OptionsMCXbrokerage numeric(10, 2) = NULL,
+    @OptionsMinBidPrice numeric(10, 2) = NULL,
+    @OptionsIndexShortSellingAllowed nvarchar(100) = NULL,
+    @OptionsEquityShortSellingAllowed nvarchar(100) = NULL,
+    @OptionsMCXOptionsShortSellingAllowed nvarchar(100) = NULL,
+    @OptionsMinimumEquityOptions numeric(10, 2) = NULL,
+    @OptionsMaximumallowedEquityOptions numeric(10, 2) = NULL,
+    @OptionsMinimumrequiredEquityINDEX numeric(10, 2) = NULL,
+    @OptionsMaximumallowedEquityINDEX numeric(10, 2) = NULL,
+    @OptionsMinimumMCXOptions numeric(10, 2) = NULL,
+    @OptionsMaximumMCXOptions numeric(10, 2) = NULL,
+    @OptionsMaximumEquityOptionsactively numeric(10, 2) = NULL,
+    @OptionsMaximumEquityINDEXactively numeric(10, 2) = NULL,
+    @OptionsMaximumallowedMCX numeric(10, 2) = NULL,
+    @OptionsMaxSizeAllEquity numeric(10, 2) = NULL,
+    @OptionsMaxSizeAllIndex numeric(10, 2) = NULL,
+    @OptionsMaxSizeAllMCX numeric(10, 2) = NULL,
+    @OptionsIntradayExposureMarginIndex numeric(10, 2) = NULL,
+    @OptionsHoldingExposureMarginIndex numeric(10, 2) = NULL,
+    @OptionsIntradayExposureMarginEquity numeric(10, 2) = NULL,
+    @OptionsHoldingExposureMarginEquity numeric(10, 2) = NULL,
+    @OptionsIntradayExposureMarginMCX numeric(10, 2) = NULL,
+    @OptionsHoldingExposureMarginMCX numeric(10, 2) = NULL,
+    @OptionsOrdersawayprice numeric(10, 2) = NULL,
+    @ShortBrokerageType nvarchar(100) = NULL,
+    @ShortBrokerage numeric(10, 2) = NULL,
+    @ShortEquityBrokerageType nvarchar(100) = NULL,
+    @ShortEquityShortsellingbrokerage numeric(10, 2) = NULL,
+    @ShortsMCXShortsellingBrokerageType nvarchar(100) = NULL,
+    @ShortMCXShortsellingbrokerage numeric(10, 2) = NULL,
+    @ShortMinimumEquityShortselling numeric(10, 2) = NULL,
+    @ShortMaximumEquityShortselling numeric(10, 2) = NULL,
+    @ShortMinimumMCXShortselling numeric(10, 2) = NULL,
+    @ShortMaximumallowedMCX numeric(10, 2) = NULL,
+    @ShortMinimumEquityINDEX numeric(10, 2) = NULL,
+    @ShortMaximumallowedsingleEquityINDEX numeric(10, 2) = NULL,
+    @ShortMaximumscrip numeric(10, 2) = NULL,
+    @ShortMaximumallowedscrip numeric(10, 2) = NULL,
+    @ShortMaximumactivelyopen numeric(10, 2) = NULL,
+    @ShortMaxSizeEquity numeric(10, 2) = NULL,
+    @ShortMaxSizeIndex numeric(10, 2) = NULL,
+    @ShortMaxSizeMCX numeric(10, 2) = NULL,
+    @ShortIntradayIndex numeric(10, 2) = NULL,
+    @ShortHoldingIndex numeric(10, 2) = NULL,
+    @ShortIntradayMCX numeric(10, 2) = NULL,
+    @ShortHoldingMCX numeric(10, 2) = NULL,
+    @Notes nvarchar(max) = NULL,
+    @BrokerId numeric(18, 0) = NULL,
+    @TRANSPASS NVARCHAR(100) = NULL,
+    @OPTION CHAR(1),
+    @RESPONSE VARCHAR(250) OUT
+)
+AS
+BEGIN
+    -- This ensures that if any error occurs, the transaction is rolled back
+    SET XACT_ABORT ON; 
+
+    BEGIN TRANSACTION;
+
+    IF (SELECT COUNT(1) FROM ADMINLOGIN WHERE Transpass = @TRANSPASS) = 1
+    BEGIN
+        IF @OPTION = 'I' -- Assuming 'I' is for Insert
+        BEGIN
+            IF (SELECT COUNT(1) FROM TradeAccountDetail WHERE Username = @Username) > 0
+            BEGIN
+                SET @RESPONSE = 'USERID ALREADY EXISTS';
+                ROLLBACK TRANSACTION; -- Rollback if username exists
+                RETURN;
+            END;
+
+            INSERT INTO [dbo].[TradeAccountDetail]
+            (
+                [UserId], [FullName], [Mobile], [OptionalMobile], [Username], [Password],
+                [OptionalPassword], [City], [OptionalCity], [ConfigRemark], [ConfigdemoAccount],
+                [ConfigAllowFreshEntryOrder], [ConfigAllowOrdersbetweenHighLow], [ConfigTradeequityasunits],
+                [ConfigAccountStatus], [ConfigAutoCloseTrades], [ConfigautoCloseall], [ConfigNotifyclient],
+                [ConfigMinTimeprofit], [MCXTrading], [MCXMinimumlotsize], [MCXMaximumlotsize],
+                [MCXMaximumlotsizeactively], [MCXMaxSizeAllCommodity], [MCXBrokerageType], [MCXbrokerage],
+                [MCXExposure], [MCXIntradayExposure], [MCXHoldingExposure], [MCXGOLDM], [MCXSILVERM],
+                [MCXBULLDEX], [MCXGOLD], [MCXSILVER], [MCXCRUDEOIL], [MCXCOPPER], [MCXNICKEL], [MCXZINC],
+                [MCXLEAD], [MCXNATURALGAS], [MCXNATURALGASMINI], [MCXALUMINIUM], [MCXMENTHAOIL], [MCXCOTTON],
+                [MCXSILVERMIC], [MCXZINCMINI], [MCXALUMINI], [MCXLEADMINI], [MCXCRUDEOILMINI], [EquityTrading],
+                [EquityEquitybrokeragez], [EquityMinimumpersingletradeofEquity], [EquityMaximumallowedEquity],
+                [EquityMinimumsingleEquityINDEX], [EquityMaximumallowedEquityINDEX],
+                [EquityMaximumEquitytobeactivelyopen], [EquityMaximumEquityINDEX], [EquityMaxSizeAllEquity],
+                [EquityMaxSizeAllIndex], [EquityIntradayExposureMarginEquity], [EquityHoldingExposureMarginEquity],
+                [EquityOrderscurrentpriceEquity], [OptionsIndexOptionsTrading], [OptionsEquityTrading],
+                [OptionsMCXTrading], [OptionsIndexBrokerageType], [OptionsIndexbrokerage],
+                [OptionsEquityBrokerageType], [OptionsEquitybrokerage], [OptionsMCXBrokerageType],
+                [OptionsMCXbrokerage], [OptionsMinBidPrice], [OptionsIndexShortSellingAllowed],
+                [OptionsEquityShortSellingAllowed], [OptionsMCXOptionsShortSellingAllowed],
+                [OptionsMinimumEquityOptions], [OptionsMaximumallowedEquityOptions],
+                [OptionsMinimumrequiredEquityINDEX], [OptionsMaximumallowedEquityINDEX],
+                [OptionsMinimumMCXOptions], [OptionsMaximumMCXOptions],
+                [OptionsMaximumEquityOptionsactively], [OptionsMaximumEquityINDEXactively],
+                [OptionsMaximumallowedMCX], [OptionsMaxSizeAllEquity], [OptionsMaxSizeAllIndex],
+                [OptionsMaxSizeAllMCX], [OptionsIntradayExposureMarginIndex], [OptionsHoldingExposureMarginIndex],
+                [OptionsIntradayExposureMarginEquity], [OptionsHoldingExposureMarginEquity],
+                [OptionsIntradayExposureMarginMCX], [OptionsHoldingExposureMarginMCX],
+                [OptionsOrdersawayprice], [ShortBrokerageType], [ShortBrokerage], [ShortEquityBrokerageType],
+                [ShortEquityShortsellingbrokerage], [ShortsMCXShortsellingBrokerageType],
+                [ShortMCXShortsellingbrokerage], [ShortMinimumEquityShortselling],
+                [ShortMaximumEquityShortselling], [ShortMinimumMCXShortselling], [ShortMaximumallowedMCX],
+                [ShortMinimumEquityINDEX], [ShortMaximumallowedsingleEquityINDEX], [ShortMaximumscrip],
+                [ShortMaximumallowedscrip], [ShortMaximumactivelyopen], [ShortMaxSizeEquity], [ShortMaxSizeIndex],
+                [ShortMaxSizeMCX], [ShortIntradayIndex], [ShortHoldingIndex], [ShortIntradayMCX],
+                [ShortHoldingMCX], [Notes], [BrokerId]
+            )
+            VALUES
+            (
+                @UserId, @FullName, @Mobile, @OptionalMobile, @Username, @Password,
+                @OptionalPassword, @City, @OptionalCity, @ConfigRemark, @ConfigdemoAccount,
+                @ConfigAllowFreshEntryOrder, @ConfigAllowOrdersbetweenHighLow, @ConfigTradeequityasunits,
+                @ConfigAccountStatus, @ConfigAutoCloseTrades, @ConfigautoCloseall, @ConfigNotifyclient,
+                @ConfigMinTimeprofit, @MCXTrading, @MCXMinimumlotsize, @MCXMaximumlotsize,
+                @MCXMaximumlotsizeactively, @MCXMaxSizeAllCommodity, @MCXBrokerageType, @MCXbrokerage,
+                @MCXExposure, @MCXIntradayExposure, @MCXHoldingExposure, @MCXGOLDM, @MCXSILVERM,
+                @MCXBULLDEX, @MCXGOLD, @MCXSILVER, @MCXCRUDEOIL, @MCXCOPPER, @MCXNICKEL, @MCXZINC,
+                @MCXLEAD, @MCXNATURALGAS, @MCXNATURALGASMINI, @MCXALUMINIUM, @MCXMENTHAOIL, @MCXCOTTON,
+                @MCXSILVERMIC, @MCXZINCMINI, @MCXALUMINI, @MCXLEADMINI, @MCXCRUDEOILMINI, @EquityTrading,
+                @EquityEquitybrokeragez, @EquityMinimumpersingletradeofEquity, @EquityMaximumallowedEquity,
+                @EquityMinimumsingleEquityINDEX, @EquityMaximumallowedEquityINDEX,
+                @EquityMaximumEquitytobeactivelyopen, @EquityMaximumEquityINDEX, @EquityMaxSizeAllEquity,
+                @EquityMaxSizeAllIndex, @EquityIntradayExposureMarginEquity, @EquityHoldingExposureMarginEquity,
+                @EquityOrderscurrentpriceEquity, @OptionsIndexOptionsTrading, @OptionsEquityTrading,
+                @OptionsMCXTrading, @OptionsIndexBrokerageType, @OptionsIndexbrokerage,
+                @OptionsEquityBrokerageType, @OptionsEquitybrokerage, @OptionsMCXBrokerageType,
+                @OptionsMCXbrokerage, @OptionsMinBidPrice, @OptionsIndexShortSellingAllowed,
+                @OptionsEquityShortSellingAllowed, @OptionsMCXOptionsShortSellingAllowed,
+                @OptionsMinimumEquityOptions, @OptionsMaximumallowedEquityOptions,
+                @OptionsMinimumrequiredEquityINDEX, @OptionsMaximumallowedEquityINDEX,
+                @OptionsMinimumMCXOptions, @OptionsMaximumMCXOptions,
+                @OptionsMaximumEquityOptionsactively, @OptionsMaximumEquityINDEXactively,
+                @OptionsMaximumallowedMCX, @OptionsMaxSizeAllEquity, @OptionsMaxSizeAllIndex,
+                @OptionsMaxSizeAllMCX, @OptionsIntradayExposureMarginIndex, @OptionsHoldingExposureMarginIndex,
+                @OptionsIntradayExposureMarginEquity, @OptionsHoldingExposureMarginEquity,
+                @OptionsIntradayExposureMarginMCX, @OptionsHoldingExposureMarginMCX,
+                @OptionsOrdersawayprice, @ShortBrokerageType, @ShortBrokerage, @ShortEquityBrokerageType,
+                @ShortEquityShortsellingbrokerage, @ShortsMCXShortsellingBrokerageType,
+                @ShortMCXShortsellingbrokerage, @ShortMinimumEquityShortselling,
+                @ShortMaximumEquityShortselling, @ShortMinimumMCXShortselling, @ShortMaximumallowedMCX,
+                @ShortMinimumEquityINDEX, @ShortMaximumallowedsingleEquityINDEX, @ShortMaximumscrip,
+                @ShortMaximumallowedscrip, @ShortMaximumactivelyopen, @ShortMaxSizeEquity, @ShortMaxSizeIndex,
+                @ShortMaxSizeMCX, @ShortIntradayIndex, @ShortHoldingIndex, @ShortIntradayMCX,
+                @ShortHoldingMCX, @Notes, @BrokerId
+            );
+
+            SET @RESPONSE = 'RECORD SAVE SUCCESSFULLY';
+        END
+        ELSE IF @OPTION = 'U' -- Assuming 'U' is for Update
+        BEGIN
+            UPDATE [dbo].[TradeAccountDetail]
+            SET
+                [UserId] = @UserId, [FullName] = @FullName, [Mobile] = @Mobile,
+                [OptionalMobile] = @OptionalMobile, [Username] = @Username, [Password] = @Password,
+                [OptionalPassword] = @OptionalPassword, [City] = @City, [OptionalCity] = @OptionalCity,
+                [ConfigRemark] = @ConfigRemark, [ConfigdemoAccount] = @ConfigdemoAccount,
+                [ConfigAllowFreshEntryOrder] = @ConfigAllowFreshEntryOrder,
+                [ConfigAllowOrdersbetweenHighLow] = @ConfigAllowOrdersbetweenHighLow,
+                [ConfigTradeequityasunits] = @ConfigTradeequityasunits,
+                [ConfigAccountStatus] = @ConfigAccountStatus,
+                [ConfigAutoCloseTrades] = @ConfigAutoCloseTrades,
+                [ConfigautoCloseall] = @ConfigautoCloseall,
+                [ConfigNotifyclient] = @ConfigNotifyclient,
+                [ConfigMinTimeprofit] = @ConfigMinTimeprofit, [MCXTrading] = @MCXTrading,
+                [MCXMinimumlotsize] = @MCXMinimumlotsize, [MCXMaximumlotsize] = @MCXMaximumlotsize,
+                [MCXMaximumlotsizeactively] = @MCXMaximumlotsizeactively,
+                [MCXMaxSizeAllCommodity] = @MCXMaxSizeAllCommodity,
+                [MCXBrokerageType] = @MCXBrokerageType, [MCXbrokerage] = @MCXbrokerage,
+                [MCXExposure] = @MCXExposure, [MCXIntradayExposure] = @MCXIntradayExposure,
+                [MCXHoldingExposure] = @MCXHoldingExposure, [MCXGOLDM] = @MCXGOLDM,
+                [MCXSILVERM] = @MCXSILVERM, [MCXBULLDEX] = @MCXBULLDEX, [MCXGOLD] = @MCXGOLD,
+                [MCXSILVER] = @MCXSILVER, [MCXCRUDEOIL] = @MCXCRUDEOIL, [MCXCOPPER] = @MCXCOPPER,
+                [MCXNICKEL] = @MCXNICKEL, [MCXZINC] = @MCXZINC, [MCXLEAD] = @MCXLEAD,
+                [MCXNATURALGAS] = @MCXNATURALGAS, [MCXNATURALGASMINI] = @MCXNATURALGASMINI,
+                [MCXALUMINIUM] = @MCXALUMINIUM, [MCXMENTHAOIL] = @MCXMENTHAOIL, [MCXCOTTON] = @MCXCOTTON,
+                [MCXSILVERMIC] = @MCXSILVERMIC, [MCXZINCMINI] = @MCXZINCMINI, [MCXALUMINI] = @MCXALUMINI,
+                [MCXLEADMINI] = @MCXLEADMINI, [MCXCRUDEOILMINI] = @MCXCRUDEOILMINI,
+                [EquityTrading] = @EquityTrading, [EquityEquitybrokeragez] = @EquityEquitybrokeragez,
+                [EquityMinimumpersingletradeofEquity] = @EquityMinimumpersingletradeofEquity,
+                [EquityMaximumallowedEquity] = @EquityMaximumallowedEquity,
+                [EquityMinimumsingleEquityINDEX] = @EquityMinimumsingleEquityINDEX,
+                [EquityMaximumallowedEquityINDEX] = @EquityMaximumallowedEquityINDEX,
+                [EquityMaximumEquitytobeactivelyopen] = @EquityMaximumEquitytobeactivelyopen,
+                [EquityMaximumEquityINDEX] = @EquityMaximumEquityINDEX,
+                [EquityMaxSizeAllEquity] = @EquityMaxSizeAllEquity,
+                [EquityMaxSizeAllIndex] = @EquityMaxSizeAllIndex,
+                [EquityIntradayExposureMarginEquity] = @EquityIntradayExposureMarginEquity,
+                [EquityHoldingExposureMarginEquity] = @EquityHoldingExposureMarginEquity,
+                [EquityOrderscurrentpriceEquity] = @EquityOrderscurrentpriceEquity,
+                [OptionsIndexOptionsTrading] = @OptionsIndexOptionsTrading,
+                [OptionsEquityTrading] = @OptionsEquityTrading,
+                [OptionsMCXTrading] = @OptionsMCXTrading,
+                [OptionsIndexBrokerageType] = @OptionsIndexBrokerageType,
+                [OptionsIndexbrokerage] = @OptionsIndexbrokerage,
+                [OptionsEquityBrokerageType] = @OptionsEquityBrokerageType,
+                [OptionsEquitybrokerage] = @OptionsEquitybrokerage,
+                [OptionsMCXBrokerageType] = @OptionsMCXBrokerageType,
+                [OptionsMCXbrokerage] = @OptionsMCXbrokerage, [OptionsMinBidPrice] = @OptionsMinBidPrice,
+                [OptionsIndexShortSellingAllowed] = @OptionsIndexShortSellingAllowed,
+                [OptionsEquityShortSellingAllowed] = @OptionsEquityShortSellingAllowed,
+                [OptionsMCXOptionsShortSellingAllowed] = @OptionsMCXOptionsShortSellingAllowed,
+                [OptionsMinimumEquityOptions] = @OptionsMinimumEquityOptions,
+                [OptionsMaximumallowedEquityOptions] = @OptionsMaximumallowedEquityOptions,
+                [OptionsMinimumrequiredEquityINDEX] = @OptionsMinimumrequiredEquityINDEX,
+                [OptionsMaximumallowedEquityINDEX] = @OptionsMaximumallowedEquityINDEX,
+                [OptionsMinimumMCXOptions] = @OptionsMinimumMCXOptions,
+                [OptionsMaximumMCXOptions] = @OptionsMaximumMCXOptions,
+                [OptionsMaximumEquityOptionsactively] = @OptionsMaximumEquityOptionsactively,
+                [OptionsMaximumEquityINDEXactively] = @OptionsMaximumEquityINDEXactively,
+                [OptionsMaximumallowedMCX] = @OptionsMaximumallowedMCX,
+                [OptionsMaxSizeAllEquity] = @OptionsMaxSizeAllEquity,
+                [OptionsMaxSizeAllIndex] = @OptionsMaxSizeAllIndex,
+                [OptionsMaxSizeAllMCX] = @OptionsMaxSizeAllMCX,
+                [OptionsIntradayExposureMarginIndex] = @OptionsIntradayExposureMarginIndex,
+                [OptionsHoldingExposureMarginIndex] = @OptionsHoldingExposureMarginIndex,
+                [OptionsIntradayExposureMarginEquity] = @OptionsIntradayExposureMarginEquity,
+                [OptionsHoldingExposureMarginEquity] = @OptionsHoldingExposureMarginEquity,
+                [OptionsIntradayExposureMarginMCX] = @OptionsIntradayExposureMarginMCX,
+                [OptionsHoldingExposureMarginMCX] = @OptionsHoldingExposureMarginMCX,
+                [OptionsOrdersawayprice] = @OptionsOrdersawayprice,
+                [ShortBrokerageType] = @ShortBrokerageType, [ShortBrokerage] = @ShortBrokerage,
+                [ShortEquityBrokerageType] = @ShortEquityBrokerageType,
+                [ShortEquityShortsellingbrokerage] = @ShortEquityShortsellingbrokerage,
+                [ShortsMCXShortsellingBrokerageType] = @ShortsMCXShortsellingBrokerageType,
+                [ShortMCXShortsellingbrokerage] = @ShortMCXShortsellingbrokerage,
+                [ShortMinimumEquityShortselling] = @ShortMinimumEquityShortselling,
+                [ShortMaximumEquityShortselling] = @ShortMaximumEquityShortselling,
+                [ShortMinimumMCXShortselling] = @ShortMinimumMCXShortselling,
+                [ShortMaximumallowedMCX] = @ShortMaximumallowedMCX,
+                [ShortMinimumEquityINDEX] = @ShortMinimumEquityINDEX,
+                [ShortMaximumallowedsingleEquityINDEX] = @ShortMaximumallowedsingleEquityINDEX,
+                [ShortMaximumscrip] = @ShortMaximumscrip,
+                [ShortMaximumallowedscrip] = @ShortMaximumallowedscrip,
+                [ShortMaximumactivelyopen] = @ShortMaximumactivelyopen,
+                [ShortMaxSizeEquity] = @ShortMaxSizeEquity, [ShortMaxSizeIndex] = @ShortMaxSizeIndex,
+                [ShortMaxSizeMCX] = @ShortMaxSizeMCX, [ShortIntradayIndex] = @ShortIntradayIndex,
+                [ShortHoldingIndex] = @ShortHoldingIndex, [ShortIntradayMCX] = @ShortIntradayMCX,
+                [ShortHoldingMCX] = @ShortHoldingMCX, [Notes] = @Notes, [BrokerId] = @BrokerId,
+                [LastModify] = GETDATE()
+            WHERE UserId = @UserId;
+
+            SET @RESPONSE = 'RECORD UPDATE SUCCESSFULLY';
+        END;
+    END
+    ELSE IF @OPTION = 'S' -- 'S' for Select
+    BEGIN
+        SELECT * FROM TradeAccountDetail WHERE UserId = @UserId;
+        -- SELECT operations typically do not require a transaction,
+        -- but if it's part of a larger unit of work, you might commit here.
+        -- For a simple select, it's often fine without an explicit commit/rollback.
+        -- However, since a transaction was begun, it must be ended.
+        -- If this is the only operation, you might consider moving BEGIN/COMMIT/ROLLBACK
+        -- outside the SELECT block or remove BEGIN TRANSACTION if not needed.
+    END;
+    ELSE -- Handle cases where @TRANSPASS is incorrect or @OPTION is not 'I', 'U', or 'S'
+    BEGIN
+        SET @RESPONSE = 'INVALID TRANSACTION PASSWORD OR OPTION';
+        ROLLBACK TRANSACTION; -- Rollback if transaction password is incorrect
+        RETURN;
+    END;
+
+    -- Centralized COMMIT/ROLLBACK
+    IF @@ERROR <> 0
+    BEGIN
+        ROLLBACK TRANSACTION;
+        SET @RESPONSE = 'AN ERROR OCCURRED. TRANSACTION ROLLED BACK.'; -- Added response for error
+    END
+    ELSE
+    BEGIN
+        -- Only commit if there are pending changes from INSERT/UPDATE
+        -- For a SELECT, if no changes, it's safe to just commit.
+        IF @@TRANCOUNT > 0
+            COMMIT TRANSACTION;
+    END;
+END;
+GO
+
+/****** Object:  StoredProcedure [dbo].[sp_TradeUser]    Script Date: 11-06-2025 23:03:57 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+--sp_helptext sp_TradeUser
+CREATE PROCEDURE [dbo].[sp_TradeUser]      
+    @UserId INT = NULL,      
+    @FullName NVARCHAR(100) = NULL,      
+    @Username NVARCHAR(50) = NULL,      
+    @Password NVARCHAR(100) = NULL,      
+    @Email NVARCHAR(100) = NULL,      
+    @Mobile NVARCHAR(15) = NULL,      
+    @Address NVARCHAR(500) = NULL,      
+    @City NVARCHAR(100) = NULL,      
+    @State NVARCHAR(100) = NULL,      
+    @PinCode NVARCHAR(10) = NULL,      
+    @PAN NVARCHAR(10) = NULL,      
+    @Aadhar NVARCHAR(12) = NULL,      
+    @BankName NVARCHAR(100) = NULL,      
+    @AccountNumber NVARCHAR(50) = NULL,      
+    @IFSCCode NVARCHAR(20) = NULL,      
+    @AccountHolderName NVARCHAR(100) = NULL,      
+    @IsActive BIT = NULL,      
+    @IsDemo BIT = NULL,      
+    @AllowOrdersBeyondHighLow BIT = NULL,      
+    @AllowOrdersBetweenHighLow BIT = NULL,      
+    @TradeEquityAsUnits BIT = NULL,      
+    @AutoSquareOff BIT = NULL,      
+    @AutoSquareOffPercentage DECIMAL(5,2) = NULL,      
+    @NotifyPercentage DECIMAL(5,2) = NULL,      
+    @MCXLotMarginJSON NVARCHAR(MAX) = NULL,      
+    @MCXLotBrokerageJSON NVARCHAR(MAX) = NULL,      
+    @MCXBidGapJSON NVARCHAR(MAX) = NULL,      
+	@TransPass NVARCHAR(100)=NULL,      
+    @NSEFuturesEnabled BIT = NULL,      
+    @NSEOptionsEnabled BIT = NULL,      
+    @MCXOptionsEnabled BIT = NULL,      
+    @NSEFuturesMaxLotPerScrip INT = NULL,      
+    @NSEOptionsMaxLotPerScrip INT = NULL,      
+    @MCXOptionsMaxLotPerScrip INT = NULL,      
+    @NSEFuturesBrokerage DECIMAL(10,4) = NULL,      
+    @NSEOptionsBrokerage DECIMAL(10,4) = NULL,      
+    @MCXOptionsBrokerage DECIMAL(10,4) = NULL,      
+    @NSEFuturesHoldingMargin DECIMAL(10,4) = NULL,      
+    @NSEOptionsHoldingMargin DECIMAL(10,4) = NULL,      
+    @MCXOptionsHoldingMargin DECIMAL(10,4) = NULL,      
+    @NSEFuturesShortSellingAllowed BIT = NULL,      
+    @NSEOptionsShortSellingAllowed BIT = NULL,      
+    @MCXOptionsShortSellingAllowed BIT = NULL,      
+    @AdminId INT = NULL,      
+    @TransactionPassword NVARCHAR(100) = NULL,      
+    @Option CHAR(1)      
+AS      
+BEGIN      
+    SET NOCOUNT ON;      
+      
+    -- Validate Transaction Password for sensitive operations      
+    --IF @Option IN ('I', 'U', 'D', 'T')      
+    --BEGIN      
+    --    IF NOT EXISTS (SELECT 1 FROM AdminLogin WHERE pk_id = @AdminId AND TransPass = @TransactionPassword)      
+    --    BEGIN      
+    --        RAISERROR('Invalid Transaction Password', 16, 1)      
+    --        RETURN      
+    --    END      
+    --END      
+      
+    -- Insert      
+    IF @Option = 'I'      
+    BEGIN      
+        -- Validate required fields      
+        IF @FullName IS NULL OR @Username IS NULL OR @Password IS NULL OR @Email IS NULL OR @Mobile IS NULL      
+        BEGIN      
+            RAISERROR('Required fields cannot be null', 16, 1)      
+            RETURN      
+        END      
+      
+        -- Check for duplicate username      
+        IF EXISTS (SELECT 1 FROM TradeUser WHERE Username = @Username)      
+        BEGIN      
+            RAISERROR('Username already exists', 16, 1)      
+            RETURN      
+        END      
+      
+        -- Validate JSON fields      
+        --IF @MCXLotMarginJSON IS NOT NULL AND ISJSON(@MCXLotMarginJSON) = 0      
+        --BEGIN      
+        --    RAISERROR('Invalid MCX Lot Margin JSON', 16, 1)      
+        --    RETURN      
+        --END      
+      
+        --IF @MCXLotBrokerageJSON IS NOT NULL AND ISJSON(@MCXLotBrokerageJSON) = 0      
+        --BEGIN      
+        --    RAISERROR('Invalid MCX Lot Brokerage JSON', 16, 1)      
+        --    RETURN      
+        --END      
+      
+        --IF @MCXBidGapJSON IS NOT NULL AND ISJSON(@MCXBidGapJSON) = 0      
+        --BEGIN      
+        --    RAISERROR('Invalid MCX Bid Gap JSON', 16, 1)      
+        --    RETURN      
+        --END      
+      
+        INSERT INTO TradeUser (      
+            FullName, Username, Password, Email, Mobile, Address, City, State, PinCode,      
+            PAN, Aadhar, BankName, AccountNumber, IFSCCode, AccountHolderName, IsActive,    
+            IsDemo, AllowOrdersBeyondHighLow, AllowOrdersBetweenHighLow, TradeEquityAsUnits,      
+            AutoSquareOff, AutoSquareOffPercentage, NotifyPercentage,      
+            MCXLotMarginJSON, MCXLotBrokerageJSON, MCXBidGapJSON,      
+            NSEFuturesEnabled, NSEOptionsEnabled, MCXOptionsEnabled,      
+            NSEFuturesMaxLotPerScrip, NSEOptionsMaxLotPerScrip, MCXOptionsMaxLotPerScrip,      
+            NSEFuturesBrokerage, NSEOptionsBrokerage, MCXOptionsBrokerage,      
+            NSEFuturesHoldingMargin, NSEOptionsHoldingMargin, MCXOptionsHoldingMargin,      
+            NSEFuturesShortSellingAllowed, NSEOptionsShortSellingAllowed, MCXOptionsShortSellingAllowed,      
+            CreatedBy, CreatedDate,TransPass      
+        )      
+        VALUES (      
+            @FullName, @Username, @Password, @Email, @Mobile, @Address, @City, @State, @PinCode,      
+            @PAN, @Aadhar, @BankName, @AccountNumber, @IFSCCode, @AccountHolderName, ISNULL(@IsActive, 1),      
+            ISNULL(@IsDemo, 0), ISNULL(@AllowOrdersBeyondHighLow, 1), ISNULL(@AllowOrdersBetweenHighLow, 1), ISNULL(@TradeEquityAsUnits, 1),      
+            ISNULL(@AutoSquareOff, 1), ISNULL(@AutoSquareOffPercentage, 90.00), ISNULL(@NotifyPercentage, 80.00),      
+            @MCXLotMarginJSON, @MCXLotBrokerageJSON, @MCXBidGapJSON,      
+            ISNULL(@NSEFuturesEnabled, 1), ISNULL(@NSEOptionsEnabled, 1), ISNULL(@MCXOptionsEnabled, 1),      
+            ISNULL(@NSEFuturesMaxLotPerScrip, 100), ISNULL(@NSEOptionsMaxLotPerScrip, 50), ISNULL(@MCXOptionsMaxLotPerScrip, 50),      
+            ISNULL(@NSEFuturesBrokerage, 20.0000), ISNULL(@NSEOptionsBrokerage, 20.0000), ISNULL(@MCXOptionsBrokerage, 20.0000),      
+            ISNULL(@NSEFuturesHoldingMargin, 2.0000), ISNULL(@NSEOptionsHoldingMargin, 2.0000), ISNULL(@MCXOptionsHoldingMargin, 2.0000),      
+            ISNULL(@NSEFuturesShortSellingAllowed, 1), ISNULL(@NSEOptionsShortSellingAllowed, 1), ISNULL(@MCXOptionsShortSellingAllowed, 1),      
+            @AdminId, GETDATE(),@TransPass      
+        )      
+      
+        SELECT SCOPE_IDENTITY() AS UserId      
+    END      
+      
+    -- Update      
+    IF @Option = 'U'      
+    BEGIN      
+        -- Validate JSON fields if provided      
+        IF @MCXLotMarginJSON IS NOT NULL AND ISJSON(@MCXLotMarginJSON) = 0      
+        BEGIN      
+            RAISERROR('Invalid MCX Lot Margin JSON', 16, 1)      
+            RETURN      
+        END      
+      
+        IF @MCXLotBrokerageJSON IS NOT NULL AND ISJSON(@MCXLotBrokerageJSON) = 0      
+        BEGIN      
+            RAISERROR('Invalid MCX Lot Brokerage JSON', 16, 1)      
+            RETURN      
+        END      
+      
+        IF @MCXBidGapJSON IS NOT NULL AND ISJSON(@MCXBidGapJSON) = 0      
+        BEGIN      
+            RAISERROR('Invalid MCX Bid Gap JSON', 16, 1)      
+            RETURN      
+        END      
+      
+        UPDATE TradeUser      
+        SET      
+            FullName = ISNULL(@FullName, FullName),      
+            Password = ISNULL(@Password, Password),      
+            Email = ISNULL(@Email, Email),      
+            Mobile = ISNULL(@Mobile, Mobile),      
+            Address = ISNULL(@Address, Address),      
+            City = ISNULL(@City, City),      
+            State = ISNULL(@State, State),      
+            PinCode = ISNULL(@PinCode, PinCode),      
+            PAN = ISNULL(@PAN, PAN),      
+            Aadhar = ISNULL(@Aadhar, Aadhar),      
+            BankName = ISNULL(@BankName, BankName),      
+            AccountNumber = ISNULL(@AccountNumber, AccountNumber),      
+            IFSCCode = ISNULL(@IFSCCode, IFSCCode),      
+            AccountHolderName = ISNULL(@AccountHolderName, AccountHolderName),      
+            IsActive = ISNULL(@IsActive, IsActive),      
+            IsDemo = ISNULL(@IsDemo, IsDemo),      
+            AllowOrdersBeyondHighLow = ISNULL(@AllowOrdersBeyondHighLow, AllowOrdersBeyondHighLow),      
+            AllowOrdersBetweenHighLow = ISNULL(@AllowOrdersBetweenHighLow, AllowOrdersBetweenHighLow),      
+            TradeEquityAsUnits = ISNULL(@TradeEquityAsUnits, TradeEquityAsUnits),      
+            AutoSquareOff = ISNULL(@AutoSquareOff, AutoSquareOff),      
+            AutoSquareOffPercentage = ISNULL(@AutoSquareOffPercentage, AutoSquareOffPercentage),      
+            NotifyPercentage = ISNULL(@NotifyPercentage, NotifyPercentage),      
+            MCXLotMarginJSON = ISNULL(@MCXLotMarginJSON, MCXLotMarginJSON),      
+            MCXLotBrokerageJSON = ISNULL(@MCXLotBrokerageJSON, MCXLotBrokerageJSON),      
+            MCXBidGapJSON = ISNULL(@MCXBidGapJSON, MCXBidGapJSON),      
+            NSEFuturesEnabled = ISNULL(@NSEFuturesEnabled, NSEFuturesEnabled),      
+            NSEOptionsEnabled = ISNULL(@NSEOptionsEnabled, NSEOptionsEnabled),      
+            MCXOptionsEnabled = ISNULL(@MCXOptionsEnabled, MCXOptionsEnabled),      
+            NSEFuturesMaxLotPerScrip = ISNULL(@NSEFuturesMaxLotPerScrip, NSEFuturesMaxLotPerScrip),      
+            NSEOptionsMaxLotPerScrip = ISNULL(@NSEOptionsMaxLotPerScrip, NSEOptionsMaxLotPerScrip),      
+            MCXOptionsMaxLotPerScrip = ISNULL(@MCXOptionsMaxLotPerScrip, MCXOptionsMaxLotPerScrip),      
+            NSEFuturesBrokerage = ISNULL(@NSEFuturesBrokerage, NSEFuturesBrokerage),      
+            NSEOptionsBrokerage = ISNULL(@NSEOptionsBrokerage, NSEOptionsBrokerage),      
+            MCXOptionsBrokerage = ISNULL(@MCXOptionsBrokerage, MCXOptionsBrokerage),      
+            NSEFuturesHoldingMargin = ISNULL(@NSEFuturesHoldingMargin, NSEFuturesHoldingMargin),      
+            NSEOptionsHoldingMargin = ISNULL(@NSEOptionsHoldingMargin, NSEOptionsHoldingMargin),      
+            MCXOptionsHoldingMargin = ISNULL(@MCXOptionsHoldingMargin, MCXOptionsHoldingMargin),      
+            NSEFuturesShortSellingAllowed = ISNULL(@NSEFuturesShortSellingAllowed, NSEFuturesShortSellingAllowed),      
+            NSEOptionsShortSellingAllowed = ISNULL(@NSEOptionsShortSellingAllowed, NSEOptionsShortSellingAllowed),      
+            MCXOptionsShortSellingAllowed = ISNULL(@MCXOptionsShortSellingAllowed, MCXOptionsShortSellingAllowed),      
+            ModifiedBy = @AdminId,      
+            ModifiedDate = GETDATE(),      
+            TransPass=ISNULL(@TransPass,TransPass)      
+      
+        WHERE UserId = @UserId      
+      
+        SELECT @UserId AS UserId      
+    END      
+      
+    -- Delete      
+    IF @Option = 'D'      
+    BEGIN      
+        DELETE FROM TradeUser      
+        WHERE UserId = @UserId      
+      
+        SELECT @UserId AS UserId      
+    END      
+      
+    -- Toggle Status      
+    IF @Option = 'T'      
+    BEGIN      
+        UPDATE TradeUser      
+        SET IsActive = ~IsActive,      
+            ModifiedBy = @AdminId,      
+            ModifiedDate = GETDATE()      
+        WHERE UserId = @UserId      
+      
+        SELECT UserId, IsActive      
+        FROM TradeUser      
+        WHERE UserId = @UserId      
+    END      
+      
+    -- Search      
+    IF @Option = 'S'      
+    BEGIN      
+        SELECT       
+            UserId, FullName, Username, Email, Mobile,'Admin' as adminId     ,'100' as Net,'1201' as Brokerage,'15410' as Gross,'1580' as Ledger,  
+            Address, City, State, PinCode,       
+            PAN, Aadhar, BankName, AccountNumber,       
+            IFSCCode, AccountHolderName, (case when IsActive=1 then 'Active' else 'Inactive' end ) as IsActive1,IsActive,      
+            IsDemo, AllowOrdersBeyondHighLow, AllowOrdersBetweenHighLow,      
+            TradeEquityAsUnits, AutoSquareOff, AutoSquareOffPercentage,      
+            NotifyPercentage, MCXLotMarginJSON, MCXLotBrokerageJSON,      
+            MCXBidGapJSON, NSEFuturesEnabled, NSEOptionsEnabled,      
+            MCXOptionsEnabled, NSEFuturesMaxLotPerScrip, NSEOptionsMaxLotPerScrip,      
+            MCXOptionsMaxLotPerScrip, NSEFuturesBrokerage, NSEOptionsBrokerage,      
+            MCXOptionsBrokerage, NSEFuturesHoldingMargin, NSEOptionsHoldingMargin,      
+            MCXOptionsHoldingMargin, NSEFuturesShortSellingAllowed,      
+            NSEOptionsShortSellingAllowed, MCXOptionsShortSellingAllowed,      
+            CreatedDate, CreatedBy, ModifiedDate, ModifiedBy      
+        FROM TradeUser      
+        WHERE       
+            (@UserId IS NULL OR UserId = @UserId)      
+            AND (@FullName IS NULL OR FullName LIKE '%' + @FullName + '%')      
+            AND (@Username IS NULL OR Username LIKE '%' + @Username + '%')      
+            AND (@IsActive IS NULL OR IsActive = @IsActive)      
+        ORDER BY FullName      
+    END      
+END 
+GO
+
+/****** Object:  StoredProcedure [dbo].[sp_UpdateBroker]    Script Date: 11-06-2025 23:03:58 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+-- Create stored procedure for updating broker
+CREATE PROCEDURE [dbo].[sp_UpdateBroker]
+    @BrokerId INT,
+    @FirstName NVARCHAR(100),
+    @LastName NVARCHAR(100),
+    @Password NVARCHAR(100) = NULL,
+    @TransactionPassword NVARCHAR(100) = NULL,
+    @RefCode NVARCHAR(50),
+    @UserType NVARCHAR(20),
+    @AccountStatus BIT,
+    @AutoSquareOffPercentage DECIMAL(5,2),
+    @NotifyPercentage DECIMAL(5,2),
+    @ProfitShare DECIMAL(5,2),
+    @BrokerageShare DECIMAL(5,2),
+    @ClientsLimit INT,
+    @SubBrokersLimit INT,
+    @SubBrokerTasksAllowed BIT,
+    @PayinAllowed BIT,
+    @PayoutAllowed BIT,
+    @CreateClientAllowed BIT,
+    @ClientTasksAllowed BIT,
+    @TradeActivityAllowed BIT,
+    @NotificationsAllowed BIT,
+    @MCXEnabled BIT,
+    @MCXBrokerageType NVARCHAR(20),
+    @MCXBrokerage DECIMAL(10,2),
+    @MCXExposureType NVARCHAR(20),
+    @MCXIntradayMargin DECIMAL(10,2),
+    @MCXHoldingMargin DECIMAL(10,2),
+    @NSEEnabled BIT,
+    @NSEBrokerage DECIMAL(10,2),
+    @NSEIntradayMargin DECIMAL(10,2),
+    @NSEHoldingMargin DECIMAL(10,2),
+    @AdminId INT,
+    @AdminTransPass NVARCHAR(100)
+AS
+BEGIN
+    -- First validate admin transaction password
+    DECLARE @ValidTransPass NVARCHAR(100)
+    SELECT @ValidTransPass = TransPass 
+    FROM AdminLogin 
+    WHERE pk_id = @AdminId
+
+    IF @ValidTransPass IS NULL OR @ValidTransPass != @AdminTransPass
+    BEGIN
+        RAISERROR('Invalid Transaction Password', 16, 1)
+        RETURN
+    END
+
+    -- If transaction password is valid, proceed with update
+    UPDATE Brokers SET
+        FirstName = @FirstName,
+        LastName = @LastName,
+        Password = CASE WHEN @Password IS NULL THEN Password ELSE @Password END,
+        TransactionPassword = CASE WHEN @TransactionPassword IS NULL THEN TransactionPassword ELSE @TransactionPassword END,
+        RefCode = @RefCode,
+        UserType = @UserType,
+        AccountStatus = @AccountStatus,
+        AutoSquareOffPercentage = @AutoSquareOffPercentage,
+        NotifyPercentage = @NotifyPercentage,
+        ProfitShare = @ProfitShare,
+        BrokerageShare = @BrokerageShare,
+        ClientsLimit = @ClientsLimit,
+        SubBrokersLimit = @SubBrokersLimit,
+        SubBrokerTasksAllowed = @SubBrokerTasksAllowed,
+        PayinAllowed = @PayinAllowed,
+        PayoutAllowed = @PayoutAllowed,
+        CreateClientAllowed = @CreateClientAllowed,
+        ClientTasksAllowed = @ClientTasksAllowed,
+        TradeActivityAllowed = @TradeActivityAllowed,
+        NotificationsAllowed = @NotificationsAllowed,
+        MCXEnabled = @MCXEnabled,
+        MCXBrokerageType = @MCXBrokerageType,
+        MCXBrokerage = @MCXBrokerage,
+        MCXExposureType = @MCXExposureType,
+        MCXIntradayMargin = @MCXIntradayMargin,
+        MCXHoldingMargin = @MCXHoldingMargin,
+        NSEEnabled = @NSEEnabled,
+        NSEBrokerage = @NSEBrokerage,
+        NSEIntradayMargin = @NSEIntradayMargin,
+        NSEHoldingMargin = @NSEHoldingMargin
+    WHERE BrokerId = @BrokerId
+
+    SELECT @BrokerId as BrokerId
+END
+
+GO
+
+/****** Object:  StoredProcedure [dbo].[sp_UpdateBrokerStatus]    Script Date: 11-06-2025 23:03:59 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE PROCEDURE [dbo].[sp_UpdateBrokerStatus]
+    @BrokerId INT,
+    @AdminId INT,
+    @AdminTransPass NVARCHAR(100)
+AS
+BEGIN
+    -- First validate admin transaction password
+    DECLARE @ValidTransPass NVARCHAR(100)
+    SELECT @ValidTransPass = TransPass 
+    FROM AdminLogin 
+    WHERE pk_id = @AdminId
+
+    IF @ValidTransPass IS NULL OR @ValidTransPass != @AdminTransPass
+    BEGIN
+        RAISERROR('Invalid Transaction Password', 16, 1)
+        RETURN
+    END
+
+    -- Toggle the broker's status
+    UPDATE Brokers 
+    SET AccountStatus = ~AccountStatus
+    WHERE BrokerId = @BrokerId
+
+    -- Return the new status
+    SELECT AccountStatus 
+    FROM Brokers 
+    WHERE BrokerId = @BrokerId
+END
+
+GO
+
+/****** Object:  StoredProcedure [dbo].[SP_updatewatchlist]    Script Date: 11-06-2025 23:04:00 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE proc [dbo].[SP_updatewatchlist]
+(
+@Id numeric,
+@UserId numeric
+)
+
+as
+
+begin
+  DECLARE @MarketType as varchar(25)
+    if not exists(select PK_Id from MarketMappingUser where scriptid=@id)
+	begin
+
+	SELECT  @MarketType=MarketType from MarketMaster where scriptid=@id
+	INSERT INTO [dbo].[MarketMappingUser]
+           ([UserId],[ScriptId],[MarketType])
+     VALUES
+           (@UserId,@Id,@MarketType)
+	end
+
+	else
+
+	begin
+	        update [MarketMappingUser] set Isactive=(case when Isactive=1 then 0 else 1 end),lastmodify=getdate() where scriptid=@id
+	end
+
+end
+GO
+
+/****** Object:  StoredProcedure [dbo].[SP_WithdrawalDeposit]    Script Date: 11-06-2025 23:04:01 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE proc [dbo].[SP_WithdrawalDeposit]
+(
+@Id numeric(10),
+@Type nvarchar(50),
+@Response nvarchar(100) out
+)
+AS
+
+BEGIN
+DECLARE @UserId NUMERIC
+DECLARE @Amount NUMERIC(18,2)
+DECLARE @addremark VARCHAR(100)
+  BEGIN  TRANSACTION
+    IF(@Type='APPROOVED')
+	BEGIN
+	       UPDATE transdetail SET AdminStatus='APPROOVED' WHERE TransId=@Id
+		   UPDATE WithdrawlMaster SET Status='APPROOVED' WHERE PK_ID=@Id
+
+
+		   SET @Response='Withdrawl approoved successfully'	
+	END
+
+	ELSE IF(@Type='REJECT')
+	BEGIN
+
+	SELECT  @UserId=UserId ,@Amount=Amount  FROM WithdrawlMaster WHERE PK_ID=@Id
+
+
+	SET @addremark='REJECT BY ADMIN'
+	          INSERT INTO TRANSDETAIL(MemberId,TransType,TransPage,Type,TransDate,Amount,AmountS,
+            Remark,LoginId,Pass,Expass,CounterId,eWalletBit,AddRemark,TransId,RefTransId)
+         VALUES(@UserId,'Main Wallet','Withdrawal Reject','+',getdate(),@Amount,@Amount,
+			'Wallet withdrawal request',@UserId,'','',0,1,@addremark,0,0) 
+
+
+	      UPDATE transdetail SET AdminStatus='REJECT' WHERE TransId=@Id
+		   UPDATE WithdrawlMaster SET Status='REJECT' WHERE PK_ID=@Id
+		   SET @Response='Withdrawl reject successfully'	
+	END
+
+
+
+
+  IF @@ERROR <> 0
+  BEGIN 
+     ROLLBACK
+	 SET @Response='error found'	
+  END
+  ELSE
+  BEGIN
+    COMMIT
+  END
+
+END
+GO
+
+/****** Object:  StoredProcedure [dbo].[SP_WithdrawlMaster]    Script Date: 11-06-2025 23:04:02 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+CREATE PROC [dbo].[SP_WithdrawlMaster]
+(
+@PK_Id numeric =0,
+@UserId numeric=0,
+@PaymentMethod nvarchar(50)=NULL,
+@Amount numeric(18,2)=0,
+@Mobile varchar(15)=NULL,
+@AccountHolder nvarchar(50)=NULL,
+@AccountNo nvarchar(50)=NULL,
+@IFSC nvarchar(25)=NULL,
+@OPTION CHAR(1),
+@RESPONSE NVARCHAR(100) OUT
+)
+
+AS
+
+BEGIN
+declare @addremark varchar(100)
+     BEGIN   TRANSACTION  
+	 IF(@OPTION='I')
+	 BEGIN
+	 INSERT INTO [dbo].[WithdrawlMaster]
+           ([UserId],[PaymentMethod],[Amount],[Mobile],[AccountHolder],[AccountNo],[IFSC])
+     VALUES
+           (@UserId,@PaymentMethod,@Amount,@Mobile,@AccountHolder,@AccountNo,@IFSC)
+		   DECLARE @_IDTY NUMERIC
+		   set @addremark=''
+		   SET @_IDTY  = scope_identity()
+
+		   set @addremark = 	'Amount debited for Withdrawal Request ID' + cast( @_IDTY as varchar)
+
+		   INSERT INTO TRANSDETAIL(MemberId,TransType,TransPage,Type,TransDate,Amount,AmountS,
+            Remark,LoginId,Pass,Expass,CounterId,eWalletBit,AddRemark,TransId,RefTransId)
+         VALUES(@UserId,'Main Wallet','Withdrawal Request','-',getdate(),@Amount,-1 * @Amount,
+			'Wallet withdrawal request',@UserId,'','',@_IDTY,1,@addremark,@_IDTY,@_IDTY)  
+     SET @RESPONSE='Your request has been is submitted'
+	 END
+
+	 IF @@ERROR <> 0
+	 BEGIN
+	  ROLLBACK
+	 END
+	 ELSE
+	 BEGIN
+	   COMMIT
+	 END
+
+
+END
+GO
+
+/****** Object:  StoredProcedure [dbo].[SPupdatetradeaccount]    Script Date: 11-06-2025 23:04:02 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE proc [dbo].[SPupdatetradeaccount]  
+(  
+@UserId numeric(20),  
+@AdminId  numeric(20),  
+@ComexTradingEnabled bit=null,	
+@ForexTradingEnabled bit=null,
+@CryptoTradingEnabled bit=null,
+@ComexbrokerageType	varchar(50)=null,
+@CryptobrokerageType	 varchar(50)=null,
+@ForexbrokerageType	 varchar(50)=null,
+@Comexbrokerage	numeric(18,4)=null,
+@MinimumlotssingleComex	 numeric(18,4)=null,
+@MaximumlotsComex	 numeric(18,4)=null,
+@Maximumlotsallowed	 numeric(18,4)=null,
+@MaxSizeAllComex	 numeric(18,4)=null,
+@IntradayExposureMarginComex	 numeric(18,4)=null,
+@HoldingExposureMarginComex	 numeric(18,4)=null,
+@OrderspriceComex	numeric(18,4)=null,
+@Forexbrokerage	 numeric(18,4)=null,
+@MinimumlotssingleForex	 numeric(18,4)=null,
+@MaximumlotsForex	 numeric(18,4)=null,
+@MaximumlotsallowedForex	 numeric(18,4)=null,
+@MaxSizeAllForex	 numeric(18,4)=null,
+@IntradayExposureMarginForex	 numeric(18,4)=null,
+@HoldingExposureMarginForex	 numeric(18,4)=null,
+@OrderspriceForex	 numeric(18,4)=null,
+@Cryptobrokerage	 numeric(18,4)=null,
+@MinimumlotssingleCrypto	 numeric(18,4)=null,
+@MaximumlotsCrypto	numeric(18,4)=null,
+@MaximumlotsallowedCrypto	numeric(18,4)=null,
+@MaxSizeAllCrypto	numeric(18,4)=null,
+@IntradayExposureMarginCrypto numeric(18,4)	=null,
+@HoldingExposureMarginCrypto	numeric(18,4)=null,
+@OrderspriceCrypto  numeric(18,4)=null,
+@TransPass nvarchar(50) =null
+)  
+AS  
+  
+  
+  
+BEGIN  
+  BEGIN TRANSACTION  
+ UPDATE TradeUser SET  ModifiedBy=@AdminId,	ModifiedDate	=getdate(),
+  ComexTradingEnabled=@ComexTradingEnabled,	ForexTradingEnabled=@ForexTradingEnabled,	ComexbrokerageType	=@ComexbrokerageType,Comexbrokerage=@Comexbrokerage	,MinimumlotssingleComex=@MinimumlotssingleComex	,MaximumlotsComex=@MaximumlotsComex
+  ,Maximumlotsallowed=@Maximumlotsallowed,	MaxSizeAllComex=@MaxSizeAllComex,	IntradayExposureMarginComex=@IntradayExposureMarginComex,	HoldingExposureMarginComex=@HoldingExposureMarginComex	
+  ,OrderspriceComex=@OrderspriceComex,	ForexbrokerageType=@ForexbrokerageType,	Forexbrokerage=@Forexbrokerage,	MinimumlotssingleForex=@MinimumlotssingleForex,	MaximumlotsForex=@MaximumlotsForex,	MaximumlotsallowedForex=@MaximumlotsallowedForex,
+  MaxSizeAllForex=@MaxSizeAllForex,	IntradayExposureMarginForex=@IntradayExposureMarginForex,	HoldingExposureMarginForex=@HoldingExposureMarginForex,	OrderspriceForex=@OrderspriceForex,	
+  CryptoTradingEnabled=@CryptoTradingEnabled,CryptobrokerageType=@CryptobrokerageType,	Cryptobrokerage=@Cryptobrokerage,	MinimumlotssingleCrypto=@MinimumlotssingleCrypto,	MaximumlotsCrypto=@MaximumlotsCrypto,	MaximumlotsallowedCrypto=@MaximumlotsallowedCrypto
+  ,MaxSizeAllCrypto=@MaxSizeAllCrypto,	IntradayExposureMarginCrypto=@IntradayExposureMarginCrypto,	HoldingExposureMarginCrypto=@HoldingExposureMarginCrypto,	OrderspriceCrypto=@OrderspriceCrypto ,TransPass=@TransPass where UserId=@UserId
+
+  --      UPDATE TradeUser SET   NSEFuturesEnabled=@NSEFuturesEnabled, NSEOptionsEnabled=@NSEOptionsEnabled, MCXOptionsEnabled=@MCXOptionsEnabled, NSEFuturesMaxLotPerScrip=@NSEFuturesMaxLotPerScrip,  
+  --NSEOptionsMaxLotPerScrip=@NSEOptionsMaxLotPerScrip, MCXOptionsMaxLotPerScrip=@MCXOptionsMaxLotPerScrip, NSEFuturesBrokerage=@NSEFuturesBrokerage, NSEOptionsBrokerage=@NSEOptionsBrokerage, MCXOptionsBrokerage=@MCXOptionsBrokerage,  
+  --NSEFuturesHoldingMargin=@NSEFuturesHoldingMargin, NSEOptionsHoldingMargin=@NSEOptionsHoldingMargin, MCXOptionsHoldingMargin=@MCXOptionsHoldingMargin, NSEFuturesShortSellingAllowed=@NSEFuturesShortSellingAllowed,  
+  --NSEOptionsShortSellingAllowed=@NSEOptionsShortSellingAllowed, MCXOptionsShortSellingAllowed=@MCXOptionsShortSellingAllowed,ModifiedBy=@AdminId, ModifiedDate=getdate(), TransPass=@TransPass where UserId=@UserId  
+  
+  
+  IF @@ERROR  <> 0  
+  BEGIN  
+       ROLLBACK  
+  END  
+  
+  ELSE  
+  
+  BEGIN  
+   COMMIT  
+  END  
+    
+END  
+GO
+
+/****** Object:  StoredProcedure [dbo].[WalletUpdate]    Script Date: 11-06-2025 23:04:03 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+--select * from transdetail
+CREATE proc [dbo].[WalletUpdate]
+(
+@MemberId numeric(18)=0,
+@Amount numeric(18,2)=0,
+@Type varchar(15)=null,
+@Remark nvarchar(500)=null
+)
+as
+begin
+if(@Type='Credit')
+begin
+  insert into transdetail(MemberId	,TransType	,TransPage	,Type	,TransDate	,Amount	,AmountS	,Remark	,LoginId	,Pass	,Expass	,BitIsActive	,CounterId,	eWalletBit)
+
+	values(@MemberId,	'USD Wallet'	,'Credit'	,'+'	,getdate()	,@Amount	,@Amount	,@Remark,1		,	1	,1	,1,	0,1)
+end
+else
+
+begin
+  insert into transdetail(MemberId	,TransType	,TransPage	,Type	,TransDate	,Amount	,AmountS	,Remark	,LoginId	,Pass	,Expass	,BitIsActive	,CounterId,	eWalletBit)
+
+	values(@MemberId,	'USD Wallet'	,'Debit'	,'-'	,getdate()	,@Amount	,@Amount * -1	,@Remark,1		,	1	,1	,1,	0,1)
+end
+ 
+end
+GO
+
+
