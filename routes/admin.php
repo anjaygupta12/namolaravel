@@ -46,8 +46,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
         Route::get('change-transaction-password', [AdminController::class, 'changeTransactionPassword'])->name('change-transaction-password');
         Route::post('profile/update-password', [AdminController::class, 'updatePassword'])->name('profile-update-password');
         Route::post('profile/update-transaction-password', [AdminController::class, 'updateTransactionPassword'])
-            ->name('profile-update-transaction-password')
-            ->middleware('admin.transaction.auth');
+            ->name('update-transaction-password');
             
         // User Management
         Route::get('users', [AdminController::class, 'users'])->name('users');
