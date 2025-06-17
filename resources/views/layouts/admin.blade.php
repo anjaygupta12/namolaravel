@@ -487,8 +487,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- Material Dashboard Core JS -->
-    <script src="{{ asset('admin-assets/js/material-dashboard.js') }}"></script>
-
+    <script src="{{ asset('admin-assets/js/material-dashboard.min.js') }}"></script>
+ 
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.5.1/dist/chart.min.js"></script>
 

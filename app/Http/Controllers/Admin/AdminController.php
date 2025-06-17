@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use App\Models\DepositeMaster;
 use App\Models\Transdetail;
 use App\Models\Fund;
@@ -282,7 +283,7 @@ class AdminController extends Controller
             $notification->user_ids = null;
         } else {
             $notification->for_all_users = 0;
-            $notification->user_ids = json_encode($request->user_ids);
+            $notification->user_ids = $request->user_ids;
         }
         
         $notification->created_by = Session::get('admin_id');
@@ -365,8 +366,8 @@ class AdminController extends Controller
         
         // Try to get bank details from bank_details table
         $bankDetails = null;
-        if (\Schema::hasTable('bank_details')) {
-            $bankDetails = \DB::table('bank_details')
+        if (Schema::hasTable('bank_details')) {
+            $bankDetails = DB::table('bank_details')
                 ->where('admin_id', $adminId)
                 ->first();
         } else {
@@ -431,9 +432,9 @@ class AdminController extends Controller
         }
         
         // Check if bank_details table exists
-        if (\Schema::hasTable('bank_details')) {
+        if (Schema::hasTable('bank_details')) {
             // Check if bank details already exist
-            $bankDetails = \DB::table('bank_details')
+            $bankDetails = DB::table('bank_details')
                 ->where('admin_id', $adminId)
                 ->first();
             
@@ -457,7 +458,7 @@ class AdminController extends Controller
             
             if ($bankDetails) {
                 // Update existing record
-                \DB::table('bank_details')
+                DB::table('bank_details')
                     ->where('admin_id', $adminId)
                     ->update($data);
                     
@@ -465,7 +466,7 @@ class AdminController extends Controller
             } else {
                 // Insert new record
                 $data['created_at'] = now();
-                \DB::table('bank_details')->insert($data);
+                DB::table('bank_details')->insert($data);
                 
                 $message = 'Bank details added successfully';
             }
@@ -514,8 +515,8 @@ class AdminController extends Controller
         
         // Try to get bank details from bank_details table
         $bankDetails = null;
-        if (\Schema::hasTable('bank_details')) {
-            $bankDetails = \DB::table('bank_details')
+        if (Schema::hasTable('bank_details')) {
+            $bankDetails = DB::table('bank_details')
                 ->where('admin_id', $adminId)
                 ->first();
         } else {
@@ -700,61 +701,167 @@ class AdminController extends Controller
      */
     public function storeUser(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'FullName' => 'required|string|max:100',
-            'Username' => 'required|string|max:50|unique:tradeuser,Username',
-            'Password' => 'required|string|min:6',
-            'UserTransactionPassword' => 'required|string|min:6',
-            'Address' => 'nullable|string|max:500',
-            'City' => 'nullable|string|max:100',
-            'State' => 'nullable|string|max:100',
-            'PinCode' => 'nullable|string|max:10',
-            'BankName' => 'nullable|string|max:100',
-            'AccountNumber' => 'nullable|string|max:50',
-            'IFSCCode' => 'nullable|string|max:20',
-            'AccountHolderName' => 'nullable|string|max:100',
-            'IsDemo' => 'boolean',
-            'AllowOrdersBeyondHighLow' => 'boolean',
-            'AllowOrdersBetweenHighLow' => 'boolean',
-            'TradeEquityAsUnits' => 'boolean',
-            'AutoSquareOff' => 'boolean',
-            'AutoSquareOffPercentage' => 'nullable|numeric|min:0|max:100',
-            'NotifyPercentage' => 'nullable|numeric|min:0|max:100',
-        ]);
-
-        if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
-        }
-
-        DB::beginTransaction();
-
         try {
-            // Create the trade user
+            // Validate all form fields
+            $validator = Validator::make($request->all(), [
+                // Personal Details
+                'full_name' => 'required|string|max:100',
+                'username' => 'required|string|max:50|unique:tradeuser,Username',
+                'password' => 'required|string|min:6',
+                'email' => 'required|email|max:100|unique:tradeuser,Email',
+                'mobile' => 'required|string|max:15|unique:tradeuser,Mobile',
+                'address' => 'nullable|string|max:500',
+                'city' => 'nullable|string|max:100',
+                'state' => 'nullable|string|max:100',
+                'pin_code' => 'nullable|string|max:10',
+                'pan' => 'nullable|string|max:10',
+                'aadhar' => 'nullable|string|max:12',
+                
+                // Bank Details
+                'bank_name' => 'nullable|string|max:100',
+                'account_number' => 'nullable|string|max:50',
+                'ifsc_code' => 'nullable|string|max:20',
+                'account_holder_name' => 'nullable|string|max:100',
+                
+                // Trading Configuration
+                'is_demo' => 'nullable|boolean',
+                'allow_orders_beyond_high_low' => 'nullable|boolean',
+                'allow_orders_between_high_low' => 'nullable|boolean',
+                'trade_equity_as_units' => 'nullable|boolean',
+                'auto_square_off' => 'nullable|boolean',
+                'auto_square_off_percentage' => 'nullable|numeric|min:0|max:100',
+                'notify_percentage' => 'nullable|numeric|min:0|max:100',
+                
+                // MCX Configuration
+                'mcx_lot_margin_json' => 'nullable|string',
+                'mcx_lot_brokerage_json' => 'nullable|string',
+                'mcx_bid_gap_json' => 'nullable|string',
+                
+                // NSE Configuration
+                'nse_futures_enabled' => 'nullable|boolean',
+                'nse_options_enabled' => 'nullable|boolean',
+                'mcx_options_enabled' => 'nullable|boolean',
+                'nse_futures_max_lot_per_scrip' => 'nullable|integer|min:1',
+                'nse_options_max_lot_per_scrip' => 'nullable|integer|min:1',
+                'mcx_options_max_lot_per_scrip' => 'nullable|integer|min:1',
+                
+                // Brokerage Configuration
+                'nse_futures_brokerage' => 'nullable|numeric|min:0',
+                'nse_options_brokerage' => 'nullable|numeric|min:0',
+                'mcx_options_brokerage' => 'nullable|numeric|min:0',
+                
+                // Margin Configuration
+                'nse_futures_holding_margin' => 'nullable|numeric|min:0',
+                'nse_options_holding_margin' => 'nullable|numeric|min:0',
+                'mcx_options_holding_margin' => 'nullable|numeric|min:0',
+                
+                // Short Selling Configuration
+                'nse_futures_short_selling_allowed' => 'nullable|boolean',
+                'nse_options_short_selling_allowed' => 'nullable|boolean',
+                'mcx_options_short_selling_allowed' => 'nullable|boolean',
+                
+                // Security
+                'user_transaction_password' => 'required|string|min:6',
+                'admin_transaction_password' => 'required|string',
+            ]);
+
+            if ($validator->fails()) {
+                return redirect()->back()
+                    ->withErrors($validator)
+                    ->withInput();
+            }
+
+            // // Validate admin transaction password
+            // $admin = AdminLogin::where('PK_ID', Session::get('admin_id'))->first();
+            // if (!$admin || !Hash::check($request->admin_transaction_password, $admin->TransPass)) {
+            //     return redirect()->back()
+            //         ->with('error', 'Invalid Transaction Password')
+            //         ->withInput();
+            // }
+
+            // Validate JSON fields
+            $jsonFields = ['mcx_lot_margin_json', 'mcx_lot_brokerage_json', 'mcx_bid_gap_json'];
+            foreach ($jsonFields as $field) {
+                if ($request->filled($field)) {
+                    $jsonValue = $request->$field;
+                    if ($jsonValue !== '{}' && !json_decode($jsonValue)) {
+                        return redirect()->back()
+                            ->with('error', 'Invalid MCX configuration JSON format. Please check the format and try again.')
+                            ->withInput();
+                    }
+                }
+            }
+
+            DB::beginTransaction();
+
+            // Create the trade user using stored procedure approach or direct model save
             $user = new TradeUser();
-            $user->FullName = $request->FullName;
-            $user->Username = $request->Username;
-            $user->Password = Hash::make($request->Password);
-            $user->TransPass = Hash::make($request->UserTransactionPassword);
-            $user->Address = $request->Address;
-            $user->City = $request->City;
-            $user->State = $request->State;
-            $user->PinCode = $request->PinCode;
-            $user->BankName = $request->BankName;
-            $user->AccountNumber = $request->AccountNumber;
-            $user->IFSCCode = $request->IFSCCode;
-            $user->AccountHolderName = $request->AccountHolderName;
+            
+            // Personal Details
+            $user->FullName = trim($request->full_name);
+            $user->Username = trim($request->username);
+            $user->Password = Hash::make($request->password);
+            $user->Email = trim($request->email);
+            $user->Mobile = trim($request->mobile);
+            $user->Address = trim($request->address);
+            $user->City = trim($request->city);
+            $user->State = trim($request->state);
+            $user->PinCode = trim($request->pin_code);
+            $user->PAN = trim($request->pan);
+            $user->Aadhar = trim($request->aadhar);
+            
+            // Bank Details
+            $user->BankName = trim($request->bank_name);
+            $user->AccountNumber = trim($request->account_number);
+            $user->IFSCCode = trim($request->ifsc_code);
+            $user->AccountHolderName = trim($request->account_holder_name);
+            
+            // Trading Configuration
+            $user->IsDemo = $request->has('is_demo') ? 1 : 0;
+            $user->AllowOrdersBeyondHighLow = $request->has('allow_orders_beyond_high_low') ? 1 : 0;
+            $user->AllowOrdersBetweenHighLow = $request->has('allow_orders_between_high_low') ? 1 : 0;
+            $user->TradeEquityAsUnits = $request->has('trade_equity_as_units') ? 1 : 0;
+            $user->AutoSquareOff = $request->has('auto_square_off') ? 1 : 0;
+            $user->AutoSquareOffPercentage = $request->auto_square_off_percentage ?? 90.00;
+            $user->NotifyPercentage = $request->notify_percentage ?? 80.00;
+            
+            // MCX Configuration
+            $user->MCXLotMarginJSON = trim($request->mcx_lot_margin_json) ?: '{}';
+            $user->MCXLotBrokerageJSON = trim($request->mcx_lot_brokerage_json) ?: '{}';
+            $user->MCXBidGapJSON = trim($request->mcx_bid_gap_json) ?: '{}';
+            
+            // NSE Configuration
+            $user->NSEFuturesEnabled = $request->has('nse_futures_enabled') ? 1 : 0;
+            $user->NSEOptionsEnabled = $request->has('nse_options_enabled') ? 1 : 0;
+            $user->MCXOptionsEnabled = $request->has('mcx_options_enabled') ? 1 : 0;
+            $user->NSEFuturesMaxLotPerScrip = $request->nse_futures_max_lot_per_scrip ?? 100;
+            $user->NSEOptionsMaxLotPerScrip = $request->nse_options_max_lot_per_scrip ?? 50;
+            $user->MCXOptionsMaxLotPerScrip = $request->mcx_options_max_lot_per_scrip ?? 50;
+            
+            // Brokerage Configuration
+            $user->NSEFuturesBrokerage = $request->nse_futures_brokerage ?? 20.0000;
+            $user->NSEOptionsBrokerage = $request->nse_options_brokerage ?? 20.0000;
+            $user->MCXOptionsBrokerage = $request->mcx_options_brokerage ?? 20.0000;
+            
+            // Margin Configuration
+            $user->NSEFuturesHoldingMargin = $request->nse_futures_holding_margin ?? 2.0000;
+            $user->NSEOptionsHoldingMargin = $request->nse_options_holding_margin ?? 2.0000;
+            $user->MCXOptionsHoldingMargin = $request->mcx_options_holding_margin ?? 2.0000;
+            
+            // Short Selling Configuration
+            $user->NSEFuturesShortSellingAllowed = $request->has('nse_futures_short_selling_allowed') ? 1 : 0;
+            $user->NSEOptionsShortSellingAllowed = $request->has('nse_options_short_selling_allowed') ? 1 : 0;
+            $user->MCXOptionsShortSellingAllowed = $request->has('mcx_options_short_selling_allowed') ? 1 : 0;
+            
+            // System fields
             $user->IsActive = 1;
-            $user->IsDemo = $request->has('IsDemo') ? 1 : 0;
-            $user->AllowOrdersBeyondHighLow = $request->has('AllowOrdersBeyondHighLow') ? 1 : 0;
-            $user->AllowOrdersBetweenHighLow = $request->has('AllowOrdersBetweenHighLow') ? 1 : 0;
-            $user->TradeEquityAsUnits = $request->has('TradeEquityAsUnits') ? 1 : 0;
-            $user->AutoSquareOff = $request->has('AutoSquareOff') ? 1 : 0;
-            $user->AutoSquareOffPercentage = $request->AutoSquareOffPercentage ?? 90.00;
-            $user->NotifyPercentage = $request->NotifyPercentage ?? 80.00;
+            $user->TransPass = Hash::make($request->user_transaction_password);
             $user->RefferalCode = Str::random(8);
+            $user->CreatedBy = Session::get('admin_id');
             $user->CreatedDate = now();
+            $user->ModifiedBy = Session::get('admin_id');
+            $user->ModifiedDate = now();
+            
             $user->save();
 
             // Create initial fund record
@@ -767,16 +874,55 @@ class AdminController extends Controller
                 'margin_level' => 0
             ]);
 
+            // Log admin activity
+            if (Session::has('admin_id')) {
+                AdminLog::create([
+                    'admin_id' => Session::get('admin_id'),
+                    'activity' => 'Created new user: ' . $user->FullName . ' (Username: ' . $user->Username . ')',
+                    'ip_address' => $request->ip()
+                ]);
+            }
+
             DB::commit();
 
             return redirect()->route('admin.users')
-                ->with('success', 'User created successfully');
+                ->with('success', 'User added successfully');
 
+        } catch (\Illuminate\Database\QueryException $e) {
+            DB::rollback();
+            
+            if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
+                if (strpos($e->getMessage(), 'Username') !== false) {
+                    return redirect()->back()
+                        ->with('error', 'Username already exists. Please choose a different username.')
+                        ->withInput();
+                } elseif (strpos($e->getMessage(), 'Email') !== false) {
+                    return redirect()->back()
+                        ->with('error', 'Email already exists. Please choose a different email.')
+                        ->withInput();
+                } elseif (strpos($e->getMessage(), 'Mobile') !== false) {
+                    return redirect()->back()
+                        ->with('error', 'Mobile number already exists. Please choose a different mobile number.')
+                        ->withInput();
+                }
+            }
+            
+            Log::error('Database error creating user: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Error saving user: ' . $e->getMessage())
+                ->withInput();
+                
+        } catch (\InvalidArgumentException $e) {
+            DB::rollback();
+            return redirect()->back()
+                ->with('error', 'Please enter valid numeric values for brokerage, margin, and lot size fields.')
+                ->withInput();
+                
         } catch (\Exception $e) {
             DB::rollback();
             Log::error('Error creating user: ' . $e->getMessage());
             return redirect()->back()
-                ->with('error', $e->getMessage() .'Error creating user. Please try again.')
+                ->with('error', 'Error saving user: ' . $e->getMessage())
                 ->withInput();
         }
     }
