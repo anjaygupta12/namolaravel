@@ -15,9 +15,12 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Carbon;
-use DB;
+use Illuminate\Support\Facades\DB;
 use App\Models\DepositeMaster;
 use App\Models\Transdetail;
+use App\Models\Fund;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 class AdminController extends Controller
 {    
@@ -351,7 +354,7 @@ class AdminController extends Controller
     /**
      * Show bank details page
      */
-public function bankDetails()
+    public function bankDetails()
     {
         // Check if admin is logged in
         if (!Session::has('admin_id')) {
@@ -499,10 +502,10 @@ public function bankDetails()
             ->with('success', $message);
     }
     
-        public function bankDetailsEdit($id)
+    public function bankDetailsEdit($id)
     {
         // Get bank details from settings
-             // Check if admin is logged in
+        // Check if admin is logged in
         if (!Session::has('admin_id')) {
             return redirect('admin/login');
         }
@@ -662,7 +665,15 @@ public function bankDetails()
         return view('admin.users', compact('users'));
     }
     public function createUsers(){
-         return view('create-user');
+        if (Session::has('admin_id')) {
+            AdminLog::create([
+                'admin_id' => Session::get('admin_id'),
+                'activity' => 'Accessed create user form',
+                'ip_address' => request()->ip()
+            ]);
+        }
+        
+        return view('admin.users-create');
     }
     
     /**
@@ -682,41 +693,92 @@ public function bankDetails()
     }
     
     /**
-     * Store a new user
+     * Store a newly created user in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
      */
     public function storeUser(Request $request)
     {
-        // Validate the request
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:trade_users,email',
-            'mobile' => 'nullable|string|max:15',
-            'password' => 'required|string|min:6',
-            'address' => 'nullable|string',
-            'city' => 'nullable|string|max:100',
-            'state' => 'nullable|string|max:100',
-            'pin_code' => 'nullable|string|max:10',
-            'pan' => 'nullable|string|max:10',
-            'aadhar' => 'nullable|string|max:12',
-            'is_active' => 'boolean',
-            'is_demo' => 'boolean',
+        $validator = Validator::make($request->all(), [
+            'FullName' => 'required|string|max:100',
+            'Username' => 'required|string|max:50|unique:tradeuser,Username',
+            'Password' => 'required|string|min:6',
+            'UserTransactionPassword' => 'required|string|min:6',
+            'Address' => 'nullable|string|max:500',
+            'City' => 'nullable|string|max:100',
+            'State' => 'nullable|string|max:100',
+            'PinCode' => 'nullable|string|max:10',
+            'BankName' => 'nullable|string|max:100',
+            'AccountNumber' => 'nullable|string|max:50',
+            'IFSCCode' => 'nullable|string|max:20',
+            'AccountHolderName' => 'nullable|string|max:100',
+            'IsDemo' => 'boolean',
+            'AllowOrdersBeyondHighLow' => 'boolean',
+            'AllowOrdersBetweenHighLow' => 'boolean',
+            'TradeEquityAsUnits' => 'boolean',
+            'AutoSquareOff' => 'boolean',
+            'AutoSquareOffPercentage' => 'nullable|numeric|min:0|max:100',
+            'NotifyPercentage' => 'nullable|numeric|min:0|max:100',
         ]);
-        
-        // Hash the password
-        $validated['password'] = bcrypt($validated['password']);
-        
-        // Create the user
-        $user = TradeUser::create($validated);
-        
-        if (Session::has('admin_id')) {
-            AdminLog::create([
-                'admin_id' => Session::get('admin_id'),
-                'activity' => 'Created new user: ' . $user->name,
-                'ip_address' => request()->ip()
-            ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
         }
-        
-        return redirect()->route('admin.users')->with('success', 'User created successfully.');
+
+        DB::beginTransaction();
+
+        try {
+            // Create the trade user
+            $user = new TradeUser();
+            $user->FullName = $request->FullName;
+            $user->Username = $request->Username;
+            $user->Password = Hash::make($request->Password);
+            $user->TransPass = Hash::make($request->UserTransactionPassword);
+            $user->Address = $request->Address;
+            $user->City = $request->City;
+            $user->State = $request->State;
+            $user->PinCode = $request->PinCode;
+            $user->BankName = $request->BankName;
+            $user->AccountNumber = $request->AccountNumber;
+            $user->IFSCCode = $request->IFSCCode;
+            $user->AccountHolderName = $request->AccountHolderName;
+            $user->IsActive = 1;
+            $user->IsDemo = $request->has('IsDemo') ? 1 : 0;
+            $user->AllowOrdersBeyondHighLow = $request->has('AllowOrdersBeyondHighLow') ? 1 : 0;
+            $user->AllowOrdersBetweenHighLow = $request->has('AllowOrdersBetweenHighLow') ? 1 : 0;
+            $user->TradeEquityAsUnits = $request->has('TradeEquityAsUnits') ? 1 : 0;
+            $user->AutoSquareOff = $request->has('AutoSquareOff') ? 1 : 0;
+            $user->AutoSquareOffPercentage = $request->AutoSquareOffPercentage ?? 90.00;
+            $user->NotifyPercentage = $request->NotifyPercentage ?? 80.00;
+            $user->RefferalCode = Str::random(8);
+            $user->CreatedDate = now();
+            $user->save();
+
+            // Create initial fund record
+            Fund::create([
+                'user_id' => $user->UserId,
+                'balance' => 0,
+                'equity' => 0,
+                'margin' => 0,
+                'free_margin' => 0,
+                'margin_level' => 0
+            ]);
+
+            DB::commit();
+
+            return redirect()->route('admin.users')
+                ->with('success', 'User created successfully');
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error('Error creating user: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', $e->getMessage() .'Error creating user. Please try again.')
+                ->withInput();
+        }
     }
     
     /**
@@ -820,9 +882,10 @@ public function bankDetails()
     /**
      * Toggle user status (active/inactive)
      */
-    public function toggleUserStatus($id)
+    public function toggleUserStatus($UserId)
     {
-        $user = TradeUser::findOrFail($id);
+      
+        $user = TradeUser::where('UserId', $UserId)->firstOrFail();
         $user->is_active = !$user->is_active;
         $user->save();
         
@@ -1089,65 +1152,65 @@ public function bankDetails()
         return view('admin.deposit-requests', compact('data'));
     }
     
-public function handleDeposit(Request $request)
-{
+    public function handleDeposit(Request $request)
+    {
 
-    $request->validate([
-        'type' => 'required|in:APPROVED,REJECTED',
-    ]);
+        $request->validate([
+            'type' => 'required|in:APPROVED,REJECTED',
+        ]);
 
-    DB::beginTransaction();
-    try {
-        $deposit = DepositeMaster::lockForUpdate()->findOrFail($request->ID);
-        $type    = $request->input('type');
+        DB::beginTransaction();
+        try {
+            $deposit = DepositeMaster::lockForUpdate()->findOrFail($request->ID);
+            $type    = $request->input('type');
 
-        if ($type === 'APPROVED') {
-            // Create a wallet transaction
-            Transdetail::create([
-                'MemberId'   => $deposit->UserId,
-                'TransType'  => 'Main Wallet',
-                'TransPage'  => 'Deposit approval',
-                'Type'       => '+',
-                'TransDate'  => now(),
-                'Amount'     => $deposit->Amount,
-                'AmountS'    => $deposit->Amount,
-                'Remark'     => 'Wallet Deposit',
-                'LoginId'    => $deposit->UserId,
-                'Pass'       => '',
-                'Expass'     => '',
-                'CounterId'  => 0,
-                'eWalletBit' => 1,
-                'AddRemark'  => 'APPROVED BY ADMIN',
-                'TransId'    => 0,
-                'RefTransId' => 0,
-            ]);
+            if ($type === 'APPROVED') {
+                // Create a wallet transaction
+                Transdetail::create([
+                    'MemberId'   => $deposit->UserId,
+                    'TransType'  => 'Main Wallet',
+                    'TransPage'  => 'Deposit approval',
+                    'Type'       => '+',
+                    'TransDate'  => now(),
+                    'Amount'     => $deposit->Amount,
+                    'AmountS'    => $deposit->Amount,
+                    'Remark'     => 'Wallet Deposit',
+                    'LoginId'    => $deposit->UserId,
+                    'Pass'       => '',
+                    'Expass'     => '',
+                    'CounterId'  => 0,
+                    'eWalletBit' => 1,
+                    'AddRemark'  => 'APPROVED BY ADMIN',
+                    'TransId'    => 0,
+                    'RefTransId' => 0,
+                ]);
 
-            $deposit->update([
-                'Approve_Status' => 'APPROVED',
-                'Approve_Date'   => now(),
-            ]);
+                $deposit->update([
+                    'Approve_Status' => 'APPROVED',
+                    'Approve_Date'   => now(),
+                ]);
 
-            $message = 'Deposit approved successfully';
-        } else { 
-            $deposit->update([
-                'Approve_Status' => 'REJECTED',
-                'Approve_Date'   => now(),
-            ]);
+                $message = 'Deposit approved successfully';
+            } else { 
+                $deposit->update([
+                    'Approve_Status' => 'REJECTED',
+                    'Approve_Date'   => now(),
+                ]);
 
-            $message = 'Deposit rejected successfully';
+                $message = 'Deposit rejected successfully';
+            }
+
+            DB::commit();
+            return response()->json(['message' => $message], 200);
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Something went wrong',
+                'error'   => $e->getMessage()
+            ], 500);
         }
-
-        DB::commit();
-        return response()->json(['message' => $message], 200);
-
-    } catch (\Throwable $e) {
-        DB::rollBack();
-        return response()->json([
-            'message' => 'Something went wrong',
-            'error'   => $e->getMessage()
-        ], 500);
     }
-}
     /**
      * Show withdrawal requests page
      */

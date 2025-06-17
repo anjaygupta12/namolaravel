@@ -175,6 +175,17 @@ a {
         text-decoration: underline
     }
 
+table a {
+    color: #4955c2;
+    text-decoration: none;
+    background-color: transparent
+}
+
+ table   a:hover {
+        color: #4955c2;
+        text-decoration: underline
+    }
+
     a:not([href]):not([class]),
     a:not([href]):not([class]):hover {
         color: inherit;

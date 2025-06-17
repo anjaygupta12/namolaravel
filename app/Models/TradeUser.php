@@ -24,7 +24,7 @@ class TradeUser extends Model
     }
     
     protected $table = 'tradeuser';
-    protected $primaryKey = 'id';
+    protected $primaryKey = 'UserId';
     
     protected $fillable = [
         // Basic user information

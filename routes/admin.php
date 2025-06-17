@@ -53,13 +53,13 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
         Route::get('users', [AdminController::class, 'users'])->name('users');
         Route::get('users/create', [AdminController::class, 'createUser'])->name('users-create');
         Route::post('users/store', [AdminController::class, 'storeUser'])->name('users-store');
-        Route::get('users/view/{id}', [AdminController::class, 'viewUser'])->name('users-view');
-        Route::get('users/edit/{id}', [AdminController::class, 'editUser'])->name('users-edit');
-        Route::post('users/update/{id}', [AdminController::class, 'updateUser'])->name('users-update');
-        Route::get('users/copy/{id}', [AdminController::class, 'copyUser'])->name('users-copy');
-        Route::post('users/toggle-status/{id}', [AdminController::class, 'toggleUserStatus'])->name('users-toggle-status');
-        Route::delete('users/delete/{id}', [AdminController::class, 'deleteUser'])->name('users-delete');
-        Route::get('comex-margins/{id}', [AdminController::class, 'comexMargins'])->name('comex-margins');
+        Route::get('users/view/{UserId}', [AdminController::class, 'viewUser'])->name('users-view');
+        Route::get('users/edit/{UserId}', [AdminController::class, 'editUser'])->name('users-edit');
+        Route::post('users/update/{UserId}', [AdminController::class, 'updateUser'])->name('users-update');
+        Route::get('users/copy/{UserId}', [AdminController::class, 'copyUser'])->name('users-copy');
+        Route::post('users/toggle-status/{UserId}', [AdminController::class, 'toggleUserStatus'])->name('users-toggle-status');
+        Route::delete('users/delete/{UserId}', [AdminController::class, 'deleteUser'])->name('users-delete');
+        Route::get('comex-margins/{id', [AdminController::class, 'comexMargins'])->name('comex-margins');
         Route::get('wf-status/{id}', [AdminController::class, 'wfStatus'])->name('wf-status');
         
         // Social links

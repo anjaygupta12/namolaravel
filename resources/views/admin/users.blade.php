@@ -74,9 +74,10 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    @foreach ($users as $user)
                                     <tr>
                                         <td>
-                                            <a href="mcxusers-views.aspx?userid=2004" title="View" aria-label="View"
+                                            <a href="{{ route('admin.users-view', $user->UserId) }}" title="View" aria-label="View"
                                                 data-pjax="0">
                                                 <svg aria-hidden="true"
                                                     style="display: inline-block; font-size: inherit; height: 1em; overflow: visible; vertical-align: -.125em; width: 1.125em"
@@ -86,7 +87,7 @@
                                                     </path>
                                                 </svg>
                                             </a>
-                                            <a href="edit-user.aspx?userid=2004" title="Update" aria-label="Update"
+                                            <a href="{{ route('admin.users-edit', $user->UserId) }}" title="Update" aria-label="Update"
                                                 data-pjax="0">
                                                 <svg aria-hidden="true"
                                                     style="display: inline-block; font-size: inherit; height: 1em; overflow: visible; vertical-align: -.125em; width: 1em"
@@ -96,7 +97,7 @@
                                                     </path>
                                                 </svg>
                                             </a>
-                                            <a href="copy-user.aspx?userid=2004" title="Copy" aria-label="Copy"
+                                            <a href="{{ route('admin.users-copy', $user->UserId) }}" title="Copy" aria-label="Copy"
                                                 data-pjax="0">
                                                 <i class="fa-solid fa-copy"></i>
                                             </a>
@@ -104,45 +105,50 @@
                                                 aria-label="Comex" data-pjax="0">
                                                 <i class="fa-solid fa-gear"></i>
                                             </a>
-                                            <a href="Create-Funds.aspx?userid=2004" title="Deposit">
-                                                <img src="images/in.png"></a>
-                                            <a href="Create-Funds-Wd.aspx?userid=6349" title="Withdraw">
-                                                <img src="images/out.png"></a>
-                                            <a href="wf-status.aspx?userid=2004" title="Enable/Disable Withdrawal Form">
-                                                <i class="fa-solid fa-rupee-sign" style="color: #00bcd4;"></i>
+                                            <a href="{{ route('admin.create-funds', $user->UserId) }}" title="Deposit">
+                                                <img src="{{ asset('admin-assets/images/in.png') }}" width="20"></a>
+                                            <a href="{{ route('admin.create-funds-wd', $user->UserId) }}" title="Withdraw">
+                                                <img src="{{ asset('admin-assets/images/out.png') }}" width="20"></a>
+                                            <a href="{{ route('admin.wf-status', $user->UserId) }}" title="Enable/Disable Withdrawal Form">
+                                                <i class="fa-solid fa-rupee-sign py-3" style="color: #00bcd4;"></i>
                                             </a>
                                         </td>
-                                        <td>Anshul</td>
-                                        <td>Ab01</td>
-                                        <td>1580</td>
-                                        <td>15410</td>
-                                        <td>1201</td>
-                                        <td>100</td>
-                                        <td>Admin</td>
-                                        <td>False</td>
-                                        <td>Active</td>
+
+                                        <td>{{ $user->FullName }}</td>
+                                        <td>{{ $user->Username }}</td>
+                                        <td>{{ $user->LedgerBalance }}</td>
+                                        <td>{{ $user->GrossPnl }}</td>
+                                        <td>{{ $user->Brokerage }}</td>
+                                        <td>{{ $user->NetPnl }}</td>
+                                        <td>{{ $user->Admin ? 'Yes' : 'No' }}</td>
+                                        <td>{{ $user->IsDemo ? 'Yes' : 'No' }}</td>
+                                        <td>{{ $user->IsActive ? 'Active' : 'Inactive' }}</td>
                                         <td>
-                                            <a onclick="return confirmStatusChange();"
-                                                id="ContentPlaceHolder1_gvUsers_btnToggleStatus_0"
-                                                class="btn btn-success btn-sm"
-                                                href="javascript:__doPostBack('ctl00$ContentPlaceHolder1$gvUsers$ctl02$btnToggleStatus','')">
-                                                <i class="fas fa-check"></i>
-                                                Active</a>
+                                            <form action="{{ route('admin.users-toggle-status', $user->UserId) }}" method="POST" style="display: inline;">
+                                                @csrf
+                                                <button type="submit" onclick="return confirmStatusChange();"
+                                                    class="btn btn-{{ $user->IsActive ? 'success' : 'danger' }} btn-sm">
+                                                    <i class="fas fa-{{ $user->IsActive ? 'check' : 'times' }}"></i>
+                                                    {{ $user->IsActive ? 'Active' : 'Inactive' }}
+                                                </button>
+                                            </form>
                                         </td>
                                         <td>
-                                            <a id="ContentPlaceHolder1_gvUsers_btnEdit_0" title="Edit User"
-                                                class="btn btn-primary btn-sm"
-                                                href="javascript:__doPostBack('ctl00$ContentPlaceHolder1$gvUsers$ctl02$btnEdit','')">
+                                            <a title="Edit User" class="btn btn-primary btn-sm"
+                                                href="{{ route('admin.users-edit', $user->UserId) }}">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-                                            <a onclick="return confirmDelete();"
-                                                id="ContentPlaceHolder1_gvUsers_btnDelete_0" title="Delete User"
-                                                class="btn btn-danger btn-sm"
-                                                href="javascript:__doPostBack('ctl00$ContentPlaceHolder1$gvUsers$ctl02$btnDelete','')">
-                                                <i class="fas fa-trash"></i>
-                                            </a>
+                                            <form action="{{ route('admin.users-delete', $user->UserId) }}" method="POST" style="display: inline;">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" onclick="return confirmDelete();" title="Delete User"
+                                                    class="btn btn-danger btn-sm">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
                                         </td>
                                     </tr>
+                                    @endforeach
                                 </tbody>
                             </table>
                         </div>

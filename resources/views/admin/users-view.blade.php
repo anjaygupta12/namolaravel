@@ -7,14 +7,14 @@
     <div class="row">
         <div class="col-md-12">
             <div class="card">
-                <div class="card-header card-header-primary">
+                <div class="card-header">
                     <h4 class="card-title">User Details</h4>
                     <p class="card-category">Viewing information for {{ $user->name }}</p>
                 </div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-12 mb-3">
-                            <a href="{{ route('admin.users.edit', $user->id) }}" class="btn btn-warning">Edit User</a>
+                            <a href="{{ route('admin.users-edit', $user->UserId) }}" class="btn btn-warning">Edit User</a>
                             <a href="{{ route('admin.users') }}" class="btn btn-secondary">Back to Users</a>
                         </div>
                     </div>
@@ -275,7 +275,7 @@
                     
                     <div class="row mt-4">
                         <div class="col-md-12">
-                            <a href="{{ route('admin.users.edit', $user->id) }}" class="btn btn-warning">Edit User</a>
+                            <a href="{{ route('admin.users-edit', $user->UserId) }}" class="btn btn-warning">Edit User</a>
                             <a href="{{ route('admin.users') }}" class="btn btn-secondary">Back to Users</a>
                         </div>
                     </div>
