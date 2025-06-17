@@ -101,7 +101,7 @@
                                                 data-pjax="0">
                                                 <i class="fa-solid fa-copy"></i>
                                             </a>
-                                            <a href="comex-margins.aspx?userid=2004" title="Comex Margins"
+                                            <a href="{{ route('admin.comex-margins', $user->UserId) }}" title="Comex Margins"
                                                 aria-label="Comex" data-pjax="0">
                                                 <i class="fa-solid fa-gear"></i>
                                             </a>

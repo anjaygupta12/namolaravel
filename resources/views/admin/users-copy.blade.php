@@ -3,298 +3,140 @@
 @section('title', 'Copy User')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header">
-                    <h4 class="card-title">Copy User</h4>
-                    <p class="card-category">Create a new user based on {{ $sourceUser->name }}'s information</p>
-                </div>
-                <div class="card-body">
-                    <form method="POST" action="{{ route('admin.users-store') }}">
-                        @csrf
-                        
-                        <div class="row">
-                            <div class="col-md-12 mt-3">
-                                <h4 class="bg-info p-2 text-white">Personal Details</h4>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card ">
+                    <div class="card-header">
+                        <h5 class="card-title">Copy User</h5>
+                    </div>
+                    <div class="card-body ">
+                        <form method="post" action="./copy-user.aspx?userid=2004" id="ctl00">
+                            <div class="aspNetHidden">
+                                <input type="hidden" name="__EVENTTARGET" id="__EVENTTARGET" value="">
+                                <input type="hidden" name="__EVENTARGUMENT" id="__EVENTARGUMENT" value="">
+                                <input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE"
+                                    value="/wEPDwULLTE1NTQ0MjA5ODZkZMzgdmlDdWfxKbFfsZBb1uAtkHywz/JSCiML32tY8td2">
                             </div>
-                            
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="name">Name</label>
-                                    <input type="text" id="name" class="form-control" name="name" value="{{ old('name') }}" required>
-                                    <small class="form-text text-muted">Insert real name of the trader. Will be visible in trading App</small>
-                                    @error('name')
-                                        <span class="text-danger">{{ $message }}</span>
-                                    @enderror
+
+                            <script type="text/javascript">
+                                //<![CDATA[
+                                var theForm = document.forms['ctl00'];
+                                if (!theForm) {
+                                    theForm = document.ctl00;
+                                }
+
+                                function __doPostBack(eventTarget, eventArgument) {
+                                    if (!theForm.onsubmit || (theForm.onsubmit() != false)) {
+                                        theForm.__EVENTTARGET.value = eventTarget;
+                                        theForm.__EVENTARGUMENT.value = eventArgument;
+                                        theForm.submit();
+                                    }
+                                }
+                                //]]>
+                            </script>
+
+
+                            <div class="aspNetHidden">
+
+                                <input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR"
+                                    value="05B61656">
+                                <input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION"
+                                    value="/wEdAAjnqXAtbfHX0Q1nU3+k2Xil+w6A96UIi12KELRQR05dWapAulf5pX4yC6K7S/vCd5qMD/v6jNNtSY3ycdPsGRIWeOOzCLKGb6Doqh3ChsL9805kTDFHFdFsccP5OMDpUuBpXHOU5QtLQtiaV7hu9oG5q1c4+VWaxQieYN0UgPTjsl+IoCSlR4fv69qWnYJRYelgWnTgYgkOdHgt1xNOkjuL">
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <h4 class="bg-info pl-2">Personal Details: </h4>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group field-mcxusers-name">
+                                        <label class="control-label" for="mcxusers-name">Name</label>
+                                        <input name="ctl00$ContentPlaceHolder1$txtfullname" type="text" value="Anshul"
+                                            id="ContentPlaceHolder1_txtfullname" class="form-control">
+
+                                        <div class="hint-block">Insert Real name of the trader. Will be visible in trading
+                                            App</div>
+                                        <div class="help-block"></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group field-mcxusers-mobile">
+                                        <label class="control-label" for="mcxusers-mobile">Mobile</label>
+                                        <input name="ctl00$ContentPlaceHolder1$txtmobile" type="text"
+                                            id="ContentPlaceHolder1_txtmobile" class="form-control">
+
+                                        <div class="hint-block">Optional</div>
+                                        <div class="help-block"></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group field-mcxusers-phone">
+                                        <label class="control-label" for="mcxusers-phone">Username</label>
+                                        <input name="ctl00$ContentPlaceHolder1$txtusername" type="text" value="Ab01"
+                                            id="ContentPlaceHolder1_txtusername" class="form-control">
+
+                                        <div class="hint-block">username for loggin-in with, is not case sensitive. must be
+                                            unique for every trader. should not contain symbols.</div>
+                                        <div class="help-block"></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group field-mcxusers-phone">
+                                        <label class="control-label" for="mcxusers-phone">Password</label>
+                                        <input name="ctl00$ContentPlaceHolder1$txtPassword" type="text"
+                                            id="ContentPlaceHolder1_txtPassword" class="form-control">
+
+                                        <div class="hint-block">password for loggin-in with, is case sensitive. Leave Blank
+                                            if you want password remain unchanged.</div>
+                                        <div class="help-block"></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group field-mcxusers-city">
+                                        <label class="control-label" for="mcxusers-city">City</label>
+                                        <input name="ctl00$ContentPlaceHolder1$txtcity" type="text"
+                                            id="ContentPlaceHolder1_txtcity" class="form-control">
+
+                                        <div class="hint-block">Optional</div>
+                                        <div class="help-block"></div>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <hr>
+                            <div class="row">
+                                <div class="px-3 form-check col-md-6">
+                                    <div class="form-group field-mcxusers-demo">
+                                        <input type="hidden" name="Mcxusers[demo]" value="0"><label><input
+                                                type="checkbox" id="mcxusers-demo" class="form-check-input" name="is_demo">
+                                            demo account? <span class="form-check-sign"><span class="check"></span></span>
+                                        </label>
+                                        <div class="help-block"></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group field-mcxusers-phone">
+                                        <label class="control-label" for="mcxusers-phone">Transaction Password</label>
+                                        <input name="ctl00$ContentPlaceHolder1$txttranspass" type="text"
+                                            value="1" id="ContentPlaceHolder1_txttranspass" class="form-control">
+
+                                        <div class="hint-block"></div>
+                                        <div class="help-block"></div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <button onclick="__doPostBack('ctl00$ContentPlaceHolder1$btnsubmit','')"
+                                            id="ContentPlaceHolder1_btnsubmit" type="submit" name="submit"
+                                            class="btn btn-success">Save</button>
+                                    </div>
                                 </div>
                             </div>
-                            
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="email">Email</label>
-                                    <input type="email" id="email" class="form-control" name="email" value="{{ old('email') }}" required>
-                                    <small class="form-text text-muted">Email address for the user</small>
-                                    @error('email')
-                                        <span class="text-danger">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="mobile">Mobile</label>
-                                    <input type="text" id="mobile" class="form-control" name="mobile" value="{{ old('mobile', $sourceUser->mobile) }}">
-                                    <small class="form-text text-muted">Optional</small>
-                                    @error('mobile')
-                                        <span class="text-danger">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="password">Password</label>
-                                    <input type="password" id="password" class="form-control" name="password" required>
-                                    <small class="form-text text-muted">Password for logging in, is case sensitive</small>
-                                    @error('password')
-                                        <span class="text-danger">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="address">Address</label>
-                                    <textarea id="address" class="form-control" name="address" rows="3">{{ old('address', $sourceUser->address) }}</textarea>
-                                    <small class="form-text text-muted">Optional</small>
-                                    @error('address')
-                                        <span class="text-danger">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="city">City</label>
-                                    <input type="text" id="city" class="form-control" name="city" value="{{ old('city', $sourceUser->city) }}">
-                                    <small class="form-text text-muted">Optional</small>
-                                    @error('city')
-                                        <span class="text-danger">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="state">State</label>
-                                    <input type="text" id="state" class="form-control" name="state" value="{{ old('state', $sourceUser->state) }}">
-                                    <small class="form-text text-muted">Optional</small>
-                                    @error('state')
-                                        <span class="text-danger">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="pin_code">PIN Code</label>
-                                    <input type="text" id="pin_code" class="form-control" name="pin_code" value="{{ old('pin_code', $sourceUser->pin_code) }}">
-                                    <small class="form-text text-muted">Optional</small>
-                                    @error('pin_code')
-                                        <span class="text-danger">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <hr>
-                        
-                        <div class="row">
-                            <div class="col-md-12">
-                                <h4 class="bg-info p-2 text-white">Bank Details</h4>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="pan">PAN</label>
-                                    <input type="text" id="pan" class="form-control" name="pan" value="{{ old('pan', $sourceUser->pan) }}">
-                                    <small class="form-text text-muted">Optional</small>
-                                    @error('pan')
-                                        <span class="text-danger">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="aadhar">Aadhar</label>
-                                    <input type="text" id="aadhar" class="form-control" name="aadhar" value="{{ old('aadhar', $sourceUser->aadhar) }}">
-                                    <small class="form-text text-muted">Optional</small>
-                                    @error('aadhar')
-                                        <span class="text-danger">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="bank_name">Bank Name</label>
-                                    <input type="text" id="bank_name" class="form-control" name="bank_name" value="{{ old('bank_name', $sourceUser->bank_name ?? '') }}">
-                                    <small class="form-text text-muted">Optional</small>
-                                    @error('bank_name')
-                                        <span class="text-danger">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="account_number">Account Number</label>
-                                    <input type="text" id="account_number" class="form-control" name="account_number" value="{{ old('account_number', $sourceUser->account_number ?? '') }}">
-                                    <small class="form-text text-muted">Optional</small>
-                                    @error('account_number')
-                                        <span class="text-danger">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="ifsc_code">IFSC Code</label>
-                                    <input type="text" id="ifsc_code" class="form-control" name="ifsc_code" value="{{ old('ifsc_code', $sourceUser->ifsc_code ?? '') }}">
-                                    <small class="form-text text-muted">Optional</small>
-                                    @error('ifsc_code')
-                                        <span class="text-danger">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="account_holder_name">Account Holder Name</label>
-                                    <input type="text" id="account_holder_name" class="form-control" name="account_holder_name" value="{{ old('account_holder_name', $sourceUser->account_holder_name ?? '') }}">
-                                    <small class="form-text text-muted">Optional</small>
-                                    @error('account_holder_name')
-                                        <span class="text-danger">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <hr>
-                        
-                        <div class="row">
-                            <div class="col-md-12">
-                                <h4 class="bg-info p-2 text-white">Configuration</h4>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <div class="form-check">
-                                    <label class="form-check-label">
-                                        <input class="form-check-input" type="checkbox" name="is_active" value="1" {{ $sourceUser->is_active ? 'checked' : '' }}>
-                                        Active Account
-                                        <span class="form-check-sign">
-                                            <span class="check"></span>
-                                        </span>
-                                    </label>
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <div class="form-check">
-                                    <label class="form-check-label">
-                                        <input class="form-check-input" type="checkbox" name="is_demo" value="1" {{ $sourceUser->is_demo ? 'checked' : '' }}>
-                                        Demo Account?
-                                        <span class="form-check-sign">
-                                            <span class="check"></span>
-                                        </span>
-                                    </label>
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <div class="form-check">
-                                    <label class="form-check-label">
-                                        <input class="form-check-input" type="checkbox" name="allow_orders_beyond_high_low" value="1" {{ $sourceUser->allow_orders_beyond_high_low ? 'checked' : '' }}>
-                                        Allow Fresh Entry Order above high & below low?
-                                        <span class="form-check-sign">
-                                            <span class="check"></span>
-                                        </span>
-                                    </label>
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <div class="form-check">
-                                    <label class="form-check-label">
-                                        <input class="form-check-input" type="checkbox" name="allow_orders_between_high_low" value="1" {{ $sourceUser->allow_orders_between_high_low ? 'checked' : '' }}>
-                                        Allow Orders between High - Low?
-                                        <span class="form-check-sign">
-                                            <span class="check"></span>
-                                        </span>
-                                    </label>
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <div class="form-check">
-                                    <label class="form-check-label">
-                                        <input class="form-check-input" type="checkbox" name="trade_equity_as_units" value="1" {{ $sourceUser->trade_equity_as_units ? 'checked' : '' }}>
-                                        Trade equity as units instead of lots
-                                        <span class="form-check-sign">
-                                            <span class="check"></span>
-                                        </span>
-                                    </label>
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <div class="form-check">
-                                    <label class="form-check-label">
-                                        <input class="form-check-input" type="checkbox" name="auto_square_off" value="1" {{ $sourceUser->auto_square_off ? 'checked' : '' }}>
-                                        Auto Square Off
-                                        <span class="form-check-sign">
-                                            <span class="check"></span>
-                                        </span>
-                                    </label>
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="auto_square_off_percentage">Auto Square Off Percentage</label>
-                                    <input type="number" id="auto_square_off_percentage" class="form-control" name="auto_square_off_percentage" value="{{ old('auto_square_off_percentage', $sourceUser->auto_square_off_percentage ?? 0) }}" step="0.01">
-                                    <small class="form-text text-muted">Percentage at which positions will be automatically squared off</small>
-                                    @error('auto_square_off_percentage')
-                                        <span class="text-danger">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="notify_percentage">Notify Percentage</label>
-                                    <input type="number" id="notify_percentage" class="form-control" name="notify_percentage" value="{{ old('notify_percentage', $sourceUser->notify_percentage ?? 0) }}" step="0.01">
-                                    <small class="form-text text-muted">Percentage at which to send notification to user</small>
-                                    @error('notify_percentage')
-                                        <span class="text-danger">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row mt-4">
-                            <div class="col-md-12">
-                                <button type="submit" class="btn btn-primary">Create User</button>
-                                <a href="{{ route('admin.users') }}" class="btn btn-secondary">Cancel</a>
-                            </div>
-                        </div>
-                    </form>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 @endsection

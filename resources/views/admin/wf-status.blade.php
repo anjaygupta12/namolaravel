@@ -7,7 +7,7 @@
     <div class="row">
         <div class="col-md-12">
             <div class="card">
-                <div class="card-header card-header-primary">
+                <div class="card-header">
                     <h4 class="card-title">Wallet Status</h4>
                     <p class="card-category">View wallet and funds status for {{ $user->name }}</p>
                 </div>
@@ -21,7 +21,7 @@
                     <div class="row">
                         <div class="col-md-12">
                             <div class="card">
-                                <div class="card-header card-header-info">
+                                <div class="card-header">
                                     <h4 class="card-title">Account Summary</h4>
                                 </div>
                                 <div class="card-body">
@@ -72,7 +72,7 @@
                     <div class="row mt-4">
                         <div class="col-md-12">
                             <div class="card">
-                                <div class="card-header card-header-warning">
+                                <div class="card-header">
                                     <h4 class="card-title">Transaction History</h4>
                                 </div>
                                 <div class="card-body">
@@ -146,7 +146,7 @@
                     <div class="row mt-4">
                         <div class="col-md-12">
                             <div class="card">
-                                <div class="card-header card-header-danger">
+                                <div class="card-header">
                                     <h4 class="card-title">Actions</h4>
                                 </div>
                                 <div class="card-body">
