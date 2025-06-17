@@ -6,132 +6,114 @@
     <div class="container-fluid">
         <div class="row">
             <div class="col-md-12">
-                <div class="card ">
+                <div class="card">
                     <div class="card-header">
                         <h5 class="card-title">Copy User</h5>
+                        <p class="text-muted">Creating a copy of user: {{ $sourceUser->FullName ?? 'Unknown' }}</p>
                     </div>
-                    <div class="card-body ">
-                        <form method="post" action="./copy-user.aspx?userid=2004" id="ctl00">
-                            <div class="aspNetHidden">
-                                <input type="hidden" name="__EVENTTARGET" id="__EVENTTARGET" value="">
-                                <input type="hidden" name="__EVENTARGUMENT" id="__EVENTARGUMENT" value="">
-                                <input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE"
-                                    value="/wEPDwULLTE1NTQ0MjA5ODZkZMzgdmlDdWfxKbFfsZBb1uAtkHywz/JSCiML32tY8td2">
+                    <div class="card-body">
+                        @if ($errors->any())
+                            <div class="alert alert-danger">
+                                <ul>
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
                             </div>
+                        @endif
 
-                            <script type="text/javascript">
-                                //<![CDATA[
-                                var theForm = document.forms['ctl00'];
-                                if (!theForm) {
-                                    theForm = document.ctl00;
-                                }
-
-                                function __doPostBack(eventTarget, eventArgument) {
-                                    if (!theForm.onsubmit || (theForm.onsubmit() != false)) {
-                                        theForm.__EVENTTARGET.value = eventTarget;
-                                        theForm.__EVENTARGUMENT.value = eventArgument;
-                                        theForm.submit();
-                                    }
-                                }
-                                //]]>
-                            </script>
-
-
-                            <div class="aspNetHidden">
-
-                                <input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR"
-                                    value="05B61656">
-                                <input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION"
-                                    value="/wEdAAjnqXAtbfHX0Q1nU3+k2Xil+w6A96UIi12KELRQR05dWapAulf5pX4yC6K7S/vCd5qMD/v6jNNtSY3ycdPsGRIWeOOzCLKGb6Doqh3ChsL9805kTDFHFdFsccP5OMDpUuBpXHOU5QtLQtiaV7hu9oG5q1c4+VWaxQieYN0UgPTjsl+IoCSlR4fv69qWnYJRYelgWnTgYgkOdHgt1xNOkjuL">
+                        @if (session('success'))
+                            <div class="alert alert-success">
+                                {{ session('success') }}
                             </div>
+                        @endif
+
+                        @if (session('error'))
+                            <div class="alert alert-danger">
+                                {{ session('error') }}
+                            </div>
+                        @endif
+
+                        <form method="POST" action="{{ route('admin.users-store-copy', $sourceUser->UserId) }}" id="copyUserForm">
+                            @csrf
+
                             <div class="row">
                                 <div class="col-md-12">
-                                    <h4 class="bg-info pl-2">Personal Details: </h4>
+                                    <h4 class="bg-info pl-2">Personal Details</h4>
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="form-group field-mcxusers-name">
-                                        <label class="control-label" for="mcxusers-name">Name</label>
-                                        <input name="ctl00$ContentPlaceHolder1$txtfullname" type="text" value="Anshul"
-                                            id="ContentPlaceHolder1_txtfullname" class="form-control">
-
-                                        <div class="hint-block">Insert Real name of the trader. Will be visible in trading
-                                            App</div>
-                                        <div class="help-block"></div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group field-mcxusers-mobile">
-                                        <label class="control-label" for="mcxusers-mobile">Mobile</label>
-                                        <input name="ctl00$ContentPlaceHolder1$txtmobile" type="text"
-                                            id="ContentPlaceHolder1_txtmobile" class="form-control">
-
-                                        <div class="hint-block">Optional</div>
-                                        <div class="help-block"></div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group field-mcxusers-phone">
-                                        <label class="control-label" for="mcxusers-phone">Username</label>
-                                        <input name="ctl00$ContentPlaceHolder1$txtusername" type="text" value="Ab01"
-                                            id="ContentPlaceHolder1_txtusername" class="form-control">
-
-                                        <div class="hint-block">username for loggin-in with, is not case sensitive. must be
-                                            unique for every trader. should not contain symbols.</div>
-                                        <div class="help-block"></div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group field-mcxusers-phone">
-                                        <label class="control-label" for="mcxusers-phone">Password</label>
-                                        <input name="ctl00$ContentPlaceHolder1$txtPassword" type="text"
-                                            id="ContentPlaceHolder1_txtPassword" class="form-control">
-
-                                        <div class="hint-block">password for loggin-in with, is case sensitive. Leave Blank
-                                            if you want password remain unchanged.</div>
-                                        <div class="help-block"></div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group field-mcxusers-city">
-                                        <label class="control-label" for="mcxusers-city">City</label>
-                                        <input name="ctl00$ContentPlaceHolder1$txtcity" type="text"
-                                            id="ContentPlaceHolder1_txtcity" class="form-control">
-
-                                        <div class="hint-block">Optional</div>
-                                        <div class="help-block"></div>
-                                    </div>
-                                </div>
-
-                            </div>
-                            <hr>
-                            <div class="row">
-                                <div class="px-3 form-check col-md-6">
-                                    <div class="form-group field-mcxusers-demo">
-                                        <input type="hidden" name="Mcxusers[demo]" value="0"><label><input
-                                                type="checkbox" id="mcxusers-demo" class="form-check-input" name="is_demo">
-                                            demo account? <span class="form-check-sign"><span class="check"></span></span>
-                                        </label>
-                                        <div class="help-block"></div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group field-mcxusers-phone">
-                                        <label class="control-label" for="mcxusers-phone">Transaction Password</label>
-                                        <input name="ctl00$ContentPlaceHolder1$txttranspass" type="text"
-                                            value="1" id="ContentPlaceHolder1_txttranspass" class="form-control">
-
-                                        <div class="hint-block"></div>
-                                        <div class="help-block"></div>
-                                    </div>
-                                </div>
-
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <button onclick="__doPostBack('ctl00$ContentPlaceHolder1$btnsubmit','')"
-                                            id="ContentPlaceHolder1_btnsubmit" type="submit" name="submit"
-                                            class="btn btn-success">Save</button>
+                                        <label class="control-label">Full Name *</label>
+                                        <input name="full_name" type="text" class="form-control" 
+                                            value="{{ old('full_name', $sourceUser->FullName ?? '') }}" required>
+                                        <div class="hint-block">Insert Real name of the trader. Will be visible in trading App</div>
                                     </div>
                                 </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="control-label">Mobile *</label>
+                                        <input name="mobile" type="text" class="form-control" 
+                                            value="{{ old('mobile', $sourceUser->Mobile ?? '') }}" required>
+                                        <div class="hint-block">10-digit mobile number</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="control-label">Username *</label>
+                                        <input name="username" type="text" class="form-control" 
+                                            value="{{ old('username', $sourceUser->Username ?? '') }}" required>
+                                        <div class="hint-block">Username for logging-in with, is not case sensitive. Must be unique for every trader. Should not contain symbols.</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="control-label">Password *</label>
+                                        <input name="password" type="password" class="form-control" 
+                                            value="{{ old('password') }}" required>
+                                        <div class="hint-block">Password for logging-in with, is case sensitive.</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="control-label">City</label>
+                                        <input name="city" type="text" class="form-control" 
+                                            value="{{ old('city', $sourceUser->City ?? '') }}">
+                                        <div class="hint-block">Optional</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="control-label">Transaction Password *</label>
+                                        <input name="transaction_password" type="password" class="form-control" 
+                                            value="{{ old('transaction_password') }}" required>
+                                        <div class="hint-block">Transaction password for secure operations</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <hr>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input name="is_demo" type="checkbox" class="form-check-input" value="1"
+                                            {{ old('is_demo', $sourceUser->IsDemo ?? false) ? 'checked' : '' }}>
+                                        <label class="form-check-label">
+                                            Demo account? <span class="form-check-sign"><span class="check"></span></span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="control-label">Admin Transaction Password *</label>
+                                        <input name="admin_transaction_password" type="password" class="form-control" required>
+                                        <div class="hint-block">Required to create copy</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group mt-3">
+                                <button type="submit" class="btn btn-success">Save Copy</button>
+                                <a href="{{ route('admin.users') }}" class="btn btn-secondary">Cancel</a>
                             </div>
                         </form>
                     </div>

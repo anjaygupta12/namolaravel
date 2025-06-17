@@ -57,6 +57,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
         Route::get('users/edit/{UserId}', [AdminController::class, 'editUser'])->name('users-edit');
         Route::post('users/update/{UserId}', [AdminController::class, 'updateUser'])->name('users-update');
         Route::get('users/copy/{UserId}', [AdminController::class, 'copyUser'])->name('users-copy');
+        Route::post('users/store-copy/{UserId}', [AdminController::class, 'storeCopyUser'])->name('users-store-copy');
         Route::post('users/toggle-status/{UserId}', [AdminController::class, 'toggleUserStatus'])->name('users-toggle-status');
         Route::delete('users/delete/{UserId}', [AdminController::class, 'deleteUser'])->name('users-delete');
         Route::get('comex-margins/{id}', [AdminController::class, 'comexMargins'])->name('comex-margins');

@@ -973,7 +973,7 @@ class AdminController extends Controller
         // Validate the request
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:trade_users,email,' . $id,
+            'email' => 'required|email|unique:tradeuser,email,' . $id,
             'mobile' => 'nullable|string|max:15',
             'password' => 'nullable|string|min:6',
             'address' => 'nullable|string',
@@ -1017,12 +1017,90 @@ class AdminController extends Controller
         if (Session::has('admin_id')) {
             AdminLog::create([
                 'admin_id' => Session::get('admin_id'),
-                'activity' => 'Accessed copy user form for: ' . $sourceUser->name,
+                'activity' => 'Accessed copy user form for: ' . $sourceUser->FullName,
                 'ip_address' => request()->ip()
             ]);
         }
         
         return view('admin.users-copy', compact('sourceUser'));
+    }
+
+    /**
+     * Store the copied user
+     */
+    public function storeCopyUser(Request $request, $sourceUserId)
+    {
+        // Validate the request
+        $request->validate([
+            'full_name' => 'required|string|max:255',
+            'mobile' => 'required|string|size:10|regex:/^[0-9]{10}$/',
+            'username' => 'required|string|max:50|unique:tradeuser,Username',
+            'password' => 'required|string|min:6',
+            'city' => 'nullable|string|max:255',
+            'transaction_password' => 'required|string|min:4',
+            'admin_transaction_password' => 'required|string',
+            'is_demo' => 'nullable|boolean'
+        ]);
+
+        // Verify admin transaction password
+        $admin = AdminLogin::find(Session::get('admin_id'));
+        if (!$admin || !Hash::check($request->admin_transaction_password, $admin->TransPass)) {
+            return back()->withErrors(['admin_transaction_password' => 'Invalid admin transaction password.'])->withInput();
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Get source user for copying configuration
+            $sourceUser = TradeUser::where('UserId', $sourceUserId)->firstOrFail();
+
+            // Call stored procedure SP_copyTradeuser
+            $adminId = Session::get('admin_id');
+
+            $result = DB::select('EXEC SP_copyTradeuser ?, ?, ?, ?, ?, ?, ?, ?', [
+                $adminId,
+                $sourceUserId,
+                $request->full_name,
+                $request->mobile,
+                $request->username,
+                $request->password,
+                $request->city,
+                $request->transaction_password
+            ]);
+
+            // Check if the stored procedure returned any error message
+            if (!empty($result) && isset($result[0]->RESPONSE)) {
+                $response = $result[0]->RESPONSE;
+                if (strpos(strtolower($response), 'error') !== false) {
+                    throw new \Exception($response);
+                }
+            }
+
+            DB::commit();
+
+            // Log the activity
+            if (Session::has('admin_id')) {
+                AdminLog::create([
+                    'admin_id' => Session::get('admin_id'),
+                    'activity' => 'Created user copy: ' . $request->full_name . ' from source: ' . $sourceUser->FullName,
+                    'ip_address' => request()->ip()
+                ]);
+            }
+
+            return redirect()->route('admin.users')->with('success', 'User copied successfully.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            // Log the error
+            Log::error('Error copying user: ' . $e->getMessage(), [
+                'source_user_id' => $sourceUserId,
+                'admin_id' => Session::get('admin_id'),
+                'request_data' => $request->except(['password', 'transaction_password', 'admin_transaction_password'])
+            ]);
+
+            return back()->withErrors(['error' => 'An error occurred while copying the user. Please try again.'])->withInput();
+        }
     }
     
     /**
