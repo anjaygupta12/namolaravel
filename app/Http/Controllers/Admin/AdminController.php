@@ -1158,12 +1158,145 @@ class AdminController extends Controller
         if (Session::has('admin_id')) {
             AdminLog::create([
                 'admin_id' => Session::get('admin_id'),
-                'activity' => 'Viewed comex margins for user: ' . $user->name,
+                'activity' => 'Viewed comex margins for user: ' . $user->FullName,
                 'ip_address' => request()->ip()
             ]);
         }
         
         return view('admin.comex-margins', compact('user'));
+    }
+    
+    /**
+     * Update comex margins for a user
+     */
+    public function updateComexMargins(Request $request, $id)
+    {
+        try {
+            $user = TradeUser::findOrFail($id);
+            
+            // Validate all form fields
+            $validator = Validator::make($request->all(), [
+                // Comex Configuration
+                'comex_brokerage_type' => 'required|string|in:Per Lot,Per Crore',
+                'comex_brokerage' => 'required|numeric|min:0',
+                'minimum_lots_single_comex' => 'required|numeric|min:0',
+                'maximum_lots_comex' => 'required|numeric|min:0',
+                'maximum_lots_allowed' => 'required|numeric|min:0',
+                'max_size_all_comex' => 'required|numeric|min:0',
+                'intraday_exposure_margin_comex' => 'required|numeric|min:0',
+                'holding_exposure_margin_comex' => 'required|numeric|min:0',
+                'orders_price_comex' => 'required|numeric|min:0',
+                
+                // Forex Configuration
+                'forex_brokerage_type' => 'required|string|in:Per Lot,Per Crore',
+                'forex_brokerage' => 'required|numeric|min:0',
+                'minimum_lots_single_forex' => 'required|numeric|min:0',
+                'maximum_lots_forex' => 'required|numeric|min:0',
+                'maximum_lots_allowed_forex' => 'required|numeric|min:0',
+                'max_size_all_forex' => 'required|numeric|min:0',
+                'intraday_exposure_margin_forex' => 'required|numeric|min:0',
+                'holding_exposure_margin_forex' => 'required|numeric|min:0',
+                'orders_price_forex' => 'required|numeric|min:0',
+                
+                // Crypto Configuration
+                'crypto_brokerage_type' => 'required|string|in:Per Lot,Per Crore',
+                'crypto_brokerage' => 'required|numeric|min:0',
+                'minimum_lots_single_crypto' => 'required|numeric|min:0',
+                'maximum_lots_crypto' => 'required|numeric|min:0',
+                'maximum_lots_allowed_crypto' => 'required|numeric|min:0',
+                'max_size_all_crypto' => 'required|numeric|min:0',
+                'intraday_exposure_margin_crypto' => 'required|numeric|min:0',
+                'holding_exposure_margin_crypto' => 'required|numeric|min:0',
+                'orders_price_crypto' => 'required|numeric|min:0',
+                
+                // Security
+                'transaction_password' => 'required|string',
+            ]);
+
+            if ($validator->fails()) {
+                return redirect()->back()
+                    ->withErrors($validator)
+                    ->withInput();
+            }
+
+            // Validate admin transaction password
+            $admin = AdminLogin::where('PK_ID', Session::get('admin_id'))->first();
+            if (!$admin || !Hash::check($request->transaction_password, $admin->TransPass)) {
+                return redirect()->back()
+                    ->with('error', 'Invalid Transaction Password')
+                    ->withInput();
+            }
+
+            DB::beginTransaction();
+
+            // Update the trade user with all the form data
+            $user->update([
+                // Comex Configuration
+                'comex_trading_enabled' => $request->has('comex_trading_enabled') ? 1 : 0,
+                'comex_brokerage_type' => $request->comex_brokerage_type,
+                'comex_brokerage' => $request->comex_brokerage,
+                'minimum_lots_single_comex' => $request->minimum_lots_single_comex,
+                'maximum_lots_comex' => $request->maximum_lots_comex,
+                'maximum_lots_allowed' => $request->maximum_lots_allowed,
+                'max_size_all_comex' => $request->max_size_all_comex,
+                'intraday_exposure_margin_comex' => $request->intraday_exposure_margin_comex,
+                'holding_exposure_margin_comex' => $request->holding_exposure_margin_comex,
+                'orders_price_comex' => $request->orders_price_comex,
+                
+                // Forex Configuration
+                'forex_trading_enabled' => $request->has('forex_trading_enabled') ? 1 : 0,
+                'forex_brokerage_type' => $request->forex_brokerage_type,
+                'forex_brokerage' => $request->forex_brokerage,
+                'minimum_lots_single_forex' => $request->minimum_lots_single_forex,
+                'maximum_lots_forex' => $request->maximum_lots_forex,
+                'maximum_lots_allowed_forex' => $request->maximum_lots_allowed_forex,
+                'max_size_all_forex' => $request->max_size_all_forex,
+                'intraday_exposure_margin_forex' => $request->intraday_exposure_margin_forex,
+                'holding_exposure_margin_forex' => $request->holding_exposure_margin_forex,
+                'orders_price_forex' => $request->orders_price_forex,
+                
+                // Crypto Configuration
+                'crypto_trading_enabled' => $request->has('crypto_trading_enabled') ? 1 : 0,
+                'crypto_brokerage_type' => $request->crypto_brokerage_type,
+                'crypto_brokerage' => $request->crypto_brokerage,
+                'minimum_lots_single_crypto' => $request->minimum_lots_single_crypto,
+                'maximum_lots_crypto' => $request->maximum_lots_crypto,
+                'maximum_lots_allowed_crypto' => $request->maximum_lots_allowed_crypto,
+                'max_size_all_crypto' => $request->max_size_all_crypto,
+                'intraday_exposure_margin_crypto' => $request->intraday_exposure_margin_crypto,
+                'holding_exposure_margin_crypto' => $request->holding_exposure_margin_crypto,
+                'orders_price_crypto' => $request->orders_price_crypto,
+            ]);
+
+            DB::commit();
+
+            // Log the activity
+            if (Session::has('admin_id')) {
+                AdminLog::create([
+                    'admin_id' => Session::get('admin_id'),
+                    'activity' => 'Updated comex margins for user: ' . $user->FullName,
+                    'ip_address' => request()->ip()
+                ]);
+            }
+
+            return redirect()->back()->with('success', 'Comex margins updated successfully.');
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            
+            // Log the error
+            if (Session::has('admin_id')) {
+                AdminLog::create([
+                    'admin_id' => Session::get('admin_id'),
+                    'activity' => 'Failed to update comex margins for user ID: ' . $id . ' - Error: ' . $e->getMessage(),
+                    'ip_address' => request()->ip()
+                ]);
+            }
+            
+            return redirect()->back()
+                ->with('error', 'An error occurred while updating comex margins. Please try again.')
+                ->withInput();
+        }
     }
     
     /**

@@ -61,6 +61,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
         Route::post('users/toggle-status/{UserId}', [AdminController::class, 'toggleUserStatus'])->name('users-toggle-status');
         Route::delete('users/delete/{UserId}', [AdminController::class, 'deleteUser'])->name('users-delete');
         Route::get('comex-margins/{id}', [AdminController::class, 'comexMargins'])->name('comex-margins');
+Route::post('comex-margins/{id}', [AdminController::class, 'updateComexMargins'])->name('comex-margins.update');
         Route::get('wf-status/{id}', [AdminController::class, 'wfStatus'])->name('wf-status');
         
         // Social links
