@@ -160,6 +160,18 @@
 @endsection
 
 @section('scripts')
+
+   
+    <script type="text/javascript">
+        function confirmDelete() {
+            return confirm('Are you sure you want to delete this user?');
+        }
+
+        function confirmStatusChange() {
+            return confirm('Are you sure you want to change the status of this user?');
+        }
+    </script>
+    
     <script>
         $(document).ready(function() {
             // Initialize DataTables
