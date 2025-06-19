@@ -122,14 +122,14 @@
                                         <td>{{ $user->NetPnl }}</td>
                                         <td>{{ $user->Admin ? 'Yes' : 'No' }}</td>
                                         <td>{{ $user->IsDemo ? 'Yes' : 'No' }}</td>
-                                        <td>{{ $user->IsActive ? 'Active' : 'Inactive' }}</td>
+                                        <td>{{ $user->is_active ? 'Active' : 'Inactive' }}</td>
                                         <td>
                                             <form action="{{ route('admin.users-toggle-status', $user->UserId) }}" method="POST" style="display: inline;">
                                                 @csrf
                                                 <button type="submit" onclick="return confirmStatusChange();"
-                                                    class="btn btn-{{ $user->IsActive ? 'success' : 'danger' }} btn-sm">
-                                                    <i class="fas fa-{{ $user->IsActive ? 'check' : 'times' }}"></i>
-                                                    {{ $user->IsActive ? 'Active' : 'Inactive' }}
+                                                    class="btn btn-{{ $user->is_active ? 'success' : 'danger' }} btn-sm">
+                                                    {{-- <i class="fas fa-{{ $user->is_active ? 'check' : 'times' }}"></i> --}}
+                                                    {{ $user->is_active ? 'Active' : 'Inactive' }}
                                                 </button>
                                             </form>
                                         </td>

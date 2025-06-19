@@ -141,8 +141,8 @@ Route::post('comex-margins/{id}', [AdminController::class, 'updateComexMargins']
         
         // Funds
         Route::get('funds', [AdminController::class, 'funds'])->name('funds-wds');
-        Route::get('create-funds', [AdminController::class, 'createFunds'])->name('create-funds');
-        Route::get('create-funds-wd', [AdminController::class, 'createFundsWd'])->name('create-funds-wd');
+        Route::get('create-funds/{UserId}', [AdminController::class, 'createFunds'])->name('create-funds');
+        Route::get('create-funds-wd/{UserId}', [AdminController::class, 'createFundsWd'])->name('create-funds-wd');
         Route::get('deposit-requests', [AdminController::class, 'depositRequests'])->name('deposit-requests');
         Route::post('deposit-status', [AdminController::class, 'handleDeposit'])->name('deposit-status');
         Route::get('withdrawal-requests', [AdminController::class, 'withdrawalRequests'])->name('withdrawal-requests');
