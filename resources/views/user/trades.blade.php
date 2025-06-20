@@ -234,7 +234,11 @@
                                 </td>
                             </tr>
                         `;
+<<<<<<< HEAD
                     }); 
+=======
+                    });
+>>>>>>> bfe15fe (chnages)
                     
                     $('#tblactive').html(html);
                 }
