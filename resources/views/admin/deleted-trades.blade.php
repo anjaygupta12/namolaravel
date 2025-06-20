@@ -7,87 +7,63 @@
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div class="card-header card-header-primary">
+                <div class="card-header">
                     <h4 class="card-title">Deleted Trades</h4>
                     <p class="card-category">History of deleted trades</p>
                 </div>
                 <div class="card-body">
-                    <div class="row mb-3">
-                        <div class="col-md-12">
-                            <form class="form-inline">
-                                <div class="form-group mx-sm-3">
-                                    <label for="dateFrom" class="mr-2">From:</label>
-                                    <input type="date" class="form-control" id="dateFrom">
+                    <form action="{{route('admin.deleted-trades')}}" method="GET">
+                    <div class="row">
+                            <div class="col-md-4 col-lg-3">
+                                <div class="form-group field-tradessearch-commodity">
+                                    <label class="control-label" for="tradessearch-commodity">Username</label>
+                                    <input type="text" id="txtuserid" class="form-control" name="username" placeholder="" value="">
+                                    <div class="help-block"></div>
                                 </div>
-                                <div class="form-group mx-sm-3">
-                                    <label for="dateTo" class="mr-2">To:</label>
-                                    <input type="date" class="form-control" id="dateTo">
-                                </div>
-                                <div class="form-group mx-sm-3">
-                                    <label for="clientFilter" class="mr-2">Client:</label>
-                                    <select class="form-control" id="clientFilter">
-                                        <option value="">All Clients</option>
-                                        <option value="1">John Doe</option>
-                                        <option value="2">Jane Smith</option>
-                                    </select>
-                                </div>
-                                <button type="submit" class="btn btn-primary">Filter</button>
-                            </form>
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-success" onclick="LoadWatchList();">Search</button>
+                                <a href="{{route('admin.deleted-trades')}}" class="btn btn-default">Reset</a>
+                                {{-- <button type="reset" class="btn btn-default" onclick="document.getElementById('trade_search').reset();">Reset</button> --}}
+                            </div>
                         </div>
-                    </div>
+                    </form>
                     <div class="table-responsive">
                         <table class="table">
                             <thead class="text-primary">
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Client</th>
-                                    <th>Script</th>
-                                    <th>Type</th>
-                                    <th>Qty</th>
-                                    <th>Price</th>
-                                    <th>Value</th>
-                                    <th>Created Date</th>
-                                    <th>Deleted Date</th>
-                                    <th>Deleted By</th>
-                                    <th>Reason</th>
-                                    <th>Actions</th>
-                                </tr>
+                               <tr>
+                                            <th >&nbsp;</th>
+                                            <th>ID</th>
+                                            <th>Scrip</th>
+                                            <th> Segment</th>
+                                            <th>User ID</th>
+                                            <th>Buy Rate</th>
+                                            <th>Sell Rate</th>
+                                            <th> Units</th>
+                                            <th>Profit/Loss</th>
+                                            <th> Diff</th>
+                                            <th>Bought at</th>
+                                            <th >Sold at</th>
+                                        </tr>
                             </thead>
                             <tbody>
+                                @foreach ($deletedTrades as $val)
                                 <tr>
-                                    <td>1005</td>
-                                    <td>John Doe</td>
-                                    <td>NIFTY 22000 CE</td>
-                                    <td><span class="badge badge-success">BUY</span></td>
-                                    <td>50</td>
-                                    <td>150.25</td>
-                                    <td>₹7,512.50</td>
-                                    <td>2023-05-15 10:30:25</td>
-                                    <td>2023-05-15 10:35:40</td>
-                                    <td>Admin</td>
-                                    <td>Duplicate entry</td>
-                                    <td>
-                                        <button class="btn btn-info btn-sm">View</button>
-                                        <button class="btn btn-success btn-sm">Restore</button>
-                                    </td>
+                                    <td>{{$val->Pk_id}}</td>
+                                    <td>{{$val->Symbol}}</td>
+                                    <td>{{$val->TransactionMode}}</td>
+                                    <td>{{$val->UserId}}</td>
+                                    <td>{{$val->BUYPRICE}}</td>
+                                    <td>{{$val->SELLPRICE}}</td>
+                                    <td>{{$val->BUYDATE }} / {{$val->Lots }}</td>
+                                    <td>74000</td>
+                                    <td>10105 secs</td>
+                                    <td>{{$val->BUYDATE }} </td>
+                                    <td>{{$val->SOLDDATE }}</td>
                                 </tr>
-                                <tr>
-                                    <td>1008</td>
-                                    <td>Jane Smith</td>
-                                    <td>BANKNIFTY 46000 PE</td>
-                                    <td><span class="badge badge-danger">SELL</span></td>
-                                    <td>25</td>
-                                    <td>320.75</td>
-                                    <td>₹8,018.75</td>
-                                    <td>2023-05-16 11:15:40</td>
-                                    <td>2023-05-16 11:20:15</td>
-                                    <td>Admin</td>
-                                    <td>Client request</td>
-                                    <td>
-                                        <button class="btn btn-info btn-sm">View</button>
-                                        <button class="btn btn-success btn-sm">Restore</button>
-                                    </td>
-                                </tr>
+                                    
+                                @endforeach
+                               
                             </tbody>
                         </table>
                     </div>

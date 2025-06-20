@@ -27,40 +27,19 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-
-                                    <tr>
-                                        <td><a class="badge badge-pill badge-success"
-                                                href="closedtrades-user.aspx?scrip_id=AMBUJACEM25JAN540PE">NSE:INDUSINDBK-EQ</a>
-                                        </td>
-                                        <td>1.000000</td>
-                                        <td>0.000000</td>
-                                        <td>0.000000</td>
-                                        <td>-1890</td>
-                                        <td>40</td>
-                                        <td>-1930</td>
-                                    </tr>
-                                    <tr>
-                                        <td><a class="badge badge-pill badge-success"
-                                                href="closedtrades-user.aspx?scrip_id=AMBUJACEM25JAN540PE">NSE:INDUSINDBK-EQ</a>
-                                        </td>
-                                        <td>1.000000</td>
-                                        <td>0.000000</td>
-                                        <td>0.000000</td>
-                                        <td>-1890</td>
-                                        <td>40</td>
-                                        <td>-1930</td>
-                                    </tr>
-                                    <tr>
-                                        <td><a class="badge badge-pill badge-success"
-                                                href="closedtrades-user.aspx?scrip_id=AMBUJACEM25JAN540PE">NSE:INDUSINDBK-EQ</a>
-                                        </td>
-                                        <td>1.000000</td>
-                                        <td>0.000000</td>
-                                        <td>0.000000</td>
-                                        <td>-1890</td>
-                                        <td>40</td>
-                                        <td>-1930</td>
-                                    </tr>
+                                    @foreach ($positions as $val)
+                                        <tr>
+                                            <td><a class="badge badge-pill badge-success"
+                                                    href="closedtrades-user.aspx?scrip_id=AMBUJACEM25JAN540PE">{{ $val->Symbol }}</a>
+                                            </td>
+                                            <td>{{ $val->Lots }}</td>
+                                            <td>{{ $val->BUYPRICE }}</td>
+                                            <td>{{ $val->SELLPRICE }}</td>
+                                            <td>-1890</td>
+                                            <td>40</td>
+                                            <td>-1930</td>
+                                        </tr>
+                                    @endforeach()
                                 </tbody>
                             </table>
                         </div>

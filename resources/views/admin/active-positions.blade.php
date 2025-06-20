@@ -27,19 +27,20 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    @foreach($positions as $val)
                                     <tr>
                                         <td id="COPPER25FEBFUT"><a class="badge badge-pill badge-success"
-                                                href="activetrades_user.aspx?scrip_id=COPPER25FEBFUT">ALUMINIUM25APRFUT</a>
+                                                href="">{{ $val->Symbol}}</a>
                                         </td>
-                                        <td>4 (943.80)</td>
-                                        <td>4 (928.80)</td>
-                                        <td id="COPPER25FEBFUT_buy_rate">836.85</td>
+                                        <td>{{$val->TotalUser}} ({{ $val->BuyPrice}})</td>
+                                        <td>>{{$val->TotalUser}} ({{ $val->SalePrice}})</td>
+                                        <td id="COPPER25FEBFUT_buy_rate">{{ $val->SalePrice}}</td>
                                         <td id="COPPER25FEBFUT_sell_rate">0</td>
                                         <td id="COPPER25FEBFUT_total_lots">2</td>
                                         <td id="COPPER25FEBFUT_net_lots">2</td>
                                         <td id="COPPER25FEBFUT_m2m">-45000</td>
                                     </tr>
-
+                                    @endforeach
                                 </tbody>
                             </table>
                         </div>

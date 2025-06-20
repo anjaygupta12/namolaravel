@@ -78,9 +78,10 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
         Route::get('brokers/create', [BrokerController::class, 'create'])->name('brokers-create');
         Route::post('brokers', [BrokerController::class, 'store'])->name('brokers-store');
         Route::get('brokers/{id}/edit', [BrokerController::class, 'edit'])->name('brokers-edit');
+        Route::get('brokers/{id}/copy', [BrokerController::class, 'copy'])->name('brokers-copy');
         Route::put('brokers/{id}', [BrokerController::class, 'update'])->name('brokers-update');
         Route::delete('brokers/{id}', [BrokerController::class, 'destroy'])->name('brokers-destroy');
-        Route::post('brokers/{id}/toggle-status', [BrokerController::class, 'toggleStatus'])->name('brokers-toggle-status');
+        Route::get('brokers/{id}', [BrokerController::class, 'toggleStatus'])->name('brokers-toggle-status');
         
         // Broker M2M
         Route::get('brokers/{id}/m2m', [BrokerController::class, 'showM2M'])->name('brokers-m2m');
@@ -130,6 +131,10 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
         
         // Trades
         Route::get('trades', [AdminController::class, 'trades'])->name('trades');
+        Route::get('trade-create', [AdminController::class, 'tradeCreate'])->name('trade.create');
+        Route::post('trade-store', [AdminController::class, 'storeOrUpdate'])->name('trades.save');
+        Route::get('trade-edit/{id}', [AdminController::class, 'tradesEdit'])->name('trade.edit');
+
         Route::get('trades-list', [AdminController::class, 'tradesList'])->name('trades-list');
         Route::get('group-trades', [AdminController::class, 'groupTrades'])->name('group-trades');
         Route::get('closed-trades', [AdminController::class, 'closedTrades'])->name('closed-trades');
@@ -138,6 +143,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
         
         // Funds
         Route::get('funds', [AdminController::class, 'funds'])->name('funds-wds');
+        Route::get('funds-report', [AdminController::class, 'fundsReport'])->name('funds-report');
         Route::get('create-funds', [AdminController::class, 'createFunds'])->name('create-funds');
         Route::get('create-funds-wd', [AdminController::class, 'createFundsWd'])->name('create-funds-wd');
         Route::get('deposit-requests', [AdminController::class, 'depositRequests'])->name('deposit-requests');
@@ -172,8 +178,13 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
         // Market Scripts and Scrip Data
         Route::get('market-scripts', [AdminController::class, 'marketScripts'])->name('market-scripts');
         Route::get('scrip-data', [AdminController::class, 'scripData'])->name('scrip-data');
-        
-        // Reports
+        Route::get('script-status/{id}', [AdminController::class, 'scriptStatus'])->name('acript.status');
+        Route::get('script-edit/{id}', [AdminController::class, 'editScript'])->name('script.edit');
+        Route::get('script-delete/{id}', [AdminController::class, 'deleteScript'])->name('script.delete');
+        Route::post('script-update', [AdminController::class, 'updateScript'])->name('script.update');
+
+
+// Reports
         Route::prefix('reports')->name('reports-')->group(function () {
             Route::get('dashboard', [ReportController::class, 'dashboard'])->name('dashboard');
             Route::get('user-registration', [ReportController::class, 'userRegistration'])->name('user-registration');

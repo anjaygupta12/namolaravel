@@ -1,391 +1,117 @@
 @extends('layouts.user')
 
-@section('styles')
-<style>
-    .trade-item {
-        border-bottom: 1px solid #eee;
-        padding: 12px 0;
-    }
-    .trade-item:last-child {
-        border-bottom: none;
-    }
-    .profit {
-        color: #28a745;
-    }
-    .loss {
-        color: #dc3545;
-    }
-    .trade-tabs .nav-link {
-        padding: 0.5rem 0.75rem;
-        font-size: 0.9rem;
-    }
-    .trade-details {
-        font-size: 0.85rem;
-    }
-    .trade-symbol {
-        font-weight: bold;
-        font-size: 1rem;
-    }
-    .trade-type {
-        display: inline-block;
-        padding: 2px 8px;
-        border-radius: 3px;
-        font-size: 0.75rem;
-        font-weight: bold;
-    }
-    .buy {
-        background-color: rgba(40, 167, 69, 0.1);
-        color: #28a745;
-    }
-    .sell {
-        background-color: rgba(220, 53, 69, 0.1);
-        color: #dc3545;
-    }
-</style>
+@section('title', 'Trades')
+
+@section('head')
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 @endsection
 
 @section('content')
 <div id="appCapsule">
-    <div class="section mt-2">
-        <div class="card">
-            <div class="card-body">
-                <ul class="nav nav-tabs trade-tabs" role="tablist">
-                    <li class="nav-item">
-                        <a class="nav-link active" data-bs-toggle="tab" href="#activeTrades" role="tab">
-                            Active
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" data-bs-toggle="tab" href="#pendingOrders" role="tab">
-                            Pending
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" data-bs-toggle="tab" href="#closedTrades" role="tab">
-                            Closed
-                        </a>
-                    </li>
-                </ul>
+    <div class="section wallet-card-section pt-1">
+        <div class="wallet-card">
+            <ul class="nav nav-tabs lined" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" data-bs-toggle="tab" href="#Pending" role="tab">Pending</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#Active" role="tab">Active</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#Closed" role="tab">Closed</a>
+                </li>
+            </ul>
 
-                <div class="tab-content mt-1">
-                    <!-- Active Trades Tab -->
-                    <div class="tab-pane fade show active" id="activeTrades" role="tabpanel">
-                        <div class="trade-list">
-                            <!-- Trade Item 1 -->
-                            <div class="trade-item">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <span class="trade-symbol">RELIANCE</span>
-                                        <span class="trade-type buy">BUY</span>
-                                    </div>
-                                    <div class="text-end">
-                                        <div class="profit">+₹1,245.50</div>
-                                        <small class="text-muted">+2.1%</small>
-                                    </div>
-                                </div>
-                                <div class="trade-details mt-1">
-                                    <div class="row">
-                                        <div class="col-6">
-                                            <small class="text-muted">Open: </small>
-                                            <small>₹2,430.25</small>
-                                        </div>
-                                        <div class="col-6 text-end">
-                                            <small class="text-muted">Current: </small>
-                                            <small>₹2,456.75</small>
-                                        </div>
-                                    </div>
-                                    <div class="row mt-1">
-                                        <div class="col-6">
-                                            <small class="text-muted">Qty: </small>
-                                            <small>5</small>
-                                        </div>
-                                        <div class="col-6 text-end">
-                                            <small class="text-muted">Date: </small>
-                                            <small>10 Jun 2023</small>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="d-flex justify-content-end mt-2">
-                                    <button class="btn btn-sm btn-outline-secondary me-2">Edit SL/TP</button>
-                                    <button class="btn btn-sm btn-danger">Close</button>
-                                </div>
-                            </div>
-                            
-                            <!-- Trade Item 2 -->
-                            <div class="trade-item">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <span class="trade-symbol">TATAMOTORS</span>
-                                        <span class="trade-type sell">SELL</span>
-                                    </div>
-                                    <div class="text-end">
-                                        <div class="loss">-₹345.20</div>
-                                        <small class="text-muted">-1.5%</small>
-                                    </div>
-                                </div>
-                                <div class="trade-details mt-1">
-                                    <div class="row">
-                                        <div class="col-6">
-                                            <small class="text-muted">Open: </small>
-                                            <small>₹450.75</small>
-                                        </div>
-                                        <div class="col-6 text-end">
-                                            <small class="text-muted">Current: </small>
-                                            <small>₹456.30</small>
-                                        </div>
-                                    </div>
-                                    <div class="row mt-1">
-                                        <div class="col-6">
-                                            <small class="text-muted">Qty: </small>
-                                            <small>10</small>
-                                        </div>
-                                        <div class="col-6 text-end">
-                                            <small class="text-muted">Date: </small>
-                                            <small>09 Jun 2023</small>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="d-flex justify-content-end mt-2">
-                                    <button class="btn btn-sm btn-outline-secondary me-2">Edit SL/TP</button>
-                                    <button class="btn btn-sm btn-danger">Close</button>
-                                </div>
-                            </div>
-                            
-                            <!-- Trade Item 3 -->
-                            <div class="trade-item">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <span class="trade-symbol">HDFCBANK</span>
-                                        <span class="trade-type buy">BUY</span>
-                                    </div>
-                                    <div class="text-end">
-                                        <div class="profit">+₹578.30</div>
-                                        <small class="text-muted">+0.7%</small>
-                                    </div>
-                                </div>
-                                <div class="trade-details mt-1">
-                                    <div class="row">
-                                        <div class="col-6">
-                                            <small class="text-muted">Open: </small>
-                                            <small>₹1,670.20</small>
-                                        </div>
-                                        <div class="col-6 text-end">
-                                            <small class="text-muted">Current: </small>
-                                            <small>₹1,678.50</small>
-                                        </div>
-                                    </div>
-                                    <div class="row mt-1">
-                                        <div class="col-6">
-                                            <small class="text-muted">Qty: </small>
-                                            <small>3</small>
-                                        </div>
-                                        <div class="col-6 text-end">
-                                            <small class="text-muted">Date: </small>
-                                            <small>08 Jun 2023</small>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="d-flex justify-content-end mt-2">
-                                    <button class="btn btn-sm btn-outline-secondary me-2">Edit SL/TP</button>
-                                    <button class="btn btn-sm btn-danger">Close</button>
-                                </div>
-                            </div>
-                        </div>
+            <div class="tab-content">
+                <!-- Pending Trades Tab -->
+                <div class="tab-pane fade show active" id="Pending" role="tabpanel">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <tbody id="tblpending">
+                                <!-- Pending trades will be loaded here via AJAX -->
+                            </tbody>
+                        </table>
                     </div>
-                    
-                    <!-- Pending Orders Tab -->
-                    <div class="tab-pane fade" id="pendingOrders" role="tabpanel">
-                        <div class="trade-list">
-                            <!-- Pending Order 1 -->
-                            <div class="trade-item">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <span class="trade-symbol">INFY</span>
-                                        <span class="trade-type buy">BUY LIMIT</span>
-                                    </div>
-                                    <div class="text-end">
-                                        <div>₹1,520.00</div>
-                                        <small class="text-muted">Current: ₹1,545.30</small>
-                                    </div>
-                                </div>
-                                <div class="trade-details mt-1">
-                                    <div class="row">
-                                        <div class="col-6">
-                                            <small class="text-muted">Qty: </small>
-                                            <small>5</small>
-                                        </div>
-                                        <div class="col-6 text-end">
-                                            <small class="text-muted">Date: </small>
-                                            <small>10 Jun 2023</small>
-                                        </div>
-                                    </div>
-                                    <div class="row mt-1">
-                                        <div class="col-6">
-                                            <small class="text-muted">SL: </small>
-                                            <small>₹1,500.00</small>
-                                        </div>
-                                        <div class="col-6 text-end">
-                                            <small class="text-muted">TP: </small>
-                                            <small>₹1,580.00</small>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="d-flex justify-content-end mt-2">
-                                    <button class="btn btn-sm btn-outline-secondary me-2">Edit</button>
-                                    <button class="btn btn-sm btn-danger">Cancel</button>
-                                </div>
-                            </div>
-                            
-                            <!-- Pending Order 2 -->
-                            <div class="trade-item">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <span class="trade-symbol">SBIN</span>
-                                        <span class="trade-type sell">SELL STOP</span>
-                                    </div>
-                                    <div class="text-end">
-                                        <div>₹580.00</div>
-                                        <small class="text-muted">Current: ₹595.40</small>
-                                    </div>
-                                </div>
-                                <div class="trade-details mt-1">
-                                    <div class="row">
-                                        <div class="col-6">
-                                            <small class="text-muted">Qty: </small>
-                                            <small>10</small>
-                                        </div>
-                                        <div class="col-6 text-end">
-                                            <small class="text-muted">Date: </small>
-                                            <small>09 Jun 2023</small>
-                                        </div>
-                                    </div>
-                                    <div class="row mt-1">
-                                        <div class="col-6">
-                                            <small class="text-muted">SL: </small>
-                                            <small>₹610.00</small>
-                                        </div>
-                                        <div class="col-6 text-end">
-                                            <small class="text-muted">TP: </small>
-                                            <small>₹550.00</small>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="d-flex justify-content-end mt-2">
-                                    <button class="btn btn-sm btn-outline-secondary me-2">Edit</button>
-                                    <button class="btn btn-sm btn-danger">Cancel</button>
-                                </div>
-                            </div>
-                        </div>
+                </div>
+
+                <!-- Active Trades Tab -->
+                <div class="tab-pane fade" id="Active" role="tabpanel">
+                    <ul class="nav nav-tabs lined">
+                        <li class="nav-item btn btn-danger" style="border-radius:0;margin: 0px 2px 0px 2px;height:25px">
+                            <a class="text-white" href="#" data-bs-toggle="modal" onclick="CloseStockmodal('MCX');">Close MCX Trades</a>
+                        </li>
+                        <li class="nav-item btn btn-danger" style="border-radius:0;margin: 0px 2px 0px 2px;height:25px">
+                            <a class="text-white" href="#" data-bs-toggle="modal" onclick="CloseStockmodal('NSE');">Close NSE Trades</a>
+                        </li>
+                        <li class="nav-item btn btn-danger" style="border-radius:0;margin: 0px 2px 0px 2px;height:25px">
+                            <a class="text-white" href="#" data-bs-toggle="modal" onclick="CloseStockmodal('COMEX');">Close COMEX Trades</a>
+                        </li>
+                    </ul>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <tbody id="tblactive">
+                                <!-- Active trades will be loaded here via AJAX -->
+                            </tbody>
+                        </table>
                     </div>
-                    
-                    <!-- Closed Trades Tab -->
-                    <div class="tab-pane fade" id="closedTrades" role="tabpanel">
-                        <div class="trade-list">
-                            <!-- Closed Trade 1 -->
-                            <div class="trade-item">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <span class="trade-symbol">TCS</span>
-                                        <span class="trade-type buy">BUY</span>
-                                    </div>
-                                    <div class="text-end">
-                                        <div class="profit">+₹1,850.00</div>
-                                        <small class="text-muted">+3.2%</small>
-                                    </div>
-                                </div>
-                                <div class="trade-details mt-1">
-                                    <div class="row">
-                                        <div class="col-6">
-                                            <small class="text-muted">Open: </small>
-                                            <small>₹3,450.25</small>
+                </div>
+
+                <!-- Closed Trades Tab -->
+                <div class="tab-pane fade" id="Closed" role="tabpanel">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <tbody id="TBLCLOSED">
+                                <!-- Closed trades will be loaded here via AJAX -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Close Single Trade Modal -->
+    <div class="modal fade action-sheet" id="CloseSingleTrade" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document" id="dvModal">
+            <!-- Modal content will be loaded dynamically -->
+        </div>
+    </div>
+
+    <!-- Close Bulk Trades Modal -->
+    <div class="modal fade action-sheet" id="CloseBulkSheet" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document" style="padding:350px">
+            <div class="modal-content" style="background-color: #311b7f;">
+                <div class="modal-header">
+                    <h5 class="modal-title text-white fw-bold">
+                        Please enter your password to close all active trades in <label id="lblBulkCloseName"></label>
+                    </h5>
+                </div>
+                <div class="modal-body">
+                    <div class="card" style="background-color: #311b7f;">
+                        <div class="card-body pt-0">
+                            <div class="tab-content mt-2">
+                                <div class="tab-pane fade show active">
+                                    <form id="bulkCloseForm">
+                                        <div class="form-group basic">
+                                            <div class="input-wrapper">
+                                                <label class="label" for="password">Password</label>
+                                                <input type="password" class="form-control" id="password" name="password" placeholder="Enter Password" required>
+                                            </div>
                                         </div>
-                                        <div class="col-6 text-end">
-                                            <small class="text-muted">Close: </small>
-                                            <small>₹3,560.75</small>
+
+                                        <div class="form-group basic">
+                                            <div class="input-wrapper text-center">
+                                                <button type="submit" class="btn btn-success" style="border-radius:0">Submit</button>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="row mt-1">
-                                        <div class="col-6">
-                                            <small class="text-muted">Qty: </small>
-                                            <small>2</small>
+
+                                        <div class="form-group basic">
+                                            <div class="input-wrapper text-center">
+                                                <button type="button" class="btn btn-danger" data-bs-dismiss="modal" style="border-radius:0">Don't Close My Trades</button>
+                                            </div>
                                         </div>
-                                        <div class="col-6 text-end">
-                                            <small class="text-muted">Closed: </small>
-                                            <small>05 Jun 2023</small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Closed Trade 2 -->
-                            <div class="trade-item">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <span class="trade-symbol">ICICIBANK</span>
-                                        <span class="trade-type sell">SELL</span>
-                                    </div>
-                                    <div class="text-end">
-                                        <div class="loss">-₹420.50</div>
-                                        <small class="text-muted">-0.8%</small>
-                                    </div>
-                                </div>
-                                <div class="trade-details mt-1">
-                                    <div class="row">
-                                        <div class="col-6">
-                                            <small class="text-muted">Open: </small>
-                                            <small>₹920.50</small>
-                                        </div>
-                                        <div class="col-6 text-end">
-                                            <small class="text-muted">Close: </small>
-                                            <small>₹928.70</small>
-                                        </div>
-                                    </div>
-                                    <div class="row mt-1">
-                                        <div class="col-6">
-                                            <small class="text-muted">Qty: </small>
-                                            <small>5</small>
-                                        </div>
-                                        <div class="col-6 text-end">
-                                            <small class="text-muted">Closed: </small>
-                                            <small>04 Jun 2023</small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Closed Trade 3 -->
-                            <div class="trade-item">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <span class="trade-symbol">WIPRO</span>
-                                        <span class="trade-type buy">BUY</span>
-                                    </div>
-                                    <div class="text-end">
-                                        <div class="profit">+₹675.20</div>
-                                        <small class="text-muted">+1.5%</small>
-                                    </div>
-                                </div>
-                                <div class="trade-details mt-1">
-                                    <div class="row">
-                                        <div class="col-6">
-                                            <small class="text-muted">Open: </small>
-                                            <small>₹410.30</small>
-                                        </div>
-                                        <div class="col-6 text-end">
-                                            <small class="text-muted">Close: </small>
-                                            <small>₹416.45</small>
-                                        </div>
-                                    </div>
-                                    <div class="row mt-1">
-                                        <div class="col-6">
-                                            <small class="text-muted">Qty: </small>
-                                            <small>10</small>
-                                        </div>
-                                        <div class="col-6 text-end">
-                                            <small class="text-muted">Closed: </small>
-                                            <small>02 Jun 2023</small>
-                                        </div>
-                                    </div>
+                                    </form>
                                 </div>
                             </div>
                         </div>
@@ -394,16 +120,297 @@
             </div>
         </div>
     </div>
-</div>
-@endsection
 
-@section('scripts')
+    <!-- Success Dialog -->
+    <div class="modal fade dialogbox" id="DialogIconedSuccess" data-bs-backdrop="static" tabindex="-1" aria-hidden="true" style="display: none;">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-icon text-success">
+                    <ion-icon name="checkmark-circle"></ion-icon>
+                </div>
+                <div class="modal-header">
+                    <h5 class="modal-title">Your Trade has been closed</h5>
+                </div>
+                <div class="modal-body">
+                    <span id="successMessage">Your trade has been successfully closed.</span>
+                </div>
+                <div class="modal-footer">
+                    <div class="btn-inline">
+                        <a href="#" class="btn" data-bs-dismiss="modal">CLOSE</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
+    var Close = '';
+    
+    // Setup CSRF token for AJAX requests
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
+    });
+
     $(document).ready(function() {
-        // Initialize tabs
-        $('.trade-tabs a').on('click', function (e) {
-            e.preventDefault();
-            $(this).tab('show');
+        LoadPendingTrades();
+        LoadActiveTrades();
+        LoadClosedTrades();
+    });
+
+    function LoadPendingTrades() {
+        $.ajax({
+            type: "GET",
+            url: "{{ route('pending') }}",
+            dataType: "json",
+            success: function(response) {
+                if (response.success) {
+                    $('#tblpending').html('');
+                    var html = '';
+                    
+                    response.data.forEach(function(trade) {
+                        var badgeClass = trade.Mode === 'BUY ORDER' ? 'badge-success' : 'badge-danger';
+                        var actionText = trade.Mode === 'BUY ORDER' ? 'Bought' : 'Sold';
+                        
+                        html += `
+                            <tr>
+                                <td scope="row">
+                                    <p class="date">
+                                        <span class="badge ${badgeClass}">Bought X1</span>&nbsp;&nbsp;
+                                        <span class="badge badge-success">${trade.Status_Exec}</span>
+                                    </p>
+                                    <h4 class="comodity mt-1">${trade.Symbol}</h4>
+                                    <p class="date mt-1">${actionText} by Trader</p>
+                                    <p class="detail"><b>Margin used</b> ${trade.margin_used || '1494'}</p>
+                                </td>
+                                <td></td>
+                                <td class="text-end text-primary">
+                                    <p class="date mb-1">${trade.Timestamp}</p>
+                                    <p class="text-white fw-bold mb-0">8.3</p>
+                                    <button class="btn btn-danger mb-1" onclick="OpenCloseModal(${trade.Pk_id});" style="border-radius:0">Close Trade</button>
+                                    <p class="text-white fw-bold">Holding margin Req: ${trade.holding_margin_req || '3735'}</p>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    
+                    $('#tblpending').html(html);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error loading pending trades:', error);
+            }
+        });
+    }
+
+    function LoadActiveTrades() {
+        $.ajax({
+            type: "GET",
+            url: "{{ route('active') }}",
+            dataType: "json",
+            success: function(response) {
+                if (response.success) {
+                    $('#tblactive').html('');
+                    var html = '';
+                    
+                    response.data.forEach(function(trade) {
+                        html += `
+                            <tr>
+                                <td scope="row">
+                                    <h4 class="comodity mb-1">${trade.Symbol}</h4>
+                                    <p class="date">Sold by Trader <span class="badge badge-danger">6.2</span></p>
+                                    <p class="detail">${trade.Timestamp}</p>
+                                </td>
+                                <td></td>
+                                <td class="text-end text-primary">
+                                    <p class="text-white fw-bold mb-1">
+                                        <span class="badge badge-danger">-1890 / -40</span> 
+                                        <span class="badge badge-danger">QTY:${trade.quantity || '900'}</span>
+                                    </p>
+                                    <p class="date">Bought by Trader <span class="badge badge-success">6.2</span></p>
+                                    <p class="detail">${trade.Timestamp}</p>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    
+                    $('#tblactive').html(html);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error loading active trades:', error);
+            }
+        });
+    }
+
+    function LoadClosedTrades() {
+        $.ajax({
+            type: "GET",
+            url: "{{ route('closed') }}",
+            dataType: "json",
+            success: function(response) {
+                if (response.success) {
+                    $('#TBLCLOSED').html('');
+                    var html = '';
+                    
+                    response.data.forEach(function(trade) {
+                        html += `
+                            <tr>
+                                <td scope="row">
+                                    <h4 class="comodity mb-1">${trade.Symbol}</h4>
+                                    <p class="date">Sold by Trader <span class="badge badge-danger">6.2</span></p>
+                                    <p class="detail">${trade.Timestamp}</p>
+                                </td>
+                                <td></td>
+                                <td class="text-end text-primary">
+                                    <p class="text-white fw-bold mb-1">
+                                        <span class="badge badge-danger">-1890 / -40</span> 
+                                        <span class="badge badge-danger">QTY:${trade.quantity || '900'}</span>
+                                    </p>
+                                    <p class="date">Bought by Trader <span class="badge badge-success">6.2</span></p>
+                                    <p class="detail">${trade.Timestamp}</p>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    
+                    $('#TBLCLOSED').html(html);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error loading closed trades:', error);
+            }
+        });
+    }
+
+    function OpenCloseModal(tradeId) {
+        $.ajax({
+            type: "POST",
+            url: "{{ route('details') }}",
+            data: { ID: tradeId },
+            dataType: "json",
+            success: function(response) {
+                if (response.success && response.data.length > 0) {
+                    var trade = response.data[0];
+                    var modalHtml = generateModalContent(trade);
+                    $('#dvModal').html(modalHtml);
+                    $('#CloseSingleTrade').modal('show');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error loading trade details:', error);
+            }
+        });
+    }
+
+    function generateModalContent(trade) {
+        return `
+            <div class="modal-content" style="background-color: #311b7f;">
+                <div class="modal-header">
+                    <h5 class="modal-title text-white fw-bold">${trade.Symbol}</h5>
+                </div>
+                <div class="modal-body">
+                    <div class="card" style="background-color: #311b7f;">
+                        <div class="card-body pt-0">
+                            <div class="tab-content mt-2">
+                                <div class="tab-pane fade show active">
+                                    <ul class="nav nav-tabs lined">
+                                        <button class="nav-item" style="background: #b24153;" onclick="SAVEEXIT(${trade.Pk_id});">
+                                            <a class="nav-link" style="color: #fff; font-size: 15px;">Exit Buy in loss of -600</a>
+                                        </button>
+                                    </ul>
+                                    <div class="table-responsive">
+                                        <table class="table">
+                                            <tbody>
+                                                <tr><td><h4 class="comodity">Bid: ${trade.Bid}</h4></td><td class="text-end text-primary"><h4 class="comodity">Ask: ${trade.Ask}</h4></td></tr>
+                                                <tr><td><h4 class="comodity">Last: ${trade.TradeLast}</h4></td><td class="text-end text-primary"><h4 class="comodity">Change: ${trade.Change}</h4></td></tr>
+                                                <tr><td><h4 class="comodity">High: ${trade.High}</h4></td><td class="text-end text-primary"><h4 class="comodity">Low: ${trade.Low}</h4></td></tr>
+                                                <tr><td><h4 class="comodity">Open: ${trade.TradeOpen}</h4></td><td class="text-end text-primary"><h4 class="comodity">Bid Qty: ${trade.BidQty}</h4></td></tr>
+                                                <tr><td><h4 class="comodity">Close: ${trade.PrevClose}</h4></td><td class="text-end text-primary"><h4 class="comodity">Ask Qty: ${trade.AskQty}</h4></td></tr>
+                                                <tr><td><h4 class="comodity">Volume: ${trade.Volume}</h4></td><td class="text-end text-primary"><h4 class="comodity">Last Traded Qty: ${trade.LastTradeQty}</h4></td></tr>
+                                                <tr><td><h4 class="comodity">Upper ckt: ${trade.UpperCircuit}</h4></td><td class="text-end text-primary"><h4 class="comodity">Open Interest: ${trade.OpenInterest}</h4></td></tr>
+                                                <tr><td><h4 class="comodity">Atp: ${trade.Atp}</h4></td><td class="text-end text-primary"><h4 class="comodity">Lower ckt: ${trade.LowerCircuit}</h4></td></tr>
+                                                <tr><td></td><td class="text-end text-primary"><h4 class="comodity">Lot Size: ${trade.LotSize}</h4></td></tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function CloseStockmodal(tradeType) {
+        if (tradeType !== '') {
+            Close = tradeType;
+            $('#lblBulkCloseName').html(tradeType);
+            $('#CloseBulkSheet').modal('show');
+        }
+    }
+
+    function SAVEEXIT(tradeId) {
+        $.ajax({
+            type: "POST",
+            url: "{{ route('exit') }}",
+            data: { ID: tradeId },
+            dataType: "json",
+            success: function(response) {
+                if (response.success) {
+                    $('#CloseSingleTrade').modal('hide');
+                    $('#successMessage').text('Trade closed successfully');
+                    $('#DialogIconedSuccess').modal('show');
+                    LoadPendingTrades();
+                    LoadActiveTrades();
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error closing trade:', error);
+                alert('Error closing trade. Please try again.');
+            }
+        });
+    }
+
+    // Handle bulk close form submission
+    $('#bulkCloseForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        var password = $('#password').val();
+        if (!password) {
+            alert('Please enter your password');
+            return;
+        }
+
+        $.ajax({
+            type: "POST",
+            url: "{{ route('bulk-close') }}",
+            data: {
+                exchange_type: Close,
+                password: password
+            },
+            dataType: "json",
+            success: function(response) {
+                if (response.success) {
+                    $('#CloseBulkSheet').modal('hide');
+                    $('#successMessage').text(response.message);
+                    $('#DialogIconedSuccess').modal('show');
+                    LoadActiveTrades();
+                    LoadPendingTrades();
+                } else {
+                    alert(response.message || 'Error closing trades');
+                }
+            },
+            error: function(xhr, status, error) {
+                var errorMessage = 'Error closing trades';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMessage = xhr.responseJSON.message;
+                }
+                alert(errorMessage);
+            }
         });
     });
 </script>

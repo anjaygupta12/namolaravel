@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class DepositeMaster extends Model
 {
-    protected $table = 'DepositeMaster';
+    protected $table = 'depositemaster';
     protected $primaryKey = 'PK_Id';
     public $timestamps = false;
     

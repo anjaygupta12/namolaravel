@@ -6,15 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class MarketMaster extends Model
 {
-    protected $table = 'MarketMaster';
-    protected $primaryKey = 'PK_Id';
+    protected $table = 'marketmaster';
+    protected $primaryKey = 'ScriptId';
     public $timestamps = false;
     
-    protected $fillable = [
-        'Symbol', 'Name', 'MarketType', 'Bid', 'Ask', 'High', 'Low', 
-        'TradeLast', 'Change', 'TradeOpen', 'Volume', 'LastTradeQty',
-        'Atp', 'LotSize', 'OpenInterest', 'BidQty', 'AskQty', 'PrevClose',
-        'UpperCircuit', 'LowerCircuit', 'Timestamp', 'LastModify', 'Isactive'
+    protected $fillable = ['ScriptName','MarketType','LotSize','TickSize',
+        'Timestamp','CreatedBy','CreatedAt','UpdatedBy','UpdatedAt','LastModify','Isactive'
     ];
     
     protected $casts = [

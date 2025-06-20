@@ -7,7 +7,7 @@
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div class="card-header card-header-primary">
+                <div class="card-header">
                     <h4 class="card-title">Trades List</h4>
                     <p class="card-category">Comprehensive list of all trades</p>
                 </div>

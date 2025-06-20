@@ -13,6 +13,10 @@
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('assets/img/icon/192x192.png') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
     <script src="https://kit.fontawesome.com/9701dbec97.js"></script>
+      <title>Transaction Page</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
     <style>
         .badge {
             font-size: 15px;
@@ -45,6 +49,14 @@
             <a href="{{ route('deposit.request.form') }}" class="headerButton icon">
                 <i class="fas fa-home"></i>
                 <span>Deposit</span>
+            </a>
+              <a href="{{route('withdrawal.requests.form') }}" class="headerButton icon">
+                <i class="fas fa-hand-holding-usd" aria-hidden="true"></i>
+                <span>Withdraw</span>
+            </a>
+            <a href="#" class="headerButton icon">
+                <i class="fas fa-share-alt" aria-hidden="true"></i>
+                <span>Share</span>
             </a>
         </div>
     </div>

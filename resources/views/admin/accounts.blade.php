@@ -1,7 +1,6 @@
 @extends('layouts.admin')
 
 @section('title', 'Accounts')
-
 @section('content')
 <div class="container-fluid">
     <div class="row">
@@ -11,7 +10,7 @@
                     <h4 class="card-title">Accounts</h4>
                     <p class="card-category">Manage system accounts and permissions</p>
                 </div>
-                <div class="card-body ">
+                <div class="card-body">
                     <div id="pjax-grid-activeTrade" data-pjax-container="" data-pjax-push-state="" data-pjax-timeout="1000">
                         <div class="container-fluid">
                             <div class="row">

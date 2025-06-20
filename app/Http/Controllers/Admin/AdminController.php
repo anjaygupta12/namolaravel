@@ -18,6 +18,9 @@ use Illuminate\Support\Carbon;
 use DB;
 use App\Models\DepositeMaster;
 use App\Models\Transdetail;
+use App\Models\MarketMaster;
+use App\Exports\FundsExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class AdminController extends Controller
 {
@@ -615,6 +618,33 @@ class AdminController extends Controller
                 'ip_address' => request()->ip()
             ]);
         }
+        $marketStats = DB::table('MarketBidMaster')
+            ->selectRaw('
+        Symbol,
+        COUNT(*)            AS TotalUser,
+        SUM(ToAmount)       AS ToAmount,
+        SUM(SalePrice)      AS SalePrice,
+        SUM(BuyPrice)       AS BuyPrice,
+        SUM(Bid)            AS Bid,
+        SUM(Ask)            AS Ask,
+        SUM(High)           AS Hig,
+        SUM(Low)            AS Low,
+        SUM(TradeLast)      AS TradeLast,
+        SUM(`Change`)       AS `Change`,
+        SUM(TradeOpen)      AS TradeOpen,
+        SUM(Volume)         AS Volume,
+        SUM(LastTradeQty)   AS LastTradeQty,
+        SUM(Atp)            AS Atp,
+        SUM(LotSize)        AS LotSize,
+        SUM(OpenInterest)   AS OpenInterest,
+        SUM(BidQty)         AS BidQty,
+        SUM(AskQty)         AS AskQty,
+        SUM(PrevClose)      AS PrevClose,
+        SUM(UpperCircuit)   AS UpperCircuit,
+        SUM(LowerCircuit)   AS LowerCircuit
+    ')
+            ->groupBy('Symbol')
+            ->get();
 
         return view('admin.active-positions', compact('positions'));
     }
@@ -634,6 +664,19 @@ class AdminController extends Controller
                 'ip_address' => request()->ip()
             ]);
         }
+
+
+        $positions = DB::table('marketplacemaster')
+            ->selectRaw('
+        Symbol,
+        IFNULL(AVG(LotSize), 0) AS Lots,
+        IFNULL(AVG(BUYPRICE), 0) AS BUYPRICE,
+        IFNULL(AVG(SELLPRICE), 0) AS SELLPRICE
+    ')
+            ->where('Status_Exec', 'Close')
+            ->groupBy('Symbol')
+            ->orderByDesc('Symbol')
+            ->get();
 
         return view('admin.closed-positions', compact('positions'));
     }
@@ -912,7 +955,7 @@ class AdminController extends Controller
     /**
      * Show trades page
      */
-    public function trades()
+    public function trades(Request $request)
     {
         // Get trades data
         $trades = []; // Replace with actual trade data fetching logic
@@ -924,8 +967,130 @@ class AdminController extends Controller
                 'ip_address' => request()->ip()
             ]);
         }
+        $query = DB::table('sp_getmarketwatch');
+
+        if ($request->filled('id')) {
+            $query->where('id', $request->id);
+        }
+
+        if ($request->filled('scrip_id')) {
+            $query->where('scrip_id', 'like', '%' . $request->scrip_id . '%');
+        }
+
+        if ($request->filled('segment') && $request->segment != 'All') {
+            $query->where('segment', $request->segment);
+        }
+
+        if ($request->filled('userid')) {
+            $query->where('user_id', $request->userid);
+        }
+
+        if ($request->filled('buy_rate')) {
+            $query->where('buy_price', $request->buy_rate);
+        }
+
+        if ($request->filled('sell_rate')) {
+            $query->where('sell_price', $request->sell_rate);
+        }
+
+        if ($request->filled('lots')) {
+            $query->where('lots', $request->lots);
+        }
+
+        $trades = $query->orderByDesc('id')->get();
 
         return view('admin.trades', compact('trades'));
+    }
+
+    public function tradeCreate()
+    {
+        $trades = [];
+
+        if (Session::has('admin_id')) {
+            AdminLog::create([
+                'admin_id' => Session::get('admin_id'),
+                'activity' => 'Viewed trades list',
+                'ip_address' => request()->ip()
+            ]);
+        }
+        $tradeUser = TradeUser::all();
+        return view('admin.create_trade', compact('trades', 'tradeUser'));
+    }
+
+    public function storeOrUpdate(Request $request)
+    {
+        if (Session::has('admin_id')) {
+            AdminLog::create([
+                'admin_id' => Session::get('admin_id'),
+                'activity' => 'Viewed trades list',
+                'ip_address' => request()->ip()
+            ]);
+        }
+
+        $validated = $request->validate([
+            'scrip_id' => 'required|string',
+            'userid' => 'required|integer',
+            'lots' => 'required|integer',
+            'buy_price' => 'nullable|numeric',
+            'sell_price' => 'nullable|numeric',
+            'segment' => 'required',
+        ]);
+        $id = $request->input('id');
+        if ($id) {
+            $trade = DB::table('sp_getmarketwatch')->where('id', $id)->first();
+            if (!$trade) {
+                return back()->with('error', 'Record not found.');
+            }
+
+            DB::table('sp_getmarketwatch')->where('id', $id)->update([
+                'scrip_id' => $validated['scrip_id'],
+                'user_id' => $validated['userid'],
+                'lots' => $validated['lots'],
+                'buy_price' => $validated['buy_price'],
+                'sell_price' => $validated['sell_price'],
+                'segment' => $validated['segment'],
+                'updated_at' => now()
+            ]);
+
+            if ($request->filled('transaction_password')) {
+                $data['transaction_password'] = bcrypt($request->transaction_password);
+            }
+
+            DB::table('sp_getmarketwatch')->where('id', $id)->update($data);
+            return back()->with('success', 'Trade updated successfully.');
+        } else {
+            // Create new record
+            DB::table('sp_getmarketwatch')->insert([
+                'scrip_id' => $validated['scrip_id'],
+                'user_id' => $validated['userid'],
+                'lots' => $validated['lots'],
+                'buy_price' => $validated['buy_price'],
+                'sell_price' => $validated['sell_price'],
+                'segment' => $validated['segment'],
+                'transaction_password' => bcrypt($request->transaction_password),
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+            return back()->with('success', 'Trade created successfully.');
+        }
+    }
+    public function tradesEdit($id = null)
+    {
+        $trades = [];
+
+        if (Session::has('admin_id')) {
+            AdminLog::create([
+                'admin_id' => Session::get('admin_id'),
+                'activity' => 'Viewed trades list',
+                'ip_address' => request()->ip()
+            ]);
+        }
+        $trade = null;
+        if ($id) {
+            $trade = DB::table('sp_getmarketwatch')->where('id', $id)->first();
+        }
+        $tradeUser = TradeUser::all();
+        return view('admin.create_trade', compact('trade', 'tradeUser'));
     }
 
     /**
@@ -981,6 +1146,68 @@ class AdminController extends Controller
                 'ip_address' => request()->ip()
             ]);
         }
+        
+        // Get deleted trades data
+        $deletedTrades = []; // Replace with actual deleted trades data fetching logic
+        $userName = $request->username ?? null;
+        if (Session::has('admin_id')) {
+            AdminLog::create([
+                'admin_id' => Session::get('admin_id'),
+                'activity' => 'Viewed deleted trades',
+                'ip_address' => request()->ip()
+            ]);
+        }
+
+       // MySQL version – no NOLOCK hints
+$closedTrades = DB::table('closeMarketPlaceMaster as CP')
+    ->select([
+        'CP.Pk_id',
+        'CP.Fk_Id',
+        'CP.BUYPRICE',
+        'CP.SELLPRICE',
+        'CP.TransactionId',
+        'CP.Mode',
+        'CP.ToAmount',
+        'CP.TransactionMode',
+        'CP.Bid',
+        'CP.Ask',
+        'CP.High',
+        'CP.Low',
+        'CP.TradeLast',
+        'CP.Change',
+        'CP.TradeOpen',
+        'CP.Volume',
+        'CP.LastTradeQty',
+        'CP.Atp',
+        'CP.LotSize',
+        'CP.OpenInterest',
+        'CP.BidQty',
+        'CP.AskQty',
+        'CP.PrevClose',
+        'CP.UpperCircuit',
+        'CP.LowerCircuit',
+        DB::raw('MP.Timestamp   AS BUYDATE'),
+        DB::raw('CP.Timestamp   AS SOLDDATE'),
+        'CP.Lastmodify',
+        'CP.Isactive',
+        DB::raw("CONCAT(LM.USERID, ' ', LM.FULLNAME) AS UserId"),
+        'CP.Symbol',
+        'CP.IsMin',
+        'CP.IsMega',
+        'CP.Lots',
+        'CP.Price',
+        'CP.Status_Exec',
+        'CP.Exitrate',
+    ])
+    ->join('loginmaster  as LM', 'CP.UserId', '=', 'LM.PK_ID')
+    ->join('marketplacemaster as MP', 'MP.PK_ID', '=', 'CP.FK_ID')
+    ->where('MP.Status_Exec', 'Deleted')          // <- Laravel will bind this and quote it
+    ->when($userName, function ($q) use ($userName) {
+        $q->where('LM.UserId', $userName);
+    })
+    ->orderByDesc('CP.Timestamp')
+    ->get();
+
 
         return view('admin.closed-trades', compact('closedTrades'));
     }
@@ -992,7 +1219,7 @@ class AdminController extends Controller
     {
         // Get deleted trades data
         $deletedTrades = []; // Replace with actual deleted trades data fetching logic
-
+        $userName = $request->username ?? null;
         if (Session::has('admin_id')) {
             AdminLog::create([
                 'admin_id' => Session::get('admin_id'),
@@ -1000,6 +1227,56 @@ class AdminController extends Controller
                 'ip_address' => request()->ip()
             ]);
         }
+
+       // MySQL version – no NOLOCK hints
+$query = DB::table('closeMarketPlaceMaster as CP')
+    ->select([
+        'CP.Pk_id',
+        'CP.Fk_Id',
+        'CP.BUYPRICE',
+        'CP.SELLPRICE',
+        'CP.TransactionId',
+        'CP.Mode',
+        'CP.ToAmount',
+        'CP.TransactionMode',
+        'CP.Bid',
+        'CP.Ask',
+        'CP.High',
+        'CP.Low',
+        'CP.TradeLast',
+        'CP.Change',
+        'CP.TradeOpen',
+        'CP.Volume',
+        'CP.LastTradeQty',
+        'CP.Atp',
+        'CP.LotSize',
+        'CP.OpenInterest',
+        'CP.BidQty',
+        'CP.AskQty',
+        'CP.PrevClose',
+        'CP.UpperCircuit',
+        'CP.LowerCircuit',
+        DB::raw('MP.Timestamp   AS BUYDATE'),
+        DB::raw('CP.Timestamp   AS SOLDDATE'),
+        'CP.Lastmodify',
+        'CP.Isactive',
+        DB::raw("CONCAT(LM.USERID, ' ', LM.FULLNAME) AS UserId"),
+        'CP.Symbol',
+        'CP.IsMin',
+        'CP.IsMega',
+        'CP.Lots',
+        'CP.Price',
+        'CP.Status_Exec',
+        'CP.Exitrate',
+    ])
+    ->join('loginmaster  as LM', 'CP.UserId', '=', 'LM.PK_ID')
+    ->join('marketplacemaster as MP', 'MP.PK_ID', '=', 'CP.FK_ID')
+    ->where('MP.Status_Exec', 'Deleted')          // <- Laravel will bind this and quote it
+    ->when($userName, function ($q) use ($userName) {
+        $q->where('LM.UserId', $userName);
+    })
+    ->orderByDesc('CP.Timestamp')
+    ->get();
 
         return view('admin.deleted-trades', compact('deletedTrades'));
     }
@@ -1026,10 +1303,10 @@ class AdminController extends Controller
     /**
      * Show funds page
      */
-    public function funds()
+    public function funds(Request $request)
     {
         // Get funds data
-        $fundsData = []; // Replace with actual funds data fetching logic
+        $fundsData = [];
 
         if (Session::has('admin_id')) {
             AdminLog::create([
@@ -1039,9 +1316,105 @@ class AdminController extends Controller
             ]);
         }
 
-        return view('admin.funds', compact('fundsData'));
+        $depositQ = DB::table('transdetail as td')
+            ->join('tradeuser as tu', 'td.MemberId', '=', 'tu.userId')
+            ->where('td.TransPage', 'Deposit approval')
+            ->when($request->filled('user_id'), function ($q) use ($request) {
+                $uid = $request->user_id;
+                $q->where(function ($sub) use ($uid) {
+                    $sub->where('tu.userId', $uid)
+                        ->orWhere('tu.UserName', 'like', "%{$uid}%");
+                });
+            })
+            ->when($request->filled('amount'), function ($q) use ($request) {
+                $q->where('td.AmountS', $request->amount);
+            })
+            ->selectRaw("td.TransPage,tu.FullName,tu.UserName as UserName,td.PK_ID,td.AmountS,
+                        td.Remark,'Deposit' as Mode,td.adminstatus,td.transdate as Timestamp")
+            ->orderBy('Timestamp', 'desc')
+            ->get();
+
+        // Second half – withdrawals
+        $withdrawQ = DB::table('withdrawlmaster as wm')
+            ->join('tradeuser as tu', 'wm.UserId', '=', 'tu.userid')
+            ->when($request->filled('user_id'), function ($q) use ($request) {
+                $uid = $request->user_id;
+                $q->where(function ($sub) use ($uid) {
+                    $sub->where('tu.userId', $uid)
+                        ->orWhere('tu.UserName', 'like', "%{$uid}%");
+                });
+            })
+            ->when($request->filled('amount'), function ($q) use ($request) {
+                $q->where('td.AmountS', $request->amount);
+            })
+            ->selectRaw("tu.FullName,tu.UserName as UserName,wm.PK_ID,wm.Amount,wm.PaymentMethod,
+            'Withdrawal' as Mode,wm.Status as adminstatus,wm.Timestamp as Timestamp")
+            ->orderBy('Timestamp', 'desc')
+            ->get();
+
+        return view('admin.funds', compact('depositQ', 'withdrawQ'));
     }
 
+    public function fundsReport(Request $request)
+    {
+        $fundsData = [];
+
+        if (Session::has('admin_id')) {
+            AdminLog::create([
+                'admin_id' => Session::get('admin_id'),
+                'activity' => 'Viewed funds page',
+                'ip_address' => request()->ip()
+            ]);
+        }
+
+        $depositQ = DB::table('transdetail as td')
+            ->join('tradeuser as tu', 'td.MemberId', '=', 'tu.userId')
+            ->where('td.TransPage', 'Deposit approval')
+            ->selectRaw("td.TransPage,tu.FullName,tu.UserName as UserName,td.PK_ID,td.AmountS,
+                        td.Remark,'Deposit' as Mode,td.adminstatus,td.transdate as Timestamp")
+            ->orderBy('Timestamp', 'desc')
+            ->get();
+
+        // Second half – withdrawals
+        $withdrawQ = DB::table('withdrawlmaster as wm')
+            ->join('tradeuser as tu', 'wm.UserId', '=', 'tu.userid')
+            ->selectRaw("tu.FullName,tu.UserName as UserName,wm.PK_ID,wm.Amount,wm.PaymentMethod,
+            'Withdrawal' as Mode,wm.Status as adminstatus,wm.Timestamp as Timestamp")
+            ->orderBy('Timestamp', 'desc')
+            ->get();
+
+        $merged = collect();
+
+        foreach ($depositQ as $item) {
+            $merged->push([
+                $item->PK_ID,
+                $item->UserName,
+                $item->FullName,
+                $item->AmountS,
+                $item->Mode,
+                $item->Remark ?? '',
+                $item->Mode,
+                $item->Timestamp,
+            ]);
+        }
+
+        foreach ($withdrawQ as $item) {
+            $merged->push([
+                $item->PK_ID,
+                $item->UserName,
+                $item->FullName,
+                $item->Amount,
+                $item->Mode,
+                $item->PaymentMethod ?? '',
+                $item->Mode,
+                $item->Timestamp,
+            ]);
+        }
+
+        if ($request->has('export')) {
+            return Excel::download(new FundsExport($merged), 'trader_funds.xlsx');
+        }
+    }
     /**
      * Show create funds page
      */
@@ -1203,7 +1576,7 @@ class AdminController extends Controller
     public function marketScripts()
     {
         // Get market scripts data
-        $scriptsData = []; // Replace with actual market scripts data fetching logic
+        // $scriptsData =  MarketMaster::all();
 
         if (Session::has('admin_id')) {
             AdminLog::create([
@@ -1212,9 +1585,68 @@ class AdminController extends Controller
                 'ip_address' => request()->ip()
             ]);
         }
+        $scriptsData =  MarketMaster::where('CreatedBy', Session::get('admin_id'))->get();
 
         return view('admin.market-scripts', compact('scriptsData'));
     }
+    public function scriptStatus(Request $request, $id)
+    {
+        $scriptsData =  MarketMaster::where('ScriptId', $id)->first();
+        if ($scriptsData->Isactive == 1) {
+            $status = 0;
+        } else {
+            $status = 1;
+        }
+        MarketMaster::where('ScriptId', $id)
+            ->update(['Isactive' => $status]);
+        return back()->with('success', 'Script Status updated successfully.');
+    }
+    public function editScript(Request $request, $id)
+    {
+        $scriptsData =  MarketMaster::where('ScriptId', $id)->first();
+
+        return response()->json($scriptsData);
+    }
+    public function deleteScript(Request $request, $id)
+    {
+
+        MarketMaster::where('ScriptId', $id)->delete();
+        return back()->with('success', 'Script Status Deleted successfully.');
+    }
+    public function updateScript(request $request)
+    {
+        if (Session::has('admin_id')) {
+            AdminLog::create([
+                'admin_id' => Session::get('admin_id'),
+                'activity' => 'Viewed market scripts',
+                'ip_address' => request()->ip()
+            ]);
+        }
+
+        if ($request->id !== null) {
+            // Update existing record
+            MarketMaster::where('ScriptId', $request->id)->update([
+                'ScriptName' => $request->script_name,
+                'MarketType' => $request->market_type,
+                'LotSize' => $request->lot_size,
+                'TickSize' => $request->tick_size,
+                'Isactive' => $request->is_active
+            ]);
+            return back()->with('success', 'Script Updated successfully.');
+        } else {
+            MarketMaster::create([
+                'ScriptName' => $request->script_name,
+                'MarketType' => $request->market_type,
+                'LotSize' => $request->lot_size,
+                'TickSize' => $request->tick_size,
+                'Isactive' => $request->is_active,
+                'CreatedBy' => Session::get('admin_id')
+            ]);
+            return back()->with('success', 'Script Create successfully.');
+        }
+    }
+
+
 
     /**
      * Show scrip data page
@@ -1222,7 +1654,7 @@ class AdminController extends Controller
     public function scripData()
     {
         // Get scrip data
-        $scripData = []; // Replace with actual scrip data fetching logic
+        $scripData = [];
 
         if (Session::has('admin_id')) {
             AdminLog::create([

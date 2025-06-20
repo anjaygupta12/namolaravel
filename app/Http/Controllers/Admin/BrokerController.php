@@ -16,12 +16,18 @@ class BrokerController extends Controller
     /**
      * Display a listing of brokers
      */
-    public function index()
+    public function index(Request $request)
     {
-        // Get all brokers without sorting in the database query
-        $brokers = Broker::all();
-        
-        // Log admin activity
+          $query = Broker::query();
+
+    if ($request->filled('username')) {
+        $query->where('username', 'like', '%' . $request->username . '%');
+    }
+    if ($request->filled('status')) {
+        $query->where('account_status', $request->status);
+    }
+    $brokers = $query->get();
+
         if (Session::has('admin_id')) {
             AdminLog::create([
                 'admin_id' => Session::get('admin_id'),
@@ -48,7 +54,7 @@ class BrokerController extends Controller
      */
     public function create()
     {
-        return view('admin.new-broker');
+        return view('admin.new_broker');
     }
     
     /**
@@ -56,41 +62,40 @@ class BrokerController extends Controller
      */
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:100|unique:brokers,name',
-            'api_key' => 'nullable|string|max:255',
-            'api_secret' => 'nullable|string|max:255',
-            'api_url' => 'nullable|url',
-            'margin_percentage' => 'required|numeric|min:0|max:100',
-            'commission_percentage' => 'required|numeric|min:0|max:100',
-            'description' => 'nullable|string',
-        ]);
-        
-        if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
-        }
-        
         // Create broker
         $broker = new Broker();
-        $broker->name = $request->name;
-        $broker->api_key = $request->api_key;
-        $broker->api_secret = $request->api_secret;
-        $broker->api_url = $request->api_url;
-        $broker->margin_percentage = $request->margin_percentage;
-        $broker->commission_percentage = $request->commission_percentage;
-        $broker->description = $request->description;
-        $broker->is_active = $request->has('is_active') ? 1 : 0;
+        $broker->first_name = $request->first_name;
+         $broker->last_name = $request->last_name;
+          $broker->username = $request->username;
+        $broker->password =  $request->password;
+        $broker->transaction_password = $request->transaction_password;
+        $broker->ref_code = $request->ref_code;
+        $broker->user_type = $request->usertype;
+        $broker->account_status = $request->status;
+        $broker->auto_square_off_percentage = $request->auto_square_off_percentage;
+        $broker->notify_percentage = $request->notify_percentage;
+        $broker->profit_share = $request->profit_share;
+        $broker->brokerage_share = $request->brokerage_share;
+        $broker->clients_limit = $request->clients_limit;
+        $broker->sub_brokers_limit = $request->sub_brokers_limit;
+        $broker->payin_allowed = $request->payin_allowed;
+        $broker->payout_allowed = $request->payout_allowed;
+        $broker->create_client_allowed = $request->create_client_allowed;
+        $broker->client_tasks_allowed= $request->client_tasks_allowed;
+        $broker->trade_activity_allowed = $request->trade_activity_allowed;
+        $broker->notifications_allowed = $request->notifications_allowed;
+        $broker->mcx_enabled = $request->mcx_enabled; 
+        $broker->mcx_brokerage_type = $request->mcx_brokerage_type;
+        $broker->mcx_brokerage = $request->mcx_brokerage;
+        $broker->mcx_exposure_type = $request->mcx_exposure_type;
+        $broker->mcx_intraday_margin = $request->mcx_intraday_margin;
+        $broker->mcx_holding_margin = $request->mcx_holding_margin;
+        $broker->nse_enabled = $request->nse_enabled; 
+        $broker->nse_brokerage = $request->nse_brokerage;
+        $broker->nse_intraday_margin = $request->nse_intraday_margin; 
+        $broker->nse_holding_margin = $request->nse_holding_margin;
+        $broker->created_by = $request->created_by;
         $broker->save();
-        
-        // Log the action
-        AdminLog::create([
-            'admin_id' => Session::get('admin_id'),
-            'activity' => "Created new broker: {$broker->name}",
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-        ]);
         
         return redirect()->route('admin.brokers')
             ->with('success', 'Broker created successfully.');
@@ -101,8 +106,15 @@ class BrokerController extends Controller
      */
     public function edit($id)
     {
-        $broker = Broker::findOrFail($id);
-        return view('admin.edit-broker', compact('broker'));
+        $broker = Broker::where('BrokerId',$id)->first();
+        
+        return view('admin.new_broker', compact('broker'));
+    }
+        public function copy($id)
+    {
+        $broker = Broker::where('BrokerId',$id)->first();
+        
+        return view('admin.new_broker', compact('broker'));
     }
     
     /**
@@ -156,29 +168,23 @@ class BrokerController extends Controller
      */
     public function destroy($id)
     {
-        $broker = Broker::findOrFail($id);
-        $brokerName = $broker->name;
-        
-        // Check if broker has M2M data
-        $hasM2mData = BrokerM2M::where('broker_id', $id)->exists();
-        
-        if ($hasM2mData) {
-            return redirect()->back()
-                ->with('error', 'Cannot delete broker with M2M data. Deactivate it instead.');
-        }
-        
-        $broker->delete();
-        
-        // Log the action
-        AdminLog::create([
-            'admin_id' => Session::get('admin_id'),
-            'activity' => "Deleted broker: {$brokerName}",
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent(),
-        ]);
-        
+        $broker = Broker::where('BrokerId',$id)->delete();
         return redirect()->route('admin.brokers')
             ->with('success', 'Broker deleted successfully.');
+    }
+        public function toggleStatus($id)
+    {
+        $broker = Broker::where('BrokerId',$id)->first();
+       
+        if($broker->account_status==1){
+            $status = 0;
+        }else{
+            $status = 1;
+        }
+        $broker = Broker::where('BrokerId',$id)->update(['account_status'=>$status]);
+   
+        return redirect()->route('admin.brokers')
+            ->with('success', 'Broker Status successfully.');
     }
     
     /**
