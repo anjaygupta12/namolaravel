@@ -234,7 +234,7 @@
                                 </td>
                             </tr>
                         `;
-                    });
+                    }); 
                     
                     $('#tblactive').html(html);
                 }
