@@ -797,8 +797,8 @@ class AdminController extends Controller
      */
     public function editUser($id)
     {
-        $user = TradeUser::findOrFail($id);
-
+        $user = TradeUser::where('UserId',$id)->first();
+    
         if (Session::has('admin_id')) {
             AdminLog::create([
                 'admin_id' => Session::get('admin_id'),
