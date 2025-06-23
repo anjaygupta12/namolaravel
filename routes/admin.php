@@ -54,7 +54,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
         Route::post('users/store', [AdminController::class, 'storeUser'])->name('users-store');
         Route::get('users/view/{id}', [AdminController::class, 'viewUser'])->name('users-view');
         Route::get('users/edit/{id}', [AdminController::class, 'editUser'])->name('users-edit');
-        Route::post('users/update/{id}', [AdminController::class, 'updateUser'])->name('users-update');
+        Route::put('users/update/{id}', [AdminController::class, 'updateUser'])->name('users-update');
         Route::get('users/copy/{id}', [AdminController::class, 'copyUser'])->name('users-copy');
         Route::post('users/toggle-status/{id}', [AdminController::class, 'toggleUserStatus'])->name('users-toggle-status');
         Route::delete('users/delete/{id}', [AdminController::class, 'deleteUser'])->name('users-delete');

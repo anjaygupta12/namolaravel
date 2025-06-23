@@ -7,7 +7,7 @@
     <div class="row">
         <div class="col-md-12">
             <div class="card">
-                <div class="card-header card-header-primary">
+                <div class="card-header">
                     <h4 class="card-title">User Details</h4>
                     <p class="card-category">Viewing information for {{ $user->name }}</p>
                 </div>

@@ -21,6 +21,7 @@ use App\Models\Transdetail;
 use App\Models\MarketMaster;
 use App\Exports\FundsExport;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Models\Broker;
 
 class AdminController extends Controller
 {
@@ -717,7 +718,8 @@ class AdminController extends Controller
     }
     public function createUsers()
     {
-        return view('create-user');
+      
+        return view('admin/create-user');
     }
 
     /**
@@ -798,7 +800,7 @@ class AdminController extends Controller
     public function editUser($id)
     {
         $user = TradeUser::where('UserId',$id)->first();
-    
+        $brokers = Broker::all();
         if (Session::has('admin_id')) {
             AdminLog::create([
                 'admin_id' => Session::get('admin_id'),
@@ -807,7 +809,7 @@ class AdminController extends Controller
             ]);
         }
 
-        return view('admin.users-edit', compact('user'));
+        return view('admin.users-edit', compact('user','brokers'));
     }
 
     /**
@@ -815,43 +817,38 @@ class AdminController extends Controller
      */
     public function updateUser(Request $request, $id)
     {
-        $user = TradeUser::findOrFail($id);
+        
+        $user = TradeUser::where('UserId', $id)->first();
+       
+    // Update the user
+    $user->update([
+        'FullName' => $request->input('full_name'),
+        'Username' => $request->input('username'),
+        'Email' => $request->input('email'),
+        'Mobile' => $request->input('mobile'),
+        'City' => $request->input('city'),
+        'IsDemo' => $request->boolean('is_demo'),
+        'AllowOrdersBeyondHighLow' => $request->boolean('allow_orders_beyond_high_low'),
+        'AllowOrdersBetweenHighLow' => $request->boolean('allow_orders_between_high_low'),
+        'TradeEquityAsUnits' => $request->boolean('trade_equity_as_units'),
+        'IsActive' => $request->boolean('account_status'),
+        'auto_square_off' => $request->boolean('auto_square_off'),
+        'AutoSquareOffPercentage' => $request->input('auto_square_off_percentage', 90),
+        'NotifyPercentage' => $request->input('notify_percentage', 70),
+        'profit_book_interval' => $request->input('profit_book_interval', 0),
+        'MCXOptionsEnabled' => $request->boolean('mcx_enabled'),
+        'minimum_lots_single_comex' => $request->input('mcx_min_lot_per_trade', 0),
+        'maximum_lots_comex' => $request->input('mcx_max_lot_per_scrip', 0),
+        'max_size_all_comex' => $request->input('mcx_max_lot_all_scrips', 0),
+        'nse_futures_enabled' => $request->boolean('nse_futures_enabled'),
+        'NSEFuturesMaxLotPerScrip' => $request->input('nse_futures_max_lot_per_scrip', 0),
+        'broker_id' => $request->input('broker_id'),
+        // Update password only if provided
+        'Password' => $request->filled('password') ? bcrypt($request->input('password')) : $user->Password,
+        'TransPass' => $request->filled('transaction_password') ? bcrypt($request->input('transaction_password')) : $user->TransPass,
+    ]);
 
-        // Validate the request
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:trade_users,email,' . $id,
-            'mobile' => 'nullable|string|max:15',
-            'password' => 'nullable|string|min:6',
-            'address' => 'nullable|string',
-            'city' => 'nullable|string|max:100',
-            'state' => 'nullable|string|max:100',
-            'pin_code' => 'nullable|string|max:10',
-            'pan' => 'nullable|string|max:10',
-            'aadhar' => 'nullable|string|max:12',
-            'is_active' => 'boolean',
-            'is_demo' => 'boolean',
-        ]);
-
-        // Only hash the password if it was provided
-        if (isset($validated['password']) && !empty($validated['password'])) {
-            $validated['password'] = bcrypt($validated['password']);
-        } else {
-            unset($validated['password']);
-        }
-
-        // Update the user
-        $user->update($validated);
-
-        if (Session::has('admin_id')) {
-            AdminLog::create([
-                'admin_id' => Session::get('admin_id'),
-                'activity' => 'Updated user: ' . $user->name,
-                'ip_address' => request()->ip()
-            ]);
-        }
-
-        return redirect()->route('admin.users')->with('success', 'User updated successfully.');
+    return redirect()->route('admin.users')->with('success', 'User updated successfully');
     }
 
     /**
@@ -859,7 +856,7 @@ class AdminController extends Controller
      */
     public function copyUser($id)
     {
-        $sourceUser = TradeUser::findOrFail($id);
+        $sourceUser = TradeUser::where('UserId', $id)->first();
 
         if (Session::has('admin_id')) {
             AdminLog::create([
@@ -868,7 +865,6 @@ class AdminController extends Controller
                 'ip_address' => request()->ip()
             ]);
         }
-
         return view('admin.users-copy', compact('sourceUser'));
     }
 
@@ -1420,6 +1416,7 @@ $query = DB::table('closeMarketPlaceMaster as CP')
      */
     public function createFunds()
     {
+       
         // Get data needed for creating funds
         $data = []; // Replace with actual data fetching logic
 

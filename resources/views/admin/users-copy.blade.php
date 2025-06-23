@@ -7,14 +7,14 @@
     <div class="row">
         <div class="col-md-12">
             <div class="card">
-                <div class="card-header card-header-primary">
+                <div class="card-header">
                     <h4 class="card-title">Copy User</h4>
                     <p class="card-category">Create a new user based on {{ $sourceUser->name }}'s information</p>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="{{ route('admin.users-store') }}">
+                     <form method="POST" action="{{ route('admin.users-store') }}">
                         @csrf
-                        
+
                         <div class="row">
                             <div class="col-md-12 mt-3">
                                 <h4 class="bg-info p-2 text-white">Personal Details</h4>
@@ -22,10 +22,10 @@
                             
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="name">Name</label>
-                                    <input type="text" id="name" class="form-control" name="name" value="{{ old('name') }}" required>
-                                    <small class="form-text text-muted">Insert real name of the trader. Will be visible in trading App</small>
-                                    @error('name')
+                                    <label for="FullName">Name*</label>
+                                    <input type="text" id="FullName" class="form-control" name="FullName" 
+                                           value="{{ old('FullName', $sourceUser->FullName) }}" required>
+                                    @error('FullName')
                                         <span class="text-danger">{{ $message }}</span>
                                     @enderror
                                 </div>
@@ -33,10 +33,10 @@
                             
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="email">Email</label>
-                                    <input type="email" id="email" class="form-control" name="email" value="{{ old('email') }}" required>
-                                    <small class="form-text text-muted">Email address for the user</small>
-                                    @error('email')
+                                    <label for="Username">Username*</label>
+                                    <input type="text" id="Username" class="form-control" name="Username" 
+                                           value="{{ old('Username', $sourceUser->Username) }}" required>
+                                    @error('Username')
                                         <span class="text-danger">{{ $message }}</span>
                                     @enderror
                                 </div>
@@ -44,10 +44,10 @@
                             
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="mobile">Mobile</label>
-                                    <input type="text" id="mobile" class="form-control" name="mobile" value="{{ old('mobile', $sourceUser->mobile) }}">
-                                    <small class="form-text text-muted">Optional</small>
-                                    @error('mobile')
+                                    <label for="Email">Email</label>
+                                    <input type="email" id="Email" class="form-control" name="Email" 
+                                           value="{{ old('Email', $sourceUser->Email) }}">
+                                    @error('Email')
                                         <span class="text-danger">{{ $message }}</span>
                                     @enderror
                                 </div>
@@ -55,10 +55,10 @@
                             
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="password">Password</label>
-                                    <input type="password" id="password" class="form-control" name="password" required>
-                                    <small class="form-text text-muted">Password for logging in, is case sensitive</small>
-                                    @error('password')
+                                    <label for="Mobile">Mobile</label>
+                                    <input type="text" id="Mobile" class="form-control" name="Mobile" 
+                                           value="{{ old('Mobile', $sourceUser->Mobile) }}">
+                                    @error('Mobile')
                                         <span class="text-danger">{{ $message }}</span>
                                     @enderror
                                 </div>
@@ -66,10 +66,10 @@
                             
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="address">Address</label>
-                                    <textarea id="address" class="form-control" name="address" rows="3">{{ old('address', $sourceUser->address) }}</textarea>
-                                    <small class="form-text text-muted">Optional</small>
-                                    @error('address')
+                                    <label for="Password">Password</label>
+                                    <input type="password" id="Password" class="form-control" name="Password">
+                                    <small class="text-muted">Leave blank to keep current password</small>
+                                    @error('Password')
                                         <span class="text-danger">{{ $message }}</span>
                                     @enderror
                                 </div>
@@ -77,32 +77,42 @@
                             
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="city">City</label>
-                                    <input type="text" id="city" class="form-control" name="city" value="{{ old('city', $sourceUser->city) }}">
-                                    <small class="form-text text-muted">Optional</small>
-                                    @error('city')
+                                    <label for="Address">Address</label>
+                                    <textarea id="Address" class="form-control" name="Address" rows="2">{{ old('Address', $sourceUser->Address) }}</textarea>
+                                    @error('Address')
                                         <span class="text-danger">{{ $message }}</span>
                                     @enderror
                                 </div>
                             </div>
                             
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <div class="form-group">
-                                    <label for="state">State</label>
-                                    <input type="text" id="state" class="form-control" name="state" value="{{ old('state', $sourceUser->state) }}">
-                                    <small class="form-text text-muted">Optional</small>
-                                    @error('state')
+                                    <label for="City">City</label>
+                                    <input type="text" id="City" class="form-control" name="City" 
+                                           value="{{ old('City', $sourceUser->City) }}">
+                                    @error('City')
                                         <span class="text-danger">{{ $message }}</span>
                                     @enderror
                                 </div>
                             </div>
                             
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <div class="form-group">
-                                    <label for="pin_code">PIN Code</label>
-                                    <input type="text" id="pin_code" class="form-control" name="pin_code" value="{{ old('pin_code', $sourceUser->pin_code) }}">
-                                    <small class="form-text text-muted">Optional</small>
-                                    @error('pin_code')
+                                    <label for="State">State</label>
+                                    <input type="text" id="State" class="form-control" name="State" 
+                                           value="{{ old('State', $sourceUser->State) }}">
+                                    @error('State')
+                                        <span class="text-danger">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="PinCode">PIN Code</label>
+                                    <input type="text" id="PinCode" class="form-control" name="PinCode" 
+                                           value="{{ old('PinCode', $sourceUser->PinCode) }}">
+                                    @error('PinCode')
                                         <span class="text-danger">{{ $message }}</span>
                                     @enderror
                                 </div>
@@ -118,10 +128,10 @@
                             
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="pan">PAN</label>
-                                    <input type="text" id="pan" class="form-control" name="pan" value="{{ old('pan', $sourceUser->pan) }}">
-                                    <small class="form-text text-muted">Optional</small>
-                                    @error('pan')
+                                    <label for="PAN">PAN Number</label>
+                                    <input type="text" id="PAN" class="form-control" name="PAN" 
+                                           value="{{ old('PAN', $sourceUser->PAN) }}">
+                                    @error('PAN')
                                         <span class="text-danger">{{ $message }}</span>
                                     @enderror
                                 </div>
@@ -129,10 +139,10 @@
                             
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="aadhar">Aadhar</label>
-                                    <input type="text" id="aadhar" class="form-control" name="aadhar" value="{{ old('aadhar', $sourceUser->aadhar) }}">
-                                    <small class="form-text text-muted">Optional</small>
-                                    @error('aadhar')
+                                    <label for="Aadhar">Aadhar Number</label>
+                                    <input type="text" id="Aadhar" class="form-control" name="Aadhar" 
+                                           value="{{ old('Aadhar', $sourceUser->Aadhar) }}">
+                                    @error('Aadhar')
                                         <span class="text-danger">{{ $message }}</span>
                                     @enderror
                                 </div>
@@ -140,10 +150,10 @@
                             
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="bank_name">Bank Name</label>
-                                    <input type="text" id="bank_name" class="form-control" name="bank_name" value="{{ old('bank_name', $sourceUser->bank_name ?? '') }}">
-                                    <small class="form-text text-muted">Optional</small>
-                                    @error('bank_name')
+                                    <label for="BankName">Bank Name</label>
+                                    <input type="text" id="BankName" class="form-control" name="BankName" 
+                                           value="{{ old('BankName', $sourceUser->BankName) }}">
+                                    @error('BankName')
                                         <span class="text-danger">{{ $message }}</span>
                                     @enderror
                                 </div>
@@ -151,10 +161,10 @@
                             
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="account_number">Account Number</label>
-                                    <input type="text" id="account_number" class="form-control" name="account_number" value="{{ old('account_number', $sourceUser->account_number ?? '') }}">
-                                    <small class="form-text text-muted">Optional</small>
-                                    @error('account_number')
+                                    <label for="AccountNumber">Account Number</label>
+                                    <input type="text" id="AccountNumber" class="form-control" name="AccountNumber" 
+                                           value="{{ old('AccountNumber', $sourceUser->AccountNumber) }}">
+                                    @error('AccountNumber')
                                         <span class="text-danger">{{ $message }}</span>
                                     @enderror
                                 </div>
@@ -162,10 +172,10 @@
                             
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="ifsc_code">IFSC Code</label>
-                                    <input type="text" id="ifsc_code" class="form-control" name="ifsc_code" value="{{ old('ifsc_code', $sourceUser->ifsc_code ?? '') }}">
-                                    <small class="form-text text-muted">Optional</small>
-                                    @error('ifsc_code')
+                                    <label for="IFSCCode">IFSC Code</label>
+                                    <input type="text" id="IFSCCode" class="form-control" name="IFSCCode" 
+                                           value="{{ old('IFSCCode', $sourceUser->IFSCCode) }}">
+                                    @error('IFSCCode')
                                         <span class="text-danger">{{ $message }}</span>
                                     @enderror
                                 </div>
@@ -173,10 +183,10 @@
                             
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="account_holder_name">Account Holder Name</label>
-                                    <input type="text" id="account_holder_name" class="form-control" name="account_holder_name" value="{{ old('account_holder_name', $sourceUser->account_holder_name ?? '') }}">
-                                    <small class="form-text text-muted">Optional</small>
-                                    @error('account_holder_name')
+                                    <label for="AccountHolderName">Account Holder Name</label>
+                                    <input type="text" id="AccountHolderName" class="form-control" name="AccountHolderName" 
+                                           value="{{ old('AccountHolderName', $sourceUser->AccountHolderName) }}">
+                                    @error('AccountHolderName')
                                         <span class="text-danger">{{ $message }}</span>
                                     @enderror
                                 </div>
@@ -187,87 +197,81 @@
                         
                         <div class="row">
                             <div class="col-md-12">
-                                <h4 class="bg-info p-2 text-white">Configuration</h4>
+                                <h4 class="bg-info p-2 text-white">Trading Configuration</h4>
                             </div>
                             
                             <div class="col-md-6">
                                 <div class="form-check">
-                                    <label class="form-check-label">
-                                        <input class="form-check-input" type="checkbox" name="is_active" value="1" {{ $sourceUser->is_active ? 'checked' : '' }}>
+                                    <input type="hidden" name="IsActive" value="0">
+                                    <input class="form-check-input" type="checkbox" name="IsActive" id="IsActive" value="1" 
+                                           {{ old('IsActive', $sourceUser->IsActive) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="IsActive">
                                         Active Account
-                                        <span class="form-check-sign">
-                                            <span class="check"></span>
-                                        </span>
                                     </label>
                                 </div>
                             </div>
                             
                             <div class="col-md-6">
                                 <div class="form-check">
-                                    <label class="form-check-label">
-                                        <input class="form-check-input" type="checkbox" name="is_demo" value="1" {{ $sourceUser->is_demo ? 'checked' : '' }}>
-                                        Demo Account?
-                                        <span class="form-check-sign">
-                                            <span class="check"></span>
-                                        </span>
+                                    <input type="hidden" name="IsDemo" value="0">
+                                    <input class="form-check-input" type="checkbox" name="IsDemo" id="IsDemo" value="1" 
+                                           {{ old('IsDemo', $sourceUser->IsDemo) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="IsDemo">
+                                        Demo Account
                                     </label>
                                 </div>
                             </div>
                             
                             <div class="col-md-6">
                                 <div class="form-check">
-                                    <label class="form-check-label">
-                                        <input class="form-check-input" type="checkbox" name="allow_orders_beyond_high_low" value="1" {{ $sourceUser->allow_orders_beyond_high_low ? 'checked' : '' }}>
-                                        Allow Fresh Entry Order above high & below low?
-                                        <span class="form-check-sign">
-                                            <span class="check"></span>
-                                        </span>
+                                    <input type="hidden" name="AllowOrdersBeyondHighLow" value="0">
+                                    <input class="form-check-input" type="checkbox" name="AllowOrdersBeyondHighLow" id="AllowOrdersBeyondHighLow" value="1" 
+                                           {{ old('AllowOrdersBeyondHighLow', $sourceUser->AllowOrdersBeyondHighLow) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="AllowOrdersBeyondHighLow">
+                                        Allow Orders Beyond High/Low
                                     </label>
                                 </div>
                             </div>
                             
                             <div class="col-md-6">
                                 <div class="form-check">
-                                    <label class="form-check-label">
-                                        <input class="form-check-input" type="checkbox" name="allow_orders_between_high_low" value="1" {{ $sourceUser->allow_orders_between_high_low ? 'checked' : '' }}>
-                                        Allow Orders between High - Low?
-                                        <span class="form-check-sign">
-                                            <span class="check"></span>
-                                        </span>
+                                    <input type="hidden" name="AllowOrdersBetweenHighLow" value="0">
+                                    <input class="form-check-input" type="checkbox" name="AllowOrdersBetweenHighLow" id="AllowOrdersBetweenHighLow" value="1" 
+                                           {{ old('AllowOrdersBetweenHighLow', $sourceUser->AllowOrdersBetweenHighLow) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="AllowOrdersBetweenHighLow">
+                                        Allow Orders Between High/Low
                                     </label>
                                 </div>
                             </div>
                             
                             <div class="col-md-6">
                                 <div class="form-check">
-                                    <label class="form-check-label">
-                                        <input class="form-check-input" type="checkbox" name="trade_equity_as_units" value="1" {{ $sourceUser->trade_equity_as_units ? 'checked' : '' }}>
-                                        Trade equity as units instead of lots
-                                        <span class="form-check-sign">
-                                            <span class="check"></span>
-                                        </span>
+                                    <input type="hidden" name="TradeEquityAsUnits" value="0">
+                                    <input class="form-check-input" type="checkbox" name="TradeEquityAsUnits" id="TradeEquityAsUnits" value="1" 
+                                           {{ old('TradeEquityAsUnits', $sourceUser->TradeEquityAsUnits) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="TradeEquityAsUnits">
+                                        Trade Equity as Units
                                     </label>
                                 </div>
                             </div>
                             
                             <div class="col-md-6">
                                 <div class="form-check">
-                                    <label class="form-check-label">
-                                        <input class="form-check-input" type="checkbox" name="auto_square_off" value="1" {{ $sourceUser->auto_square_off ? 'checked' : '' }}>
+                                    <input type="hidden" name="AutoSquareOff" value="0">
+                                    <input class="form-check-input" type="checkbox" name="AutoSquareOff" id="AutoSquareOff" value="1" 
+                                           {{ old('AutoSquareOff', $sourceUser->AutoSquareOff) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="AutoSquareOff">
                                         Auto Square Off
-                                        <span class="form-check-sign">
-                                            <span class="check"></span>
-                                        </span>
                                     </label>
                                 </div>
                             </div>
                             
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="auto_square_off_percentage">Auto Square Off Percentage</label>
-                                    <input type="number" id="auto_square_off_percentage" class="form-control" name="auto_square_off_percentage" value="{{ old('auto_square_off_percentage', $sourceUser->auto_square_off_percentage ?? 0) }}" step="0.01">
-                                    <small class="form-text text-muted">Percentage at which positions will be automatically squared off</small>
-                                    @error('auto_square_off_percentage')
+                                    <label for="AutoSquareOffPercentage">Auto Square Off Percentage</label>
+                                    <input type="number" id="AutoSquareOffPercentage" class="form-control" name="AutoSquareOffPercentage" 
+                                           value="{{ old('AutoSquareOffPercentage', $sourceUser->AutoSquareOffPercentage ?? 90) }}" step="0.01">
+                                    @error('AutoSquareOffPercentage')
                                         <span class="text-danger">{{ $message }}</span>
                                     @enderror
                                 </div>
@@ -275,10 +279,10 @@
                             
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="notify_percentage">Notify Percentage</label>
-                                    <input type="number" id="notify_percentage" class="form-control" name="notify_percentage" value="{{ old('notify_percentage', $sourceUser->notify_percentage ?? 0) }}" step="0.01">
-                                    <small class="form-text text-muted">Percentage at which to send notification to user</small>
-                                    @error('notify_percentage')
+                                    <label for="NotifyPercentage">Notify Percentage</label>
+                                    <input type="number" id="NotifyPercentage" class="form-control" name="NotifyPercentage" 
+                                           value="{{ old('NotifyPercentage', $sourceUser->NotifyPercentage ?? 70) }}" step="0.01">
+                                    @error('NotifyPercentage')
                                         <span class="text-danger">{{ $message }}</span>
                                     @enderror
                                 </div>
@@ -287,8 +291,12 @@
                         
                         <div class="row mt-4">
                             <div class="col-md-12">
-                                <button type="submit" class="btn btn-primary">Create User</button>
-                                <a href="{{ route('admin.users') }}" class="btn btn-secondary">Cancel</a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Update User
+                                </button>
+                                <a href="{{ route('admin.users') }}" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> Cancel
+                                </a>
                             </div>
                         </div>
                     </form>
