@@ -154,7 +154,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
         // Users
         Route::get('users', [AdminController::class, 'users'])->name('users');
         Route::get('create-user', [AdminController::class, 'createUsers'])->name('user-create');
-        Route::get('users/view/{id}', [UserController::class, 'viewUser'])->name('users-view');
+        // Route::get('users/view/{id}', [UserController::class, 'viewUser'])->name('users-view');
         Route::get('mcxusers-views/{id}', [UserController::class, 'mcxUsersViews'])->name('mcxusers-views');
         
         // Trades routes

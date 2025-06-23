@@ -789,6 +789,8 @@ class AdminController extends Controller
                 'activity' => 'Viewed user details: ' . $user->name,
                 'ip_address' => request()->ip()
             ]);
+        }else{
+            return redirect('admin/login');
         }
 
         return view('admin.users-view', compact('user'));
