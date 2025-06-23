@@ -22,7 +22,7 @@ use App\Models\MarketMaster;
 use App\Exports\FundsExport;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Models\Broker;
-
+use App\Models\Fund;
 class AdminController extends Controller
 {
     /**
@@ -792,7 +792,7 @@ class AdminController extends Controller
         }else{
             return redirect('admin/login');
         }
-
+      
         return view('admin.users-view', compact('user'));
     }
 
@@ -946,9 +946,9 @@ class AdminController extends Controller
                 'ip_address' => request()->ip()
             ]);
         }
-
-        return view('admin.wf-status', compact('user'));
-    }
+    $transactions = DB::table('user_transactions')->where('user_id',$user->UserId)->get();
+        return view('admin.wf-status', compact('user','transactions'));
+        }
 
     /**
      * Show trades page
@@ -1546,11 +1546,11 @@ $query = DB::table('closeMarketPlaceMaster as CP')
     /**
      * Show create funds page
      */
-    public function createFunds()
+    public function createFunds($id)
     {
        
         // Get data needed for creating funds
-        $data = []; // Replace with actual data fetching logic
+        $data = []; 
 
         if (Session::has('admin_id')) {
             AdminLog::create([
@@ -1559,14 +1559,14 @@ $query = DB::table('closeMarketPlaceMaster as CP')
                 'ip_address' => request()->ip()
             ]);
         }
-
+        $data = TradeUser::where('UserId',$id)->first();
         return view('admin.create-funds', compact('data'));
     }
 
     /**
      * Show create funds WD page
      */
-    public function createFundsWd()
+    public function createFundsWd($id)
     {
         // Get data needed for creating funds WD
         $data = []; // Replace with actual data fetching logic
@@ -1578,8 +1578,76 @@ $query = DB::table('closeMarketPlaceMaster as CP')
                 'ip_address' => request()->ip()
             ]);
         }
-
+         $data = TradeUser::where('UserId',$id)->first();
         return view('admin.create-funds-wd', compact('data'));
+    }
+    public function fundsStore(Request $request) {
+        if (Session::has('admin_id')) {
+            AdminLog::create([
+                'admin_id' => Session::get('admin_id'),
+                'activity' => 'Viewed create funds WD page',
+                'ip_address' => request()->ip()
+            ]);
+        }
+
+         $request->validate([
+        'amount' => 'required|numeric|min:1',
+        'notes' => 'nullable|string|max:255',
+        'transaction_password' => 'required|string',
+    ]);
+
+    $user = TradeUser::where('UserId', $request->userid)->first();
+
+    if (!$user) {
+        return redirect()->back()->with('error', 'User not found.');
+    }
+
+    if ($user->Password !== $request->transaction_password) {
+        return redirect()->back()->with('error', 'Invalid transaction password.');
+    }
+    
+    $fund = new Fund();
+    $fund->user_id = $user->UserId;
+    $fund->balance = $request->amount;
+    $fund->created_by = Session::get('admin_id')??1;
+    $fund->save();
+
+    return redirect()->back()->with('success', 'Funds added successfully.');
+    }
+
+     public function fundWithdrawal(Request $request) {
+
+        if (Session::has('admin_id')) {
+            AdminLog::create([
+                'admin_id' => Session::get('admin_id'),
+                'activity' => 'Viewed create funds WD page',
+                'ip_address' => request()->ip()
+            ]);
+        }
+
+         $request->validate([
+        'amount' => 'required|numeric|min:1',
+        'notes' => 'nullable|string|max:255',
+        'transaction_password' => 'required|string',
+    ]);
+
+    $user = TradeUser::where('UserId', $request->userid)->first();
+
+    if (!$user) {
+        return redirect()->back()->with('error', 'User not found.');
+    }
+
+    if ($user->Password !== $request->transaction_password) {
+        return redirect()->back()->with('error', 'Invalid transaction password.');
+    }
+    
+    $fund = new Fund();
+    $fund->user_id = $user->UserId;
+    $fund->balance = $request->amount;
+    $fund->created_by = Session::get('admin_id')??1;
+    $fund->save();
+
+    return redirect()->back()->with('success', 'Funds added successfully.');
     }
 
     /**
