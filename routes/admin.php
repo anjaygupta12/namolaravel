@@ -60,7 +60,8 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
         Route::delete('users/delete/{id}', [AdminController::class, 'deleteUser'])->name('users-delete');
         Route::get('comex-margins/{id}', [AdminController::class, 'comexMargins'])->name('comex-margins');
         Route::get('wf-status/{id}', [AdminController::class, 'wfStatus'])->name('wf-status');
-        
+        Route::post('comex-margins/{id}', [AdminController::class, 'updateComexMargins'])->name('comex-margins.update');
+
         // Social links
         Route::get('social-links', [AdminController::class, 'socialLinks'])->name('social-links');
         Route::post('social-links', [AdminController::class, 'updateSocialLinks'])->name('social-links.update');
