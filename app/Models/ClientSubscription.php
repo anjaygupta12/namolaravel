@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ClientSubscription extends Model
 {
-    protected $table = 'ClientSubscription';
+    protected $table = 'clientsubscription';
     protected $primaryKey = 'PK_ID';
     public $timestamps = false;
     

@@ -7,15 +7,25 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\View;
 use App\Models\MarketPlaceMaster;
 use App\Models\WithdrawlMaster;
-use Illuminate\Container\Attributes\Auth;
+use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Session;
 use App\Models\DepositeMaster;
+use App\Models\MarketBidMaster;
+use App\Models\ClientSubscription;
+use App\Models\ForexOption;
+use DB;
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 
 class HomeController extends Controller
 {
     public function index()
     {
+        if (!Auth::check()) {
+            return redirect('/login');
+        }
+
         return View::make('user.index');
     }
 
@@ -27,7 +37,7 @@ class HomeController extends Controller
     public function portfolio()
     {
         $trades = [];
-        return View::make('user.portfolio',compact('trades'));
+        return View::make('user.portfolio', compact('trades'));
     }
 
     public function watchlist()
@@ -44,58 +54,181 @@ class HomeController extends Controller
     {
         return View::make('user.deposit_withdraw');
     }
+    public function getData(Request $request)
+    {
+        $query = $request->input('query');
+        $type = $request->input('type');
+        $clientId = $request->input('clientid');
+
+        $dataQuery = ForexOption::leftjoin('clientsubscription','forexoptions.Symbol','=','clientsubscription.Symbol')
+        ->select('forexoptions.*','clientsubscription.Isactive as ckecked')
+        ->where('forexoptions.Isactive', 1);
+        
+        if ($type == 'MCX') {
+            $dataQuery->where('instrument', 'FUT')
+            ->where('forexoptions.Symbol', 'like', 'MCX%');
+        }else if($type == 'NSE'){
+             $dataQuery->where('instrument', 'FUT')
+            ->where('forexoptions.Symbol', 'like', 'NSE%');
+        }
+        else if ($type == 'OPTIONS') {
+            $dataQuery->where(function ($q) {
+                $q->where('forexoptions.instrument', 'PE')
+                    ->orWhere('forexoptions.instrument', 'CE');
+            });
+        }
+
+        if ($query != null) {
+            $dataQuery->where('forexoptions.Symbol', 'like', '%' . $query . '%');
+        }
+
+        // You can add more filters like clientId if needed
+        // if ($clientId) {
+        //     $dataQuery->where('client_id', $clientId);
+        // }
+
+        $data = $dataQuery->get();
+
+        return response()->json($data);
+    }
+
+
+    public function getSymbol($symbol = '')
+    {
+        $segment = DB::table('ForexOptions')
+            ->where('symbol', $symbol)
+            ->value('segment');
+
+        return $segment ?? 0;
+    }
+
+    public function UpdateWatchList(Request $request)
+    {
+        if($request->action=='add'){
+            ClientSubscription::insert([ 
+           'Symbol'=>$request->symbol,
+           'UserId'=>Auth::user()->id,
+           'Isactive'=>1
+       ]);
+
+        }else{
+            ClientSubscription::where('Symbol',$request->symbol)
+            ->where('UserId',Auth::user()->id,)->delete();
+        }
+
+            return response()->json(['success' => true, 'message' => ucfirst($request->action) . 'ed successfully']);
+
+    }
+
+
+    public function saveTransaction(Request $request)
+    {
+
+        try {
+            $userId = session('LoginId') ?? 1;
+
+            $ip = $request->header('X_FORWARDED_FOR');
+            if ($ip) {
+                $ip = explode(',', $ip)[0];
+            } else {
+                $ip = $request->ip();
+            }
+
+            $data = [
+                'Mode' => $request->input('Mode'),
+                'ToAmount' => $request->input('textfclot', 0),
+                'TransactionMode' => $request->input('TransactionMode'),
+                'SalePrice' => $request->input('tblfcsellprice', 0),
+                'BuyPrice' => $request->input('tblfcbuyprice', 0),
+                'Bid' => $request->input('lblBid', 0),
+                'Ask' => $request->input('lblAsk', 0),
+                'High' => $request->input('lblHigh', 0),
+                'Low' => $request->input('lblLow', 0),
+                'TradeLast' => $request->input('lblLast', 0),
+                'Change' => $request->input('lblChange', 0),
+                'TradeOpen' => $request->input('lblOpen', 0),
+                'Volume' => $request->input('lblVolume', 0),
+                'LastTradeQty' => $request->input('lblLastTradedQty', 0),
+                'Atp' => $request->input('lblAtp', 0),
+                'LotSize' => $request->input('lblLotSize', 0),
+                'OpenInterest' => $request->input('lblOpenInterest', 0),
+                'BidQty' => $request->input('lblBidQty', 0),
+                'AskQty' => $request->input('lblAskQty', 0),
+                'PrevClose' => $request->input('lblPrevClose', 0),
+                'UpperCircuit' => $request->input('lblUpperCircuit', 0),
+                'LowerCircuit' => $request->input('lblLowerCircuit', 0),
+                'OPTION' => 'I',
+                'UserId' => $userId,
+                'Symbol' => $request->input('Symbol'),
+                'Min' => $request->input('Min') == 'True' ? 'Y' : 'N',
+                'Mega' => $request->input('Mega') == 'True' ? 'Y' : 'N',
+                'Lots' => $request->input('Lots', 0),
+                'Price' => $request->input('Price', 0),
+                'IpAddress' => $ip,
+                'created_at' => now(),
+                'updated_at' => now()
+            ];
+
+            MarketBidMaster::insert($data);
+
+            return response()->json(['message' => 'Transaction saved successfully']);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to save transaction: ' . $e->getMessage()], 500);
+        }
+    }
 
     public function depositRequestForm()
     {
         return View::make('user.deposit_request_form');
     }
-      public function depositRequestSubmit(Request $request)
+    public function depositRequestSubmit(Request $request)
     {
-         $request->validate([
-        'amount'     => 'required|numeric|min:1',
-        'screenshot' => 'required|image|mimes:jpeg,jpg,png|max:1024',
-    ]);
+        $request->validate([
+            'amount'     => 'required|numeric|min:1',
+            'screenshot' => 'required|image|mimes:jpeg,jpg,png|max:1024',
+        ]);
 
-    $path = $request->file('screenshot')->store('deposits', 'public');
+        $path = $request->file('screenshot')->store('deposits', 'public');
 
-    DepositeMaster::create([
-        'UserId'        => 1,
-        'Amount'        => $request->amount,
-        'ScreenShot'    => $path,
-        'Approve_Status'=> 'Pending',
-        'Approve_date'  => null,
-        'Timestamp'     => Carbon::now(),
-        'LastModify'    => Carbon::now(),
-        'Isactive'      => true
-    ]);
+        DepositeMaster::create([
+            'UserId'        => 1,
+            'Amount'        => $request->amount,
+            'ScreenShot'    => $path,
+            'Approve_Status' => 'Pending',
+            'Approve_date'  => null,
+            'Timestamp'     => Carbon::now(),
+            'LastModify'    => Carbon::now(),
+            'Isactive'      => true
+        ]);
 
-    return redirect()->back()->with('success', 'Deposit request submitted successfully.');
+        return redirect()->back()->with('success', 'Deposit request submitted successfully.');
     }
 
     public function withdrawalRequestsForm()
     {
         return View::make('user.withdrawal_requests_form');
     }
-        public function withdrawalRequests(Request $request)
+    public function withdrawalRequests(Request $request)
     {
-        
+
         if ($request->ajax()) {
-        $data = WithdrawlMaster::where('UserId', 1)
-            ->orderByDesc('Timestamp')
-            ->get()
-            ->map(function ($item) {
-                $item->FormattedTimestamp = \Carbon\Carbon::parse($item->Timestamp)->format('n/j/Y g:i:s A');
-                return $item;
-            });
-   
-        return response()->json($data);
-    }
+            $data = WithdrawlMaster::where('UserId', 1)
+                ->orderByDesc('Timestamp')
+                ->get()
+                ->map(function ($item) {
+                    $item->FormattedTimestamp = \Carbon\Carbon::parse($item->Timestamp)->format('n/j/Y g:i:s A');
+                    return $item;
+                });
+
+            return response()->json($data);
+        }
 
         return View::make('user.withdrawal_requests');
     }
-    public function withdrawalRequestsSubmit(Request $request){
-       
-            $request->validate([
+    public function withdrawalRequestsSubmit(Request $request)
+    {
+
+        $request->validate([
             'payment_method' => 'required|string|max:50',
             'amount'         => 'required|numeric|min:1',
             'mobile'         => 'required|string|max:15',
@@ -123,14 +256,55 @@ class HomeController extends Controller
 
     public function login()
     {
+        if (Auth::check()) {
+            return redirect('/dashboard');
+        }
         return View::make('user.login');
     }
 
+    public function register()
+    {
+        return View::make('user.register');
+    }
+    public function userRegister(Request $request)
+    {
+        User::insert([
+            'name' => $request->full_name,
+            'email' => $request->email,
+            'mobile' => $request->mobile,
+            'referral' => $request->referral,
+            'password' => Hash::make($request->password),
+        ]);
 
-     public function getPendingTrades()
+        return redirect()->back()->with('success', 'User registered successfully');
+    }
+    public function userLogin(Request $request)
+    {
+
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|string',
+        ]);
+
+        $credentials = [
+            'email' => $request->email,
+            'password' => $request->password
+        ];
+        // dd($credentials,Auth::attempt($credentials));
+        if (Auth::attempt($credentials)) {
+            $request->session()->regenerate();
+            return redirect()->intended('/dashboard');
+        }
+
+        return redirect()->back()->with('error', 'Invalid credentials');
+    }
+
+
+
+    public function getPendingTrades()
     {
         try {
-            $pendingTrades = MarketPlaceMaster::where('Status_Exec', 'Pending')
+            $pendingTrades = MarketBidMaster::where('Status_Exec', 'Pending')
                 ->select([
                     'Pk_id as Pk_id',
                     'symbol as Symbol',
@@ -148,7 +322,7 @@ class HomeController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error fetching pending trades'.$e->getMessage()
+                'message' => 'Error fetching pending trades' . $e->getMessage()
             ], 500);
         }
     }
@@ -159,20 +333,20 @@ class HomeController extends Controller
     public function getActiveTrades()
     {
         try {
-            $activeTrades = MarketPlaceMaster::where('Status_Exec', 'Active')
-            ->select([
-                'Pk_id as Pk_id',
-                'symbol as Symbol',
-                'timestamp as Timestamp',
-                'LastTradeQty',
-            ])
-            ->orderBy('timestamp', 'desc')
-            ->get()
-            ->map(function ($item) {
-                $item->timestamp = Carbon::parse($item->Timestamp)->format('n/j/Y g:i:s A');
-                return $item;
-            });
-                
+            $activeTrades = MarketBidMaster::where('Isactive', '1')
+                ->select([
+                    'Pk_id as Pk_id',
+                    'symbol as Symbol',
+                    'timestamp as Timestamp',
+                    'LastTradeQty',
+                ])
+                ->orderBy('timestamp', 'desc')
+                ->get()
+                ->map(function ($item) {
+                    $item->timestamp = Carbon::parse($item->Timestamp)->format('n/j/Y g:i:s A');
+                    return $item;
+                });
+
 
             return response()->json([
                 'success' => true,
@@ -181,7 +355,7 @@ class HomeController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error fetching pending trades'.$e->getMessage()
+                'message' => 'Error fetching pending trades' . $e->getMessage()
             ], 500);
         }
     }
@@ -192,7 +366,7 @@ class HomeController extends Controller
     public function getClosedTrades()
     {
         try {
-            $closedTrades = MarketPlaceMaster::where('Status_Exec', 'Close')
+            $closedTrades = MarketBidMaster::where('Isactive', '3')
                 ->select([
                     'Pk_id as Pk_id',
                     'symbol as Symbol',
@@ -209,7 +383,7 @@ class HomeController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                 'message' => 'Error fetching pending trades'.$e->getMessage()
+                'message' => 'Error fetching pending trades' . $e->getMessage()
             ], 500);
         }
     }
@@ -221,7 +395,7 @@ class HomeController extends Controller
     {
         try {
             $tradeId = $request->input('ID');
-            
+
             $tradeDetails = TradeDetail::where('trade_id', $tradeId)
                 ->select([
                     'id as Pk_id',
@@ -265,7 +439,7 @@ class HomeController extends Controller
     {
         try {
             $tradeId = $request->input('ID');
-            
+
             $trade = MarketPlaceMaster::find($tradeId);
             if (!$trade) {
                 return response()->json([

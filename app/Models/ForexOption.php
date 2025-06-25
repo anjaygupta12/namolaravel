@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ForexOption extends Model
 {
-    protected $table = 'ForexOptions';
+    protected $table = 'forexoptions';
     protected $primaryKey = 'Id';
     public $timestamps = false;
     

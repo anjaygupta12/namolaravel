@@ -1,1047 +1,1358 @@
 @extends('layouts.user')
 
+@section('styles')
+<meta name="csrf-token" content="{{ csrf_token() }}">
+
+    <style>
+        .card-block {
+            padding: 15px;
+        }
+
+        .market-tabs .nav-link {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.9rem;
+        }
+
+        .search-box {
+            margin-bottom: 15px;
+        }
+
+        .stock-item {
+            border-bottom: 1px solid #eee;
+            padding: 10px 0;
+        }
+
+        .stock-item:last-child {
+            border-bottom: none;
+        }
+
+        .price-up {
+            color: #28a745;
+        }
+
+        .price-down {
+            color: #dc3545;
+        }
+    </style>
+@endsection
+
 @section('content')
-<div class="container">
-    <h1>Bid/Ask Price - Live Market Data</h1>
-    
-    <div id="ws-status" class="status disconnected">
-        WebSocket Status: Disconnected
-    </div>
-    
-    <!-- <div class="controls">
-        <button id="connect-btn">Connect</button>
-        <button id="disconnect-btn">Disconnect</button>
-        <button id="clear-btn">Clear Data</button>
-        <input type="text" id="search-box" class="search-box" placeholder="Search symbols...">
-    </div>
-    
-    <div class="stats">
-        <div class="stats-item">Total Symbols: <span id="total-symbols">0</span></div>
-        <div class="stats-item">NSE: <span id="nse-symbols">0</span></div>
-        <div class="stats-item">BSE: <span id="bse-symbols">0</span></div>
-        <div class="stats-item">MCX: <span id="mcx-symbols">0</span></div>
-    </div> -->
-    
-    <!-- Tabs Navigation -->
-    <ul class="nav nav-tabs market-tabs" id="marketTabs" role="tablist">
-        <li class="nav-item">
-            <a class="nav-link" id="mcx-tab" data-toggle="tab" href="#mcx-content" role="tab" aria-controls="mcx-content" aria-selected="false">MCX</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link active" id="nse-tab" data-toggle="tab" href="#nse-content" role="tab" aria-controls="nse-content" aria-selected="true">NSE</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" id="bse-tab" data-toggle="tab" href="#bse-content" role="tab" aria-controls="bse-content" aria-selected="false">Option</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" id="forex-tab" data-toggle="tab" href="#forex-content" role="tab" aria-controls="forex-content" aria-selected="false">Forex & Crypto</a>
-        </li>
-    </ul>
-    
-    <!-- Full-width Search Bar -->
-    <div class="search-container mb-3">
-        <input type="text" id="search-box" class="form-control form-control-lg" placeholder="Search symbols..." />
-    </div>
-    
-    <!-- Tabs Content -->
-    <div class="tab-content" id="marketTabsContent">
+    <div id="appCapsule">
+        <div class="section wallet-card-section pt-1">
+            <div class="wallet-card">
+                <label id="lblTransactionMode" style="display:none"></label>
+                <ul class="nav nav-tabs lined" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-bs-toggle="tab" href="#mcx" onclick="ChangeText('MCX');"
+                            role="tab">MCX Futures
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#nse" onclick="ChangeText('NSE');"
+                            role="tab">NSE
+                            Futures
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#options" onclick="ChangeText('OPTIONS');"
+                            role="tab">Options
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#comex" onclick="ChangeText('COMEX');"
+                            role="tab">Comex
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#forex" onclick="ChangeText('CRYPTO_FOR');"
+                            role="tab">Forex & Crypto
+                        </a>
+                    </li>
+                </ul>
+                <div class="tab-content">
+                    <div class="tab-pane fade show active" id="mcx" role="tabpanel">
 
-            <!-- MCX Tab -->
-        <div class="tab-pane fade" id="mcx-content" role="tabpanel" aria-labelledby="mcx-tab">
-            <div class="table-container">
-                <table class="market-data-table">
-                    <thead>
-                        <tr>
-                            <th>Symbol</th>
-                            <th>Short Name</th>
-                            <th>Expiry Date</th>
-                            <th>LTP</th>
-                            <th>Bid Price</th>
-                            <th>Ask Price</th>
-                            <th>Change</th>
-                            <th>Change %</th>
-                            <th>Volume</th>
-                            <th>Open</th>
-                        </tr>
-                    </thead>
-                    <tbody id="mcx-data-body">
-                        <!-- MCX market data will be inserted here -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <!-- NSE Tab -->
-        <div class="tab-pane fade show active" id="nse-content" role="tabpanel" aria-labelledby="nse-tab">
-            <div class="table-container">
-                <table class="market-data-table">
-                    <thead>
-                        <tr>
-                            <th>Symbol</th>
-                            <th>Short Name</th>
-                            <th>Expiry Date</th>
-                            <th>LTP</th>
-                            <th>Bid Price</th>
-                            <th>Ask Price</th>
-                            <th>Change</th>
-                            <th>Change %</th>
-                            <th>Volume</th>
-                            <th>Open</th>
-                        </tr>
-                    </thead>
-                    <tbody id="nse-data-body">
-                        <!-- NSE market data will be inserted here -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        
-       
-        
-    
+                        <div class="future_search" data-bs-toggle="modal" data-bs-target="#mcxpop">
+                            <input type="text" name="mcx_scrips" id="scrips_search_btn" placeholder="Search &amp; Add"
+                                onclick="OpenWatchListModal('MCX',this)" onkeyup="OpenWatchListModal('MCX', this)"
+                                style="width:100%;">
 
-         <!-- BSE Tab -->
-        <div class="tab-pane fade" id="bse-content" role="tabpanel" aria-labelledby="bse-tab">
-            <div class="table-container">
-                <table class="market-data-table">
-                    <thead>
-                        <tr>
-                            <th>Symbol</th>
-                            <th>Short Name</th>
-                            <th>Expiry Date</th>
-                            <th>LTP</th>
-                            <th>Bid Price</th>
-                            <th>Ask Price</th>
-                            <th>Change</th>
-                            <th>Change %</th>
-                            <th>Volume</th>
-                            <th>Open</th>
-                        </tr>
-                    </thead>
-                    <tbody id="bse-data-body">
-                        <!-- BSE market data will be inserted here -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
+                        </div>
 
+                        <div class="table-responsive">
+                            <table class="table">
+                                <tbody id="btlMCX">
 
-         <!-- Forex & Crypto Tab -->
-        <div class="tab-pane fade" id="forex-content" role="tabpanel" aria-labelledby="forex-tab">
-            <div class="table-container">
-                <table class="market-data-table">
-                    <thead>
-                        <tr>
-                            <th>Symbol</th>
-                            <th>Short Name</th>
-                            <th>Expiry Date</th>
-                            <th>LTP</th>
-                            <th>Bid Price</th>
-                            <th>Ask Price</th>
-                            <th>Change</th>
-                            <th>Change %</th>
-                            <th>Volume</th>
-                            <th>Open</th>
-                        </tr>
-                    </thead>
-                    <tbody id="forex-data-body">
-                        <!-- BSE market data will be inserted here -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
 
-<!-- Search Results Action Sheet -->
-<div class="modal fade action-sheet fullscreen-modal" id="searchActionSheet" tabindex="-1" role="dialog">
-    <div class="modal-dialog fullscreen-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" id="close-search-sheet" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="search-bar-container">
-                <input type="text" id="modal-search-box" class="form-control form-control-lg" placeholder="Search symbols..." />
-                <div class="active-tab-indicator">Active Tab: <span id="active-tab-name">NSE</span></div>
-            </div>
-            <div class="modal-body">
-                <div class="action-sheet-content">
-                    <div class="search-results-container">
-                        <table class="table search-results-table">
-                            <tbody id="search-results-body">
-                                <!-- Search results will be inserted here -->
-                            </tbody>
-                        </table>
+                    <div class="tab-pane fade" id="nse" role="tabpanel">
+
+                        <div class="future_search" data-bs-toggle="modal" data-bs-target="#mcxpop">
+                            <input type="text" name="mcx_scrips" id="scrips_search_btn1" placeholder="Search &amp; Add"
+                                onclick="OpenWatchListModal('NSE',this)" onkeyup="OpenWatchListModal('MCX', this)"
+                                style="width: 100%;">
+                          
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table">
+                                <tbody id="tblNSE">
+
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="options" role="tabpanel">
+
+                        <div class="future_search" data-bs-toggle="modal" data-bs-target="#mcxpop">
+                            <input type="text" name="mcx_scrips" id="scrips_search_btn51" placeholder="Search &amp; Add"
+                                onclick="OpenWatchListModal('OPTIONS',this)" onkeyup="OpenWatchListModal('MCX', this)"
+                                style="width: 100%;">
+                         
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <tbody id="tblOPTIONS">
+
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="comex" role="tabpanel">
+                        <div class="future_search" data-bs-toggle="modal" data-bs-target="#mcxpop">
+                            <input type="text" name="mcx_scrips" id="scrips_search_btn511"
+                                placeholder="Search &amp; Add" onclick="OpenWatchListModal('COMEX',this)"
+                                onkeyup="OpenWatchListModal('MCX', this)" style="width: 100%;">
+                        
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <tbody id="btlCOMEX">
+
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="forex" role="tabpanel">
+                        <div class="future_search" data-bs-toggle="modal" data-bs-target="#mcxpop">
+                            <input type="text" name="mcx_scrips" id="scrips_search_btn51121"
+                                placeholder="Search &amp; Add" onclick="OpenWatchListModal('CRYPTO',this)"
+                                onkeyup="OpenWatchListModal('CRYPTO', this)" style="width: 100%;">
+                         
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <tbody id="tblforex">
+                                    
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</div>
 
-<!-- Buy/Sell Action Sheet -->
-<div class="modal fade action-sheet" id="buyActionSheet" tabindex="-1" role="dialog">
-    <div class="modal-dialog action-sheet-modal" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="selected-symbol">Symbol</h5>
-                <button type="button" class="close" id="close-action-sheet" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="action-sheet-content">
-                    <div class="row mb-3">
-                        <div class="col-6">
-                            <div class="price-card">
-                                <p class="text-muted">Bid Price</p>
-                                <h3 id="bid-price-value" class="text-success">0.00</h3>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="price-card">
-                                <p class="text-muted">Ask Price</p>
-                                <h3 id="ask-price-value" class="text-danger">0.00</h3>
-                            </div>
-                        </div>
+
+
+
+
+
+        <div class="modal fade action-sheet" id="mcxpop" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content" style="background-color: #1c1c1c;">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-bs-dismiss="modal">Close</button>
+                        <input type="text" name="mcx_filter" id="mcx_filter" onkeyup="seachFilter()"
+                            placeholder="Search &amp; add" class="w-75">
+                       
                     </div>
-                    
-                    <div class="form-group basic">
-                        <div class="input-wrapper">
-                            <label class="label">Quantity</label>
-                            <input type="number" class="form-control" id="trade-quantity" value="1">
-                        </div>
-                    </div>
-                    
-                    <div class="mt-3">
-                        <div class="row">
-                            <div class="col-6">
-                                <button type="button" class="btn btn-success btn-lg btn-block" id="buy-button">BUY</button>
-                            </div>
-                            <div class="col-6">
-                                <button type="button" class="btn btn-danger btn-lg btn-block" id="sell-button">SELL</button>
+                    <div class="modal-body">
+                        <div class="card" style="background-color: #1c1c1c;">
+                            <div class="card-body pt-0" style="height: 500px;overflow: scroll;">
+                                <div class="mcx_search_modal active" id="mcx_search">
+                                    <div class="mcx_search_header">
+                                        <div class="icn" onclick="search_modal_hide(); market_watch();"></div>
+                                        <div class="mcx_search_input">
+
+                                        </div>
+                                    </div>
+
+                                    <div class="mcx_search_middle_cntnt">
+                                        <div class="mxc_list">
+                                            <table class="table" style="color:#fff">
+                                                <tbody id="search_datamain">
+                                                  
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</div>
 
-<style>
-    .status {
-        padding: 10px;
-        margin-bottom: 10px;
-        border-radius: 4px;
-    }
-    .connected {
-        background-color: #d4edda;
-        color: #155724;
-    }
-    .disconnected {
-        background-color: #f8d7da;
-        color: #721c24;
-    }
-    .error {
-        background-color: #f8d7da;
-        color: #721c24;
-    }
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 20px;
-        background-color: white;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    th, td {
-        padding: 8px 12px;
-        text-align: left;
-        border-bottom: 1px solid #ddd;
-        font-size: 14px;
-    }
-    th {
-        background-color: #4CAF50;
-        color: white;
-        position: sticky;
-        top: 0;
-        z-index: 10;
-    }
-    tr:hover {
-        background-color: #f5f5f5;
-    }
-    .mcx-symbol {
-        background-color: #fff3cd;
-    }
-    .nse-symbol {
-        background-color: #e3f2fd;
-    }
-    .bse-symbol {
-        background-color: #e8f5e9;
-    }
-    .zero-value {
-        color: red;
-        font-weight: bold;
-    }
-    .controls {
-        margin: 20px 0;
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-    }
-    button {
-        padding: 8px 16px;
-        background-color: #4CAF50;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-    }
-    button:hover {
-        background-color: #45a049;
-    }
-    .filter-btn {
-        background-color: #e9ecef;
-        color: #333;
-    }
-    .filter-btn.active {
-        background-color: #4CAF50;
-        color: white;
-    }
-    .positive-change {
-        color: green;
-        font-weight: bold;
-    }
-    .negative-change {
-        color: red;
-        font-weight: bold;
-    }
-    .search-box {
-        padding: 8px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        width: 200px;
-    }
-    .filter-group {
-        display: flex;
-        gap: 10px;
-        align-items: center;
-        margin-top: 10px;
-    }
-    .filter-label {
-        font-weight: bold;
-    }
-    .stats {
-        margin: 10px 0;
-        padding: 10px;
-        background-color: #e9ecef;
-        border-radius: 4px;
-        display: flex;
-        gap: 20px;
-    }
-    .stats-item {
-        font-weight: bold;
-    }
-    .table-container {
-        max-height: 600px;
-        overflow-y: auto;
-    }
-    
-    /* Action Sheet Styles */
-    .action-sheet {
-        transform: translateY(100%);
-        transition: transform 0.3s ease;
-    }
-    .action-sheet.show {
-        transform: translateY(0);
-    }
-    .modal-dialog.action-sheet-modal {
-        position: fixed;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        margin: 0;
-        width: 100%;
-        border-radius: 15px 15px 0 0;
-    }
-    .price-card {
-        background-color: #f8f9fa;
-        border-radius: 8px;
-        padding: 12px;
-        text-align: center;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-    
-    /* Search Results Styling */
-    .fullscreen-modal {
-        padding: 0 !important;
-    }
-    
-    .fullscreen-dialog {
-        max-width: 100%;
-        width: 100%;
-        height: 100%;
-        margin: 0;
-    }
-    
-    .fullscreen-dialog .modal-content {
-        height: 100%;
-        border: 0;
-        border-radius: 0;
-    }
-    
-    .search-bar-container {
-        padding: 15px;
-        background-color: #f8f9fa;
-        border-bottom: 1px solid #ddd;
-    }
-    
-    .active-tab-indicator {
-        margin-top: 10px;
-        font-size: 14px;
-        color: #666;
-    }
-    
-    .search-results-container {
-        max-height: calc(100vh - 180px);
-        overflow-y: auto;
-    }
-    
-    .search-results-table tr {
-        border-bottom: 1px solid #eee;
-    }
-    
-    .list_cntnt {
-        padding: 5px 0;
-    }
-    
-    .list_cntnt .title {
-        font-weight: bold;
-        margin-bottom: 2px;
-        font-size: 14px;
-    }
-    
-    .list_cntnt .id {
-        color: #666;
-        font-size: 12px;
-        margin-bottom: 2px;
-    }
-    
-    .list_cntnt .chg {
-        color: #666;
-        font-size: 12px;
-        margin-bottom: 0;
-    }
-    
-    .list_cntnt .title_number {
-        font-weight: bold;
-        font-size: 16px;
-        margin-bottom: 2px;
-        color: #333;
-    }
-    
-    .check_box {
-        margin-right: 5px;
-    }
-    
-    .check_mark {
-        display: inline-block;
-        width: 18px;
-        height: 18px;
-        vertical-align: middle;
-    }
-</style>
+
+
+
+
+
+
+        <div class="modal fade action-sheet" id="nsepop" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content" style="background-color: #311b7f;">
+                    <div class="modal-header">
+                        <h5 class="modal-title text-white fw-bold"></h5>
+                    </div>
+                    <div class="modal-body">
+                        <div class="card" style="background-color: #311b7f;">
+                            <div class="card-body pt-0">
+                                <div class="mcx_search_modal active" id="mcx_search1">
+                                    <div class="mcx_search_header">
+                                        <div class="icn" onclick="search_modal_hide(); market_watch();"><i
+                                                class="fas fa-chevron-left"></i></div>
+                                        <div class="mcx_search_input">
+                                            <input type="text" name="mcx_filter" id="mcx_filter"
+                                                onkeyup="fetch_scrips('Future', this.value)"
+                                                placeholder="Search &amp; add">
+                                            <button type="button" class="clear_btn"
+                                                onclick="clear_search('Future', 'mcx_filter')">Clear</button>
+                                        </div>
+                                    </div>
+
+
+                                    <div class="mcx_search_middle_cntnt">
+                                        <div class="mxc_list">
+                                            <table class="table" style="color:#fff">
+                                                <tbody id="search_data">
+                                                    <tr>
+                                                        <td>
+                                                            <div class="list_cntnt">
+                                                                <p class="title">AARTIIND MAR 385 CE</p>
+                                                                <p class="id">2025-03-27</p>
+                                                                <p class="chg">Lot Size:1000</p>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div class="list_cntnt">
+                                                                <p class="chg">H:<span
+                                                                        id="search_AARTIIND25MAR385CE_High">12.35</span>
+                                                                </p>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div class="list_cntnt">
+                                                                <p class="title_number"
+                                                                    id="search_AARTIIND25MAR385CE_Bid">10</p>
+                                                                <p class="chg">L: <span
+                                                                        id="search_AARTIIND25MAR385CE_Low">9</span></p>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div class="list_cntnt">
+                                                                <p class="title_number"
+                                                                    id="search_AARTIIND25MAR385CE_Ask">10.2</p>
+                                                                <p class="chg">O: 10</p>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div class="list_cntnt">
+                                                                <input type="checkbox" name="mcx_search"
+                                                                    id="search_AARTIIND25MAR385CE_check" class="check_box"
+                                                                    onclick="process_market_watch('AARTIIND25MAR385CE');">
+                                                                <div class="check_mark"></div>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>
+                                                            <div class="list_cntnt">
+                                                                <p class="title">AARTIIND MAR 385 PE</p>
+                                                                <p class="id">2025-03-27</p>
+                                                                <p class="chg">Lot Size:1000</p>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div class="list_cntnt">
+                                                                <p class="chg">H:<span
+                                                                        id="search_AARTIIND25MAR385PE_High">6.85</span>
+                                                                </p>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div class="list_cntnt">
+                                                                <p class="title_number"
+                                                                    id="search_AARTIIND25MAR385PE_Bid">6.35</p>
+                                                                <p class="chg">L: <span
+                                                                        id="search_AARTIIND25MAR385PE_Low">4.95</span>
+                                                                </p>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div class="list_cntnt">
+                                                                <p class="title_number"
+                                                                    id="search_AARTIIND25MAR385PE_Ask">6.65</p>
+                                                                <p class="chg">O: 6</p>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div class="list_cntnt">
+                                                                <input type="checkbox" name="mcx_search"
+                                                                    id="search_AARTIIND25MAR385PE_check" class="check_box"
+                                                                    onclick="process_market_watch('AARTIIND25MAR385PE');">
+                                                                <div class="check_mark"></div>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+
+
+
+
+
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade action-sheet" style="width: 50%!important;" id="withdrawActionSheetForex_Crypto"
+            tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+
+                <div class="modal-content" style="background-color: #311b7f;">
+                    <div class="modal-header">
+                        <h5 class="modal-title text-white fw-bold"><span id="lblsymbol"></span></h5>
+                    </div>
+
+                    <div class="modal-body">
+                        <div class="card" style="background-color: #311b7f;">
+                            <div class="card-body pt-0">
+                                <ul class="nav nav-tabs lined" role="tablist" style="background: #142e46">
+                                    <li class="nav-item">
+                                        <a class="nav-link active" data-bs-toggle="tab" href="#overview2"
+                                            role="tab">Market </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" data-bs-toggle="tab" href="#cards2" role="tab">Order
+                                        </a>
+                                    </li>
+                                </ul>
+
+                                <div class="tab-content mt-2">
+                                    <div class="tab-pane fade show active" id="overview2" role="tabpanel">
+
+
+                                        <div class="input-wrapper">
+
+                                            <input type="radio" id="chkminMarket" name="Mode" checked="checked" />
+                                            Min
+                                            <input type="radio" id="chkmegaMarket" name="Mode" /> Mega
+                                            <i class="clear-input">
+                                                <ion-icon name="close-circle"></ion-icon>
+                                            </i>
+                                        </div>
+                                        <div class="form-group basic">
+                                            <div class="input-wrapper">
+                                                <label class="label" for="text11d">Lots</label>
+                                                <input type="email" class="form-control" id="textfclot"
+                                                    placeholder="Enter IBAN" value="1">
+                                                <i class="clear-input">
+                                                    <ion-icon name="close-circle"></ion-icon>
+                                                </i>
+                                            </div>
+                                        </div>
+
+                                        <ul class="nav nav-tabs lined">
+                                            <li class="nav-item" style="background: #b24153;">
+                                                <a class="nav-link"
+                                                    style="color: #fff; font-size: 15px; display: block; height: 50px">Sell
+                                                    <br />
+                                                    <h2 onclick="sellfc();">
+                                                        <lable id="tblfcsellprice">0</lable>
+                                                    </h2>
+                                                </a>
+
+                                            </li>
+                                            <li class="nav-item" style="background: #208549!important;">
+                                                <a class="nav-link"
+                                                    style="color: #fff; font-size: 15px; display: block; height: 50px">Buy
+                                                    <br />
+                                                    <h2 onclick="buyfc();">
+                                                        <lable id="tblfcbuyprice"></lable>
+                                                    </h2>
+                                                </a>
+
+                                            </li>
+                                        </ul>
+
+                                        <div class="table-responsive">
+                                            <table class="table">
+                                                <tbody>
+                                                    <tr data-bs-toggle="modal" data-bs-target="#withdrawActionSheet">
+                                                        <td scope="row">
+                                                            <p class="date">Bid</p>
+                                                            <h4 class="comodity"> <label id="lblBid">0</label> </h4>
+                                                        </td>
+                                                        <td>
+                                                            <p class="date">Ask</p>
+                                                            <h4 class="comodity"><label id="lblAsk">0</label> </h4>
+                                                        </td>
+                                                        <td class="text-end text-primary" id="tdlast">
+                                                            <p class="date">Last</p>
+                                                            <h4 class="comodity"><label id="lblLast">0</label> </h4>
+                                                        </td>
+                                                    </tr>
+                                                    <tr data-bs-toggle="modal" data-bs-target="#withdrawActionSheet">
+                                                        <td scope="row">
+                                                            <p class="date">High</p>
+                                                            <h4 class="comodity"><label id="lblHigh">0</label></h4>
+                                                        </td>
+                                                        <td>
+                                                            <p class="date">Low</p>
+                                                            <h4 class="comodity"><label id="lblLow">0</label> </h4>
+                                                        </td>
+                                                        <td class="text-end text-primary">
+                                                            <p class="date">Change</p>
+                                                            <h4 class="comodity"><label id="lblChange">0</label> </h4>
+                                                        </td>
+                                                    </tr>
+                                                    <tr data-bs-toggle="modal" data-bs-target="#withdrawActionSheet">
+                                                        <td scope="row">
+                                                            <p class="date">Open</p>
+                                                            <h4 class="comodity"><label id="lblOpen">0</label> </h4>
+                                                        </td>
+                                                        <td>
+                                                            <p class="date">Volume</p>
+                                                            <h4 class="comodity"><label id="lblVolume">0</label> </h4>
+                                                        </td>
+                                                        <td class="text-end text-primary">
+                                                            <p class="date">Last Traded Qty</p>
+                                                            <h4 class="comodity"><label id="lblLastTradedQty">0</label>
+                                                            </h4>
+                                                        </td>
+                                                    </tr>
+                                                    <tr data-bs-toggle="modal" data-bs-target="#withdrawActionSheet">
+                                                        <td scope="row">
+                                                            <p class="date">Atp</p>
+                                                            <h4 class="comodity"><label id="lblAtp">0</label> </h4>
+                                                        </td>
+                                                        <td>
+                                                            <p class="date">Lot Size</p>
+                                                            <h4 class="comodity"><label id="lblLotSize">0</label> </h4>
+                                                        </td>
+                                                        <td class="text-end text-primary">
+                                                            <p class="date">Open Interest</p>
+                                                            <h4 class="comodity"><label id="lblOpenInterest">0</label>
+                                                            </h4>
+                                                        </td>
+                                                    </tr>
+                                                    <tr data-bs-toggle="modal" data-bs-target="#withdrawActionSheet">
+                                                        <td scope="row">
+                                                            <p class="date">Bid Qty</p>
+                                                            <h4 class="comodity"><label id="lblBidQty">0</label> </h4>
+                                                        </td>
+                                                        <td>
+                                                            <p class="date">Ask Qty</p>
+                                                            <h4 class="comodity"><label id="lblAskQty">0</label> </h4>
+                                                        </td>
+                                                        <td class="text-end text-primary">
+                                                            <p class="date">Prev. Close</p>
+                                                            <h4 class="comodity"><label id="lblPrevClose">0</label>
+                                                            </h4>
+                                                        </td>
+                                                    </tr>
+                                                    <tr data-bs-toggle="modal" data-bs-target="#withdrawActionSheet">
+                                                        <td scope="row">
+                                                            <p class="date">Upper Circuit</p>
+                                                            <h4 class="comodity"><label id="lblUpperCircuit">0</label>
+                                                            </h4>
+                                                        </td>
+                                                        <td>
+                                                            <p class="date">Lower Circuit</p>
+                                                            <h4 class="comodity"><label id="lblLowerCircuit">0</label>
+                                                            </h4>
+                                                        </td>
+                                                    </tr>
+
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                                    </div>
+                                    <div class="tab-pane fade" id="cards2" role="tabpanel">
+
+
+                                        <div class="form-group basic">
+
+
+                                            <div class="input-wrapper">
+
+                                                <input type="radio" id="chkminOrder" name="type"
+                                                    checked="checked" />
+                                                Min
+                                                <input type="radio" id="chkmegaOrder" name="type" /> Mega
+                                                <i class="clear-input">
+                                                    <ion-icon name="close-circle"></ion-icon>
+                                                </i>
+                                            </div>
+                                            <div class="input-wrapper">
+                                                <label class="label" for="text11d">Lots</label>
+                                                <input type="number" class="form-control" id="txtLots"
+                                                    placeholder="Enter Lots" value="1">
+                                                <i class="clear-input">
+                                                    <ion-icon name="close-circle"></ion-icon>
+                                                </i>
+                                            </div>
+                                            <div class="input-wrapper">
+                                                <label class="label" for="text11d">Price</label>
+                                                <input type="number" class="form-control" id="txtPriceOrder"
+                                                    placeholder="" value="">
+                                                <i class="clear-input">
+                                                    <ion-icon name="close-circle"></ion-icon>
+                                                </i>
+                                            </div>
+                                        </div>
+                                        <ul class="nav nav-tabs lined">
+                                            <li class="nav-item" style="background: #b24153;">
+                                                <a class="nav-link" style="color: #fff; font-size: 15px;"
+                                                    onclick="sellplacedorder();">Place Sell Order
+                                                </a>
+                                            </li>
+                                            <li class="nav-item" style="background: #208549!important;">
+                                                <a class="nav-link" style="color: #fff; font-size: 15px;"
+                                                    onclick="buyplacedorder();">Place Buy Order
+                                                </a>
+
+                                            </li>
+                                        </ul>
+                                        <div class="table-responsive">
+                                            <table class="table">
+                                                <tbody>
+                                                    <tr data-bs-toggle="modal" data-bs-target="#withdrawActionSheet">
+                                                        <td scope="row">
+                                                            <p class="date">Bid</p>
+                                                            <h4 class="comodity"><label id="lblbid">0</label></h4>
+                                                        </td>
+                                                        <td>
+                                                            <p class="date">Ask</p>
+                                                            <h4 class="comodity"><label id="lblASK">0</label></h4>
+                                                        </td>
+                                                        <td class="text-end text-primary">
+                                                            <p class="date"><label id="lblLast1">0</label></p>
+                                                            <h4 class="comodity">8365</h4>
+                                                        </td>
+                                                    </tr>
+                                                    <tr data-bs-toggle="modal" data-bs-target="#withdrawActionSheet">
+                                                        <td scope="row">
+                                                            <p class="date">High</p>
+                                                            <h4 class="comodity">
+                                                                <lable id="lblHigh1">0</lable>
+                                                            </h4>
+                                                        </td>
+                                                        <td>
+                                                            <p class="date">Low</p>
+                                                            <h4 class="comodity">
+                                                                <lable id="lblLow1">0</lable>
+                                                            </h4>
+                                                        </td>
+                                                        <td class="text-end text-primary">
+                                                            <p class="date">Change</p>
+                                                            <h4 class="comodity">
+                                                                <lable id="lblChange1">0</lable>
+                                                            </h4>
+                                                        </td>
+                                                    </tr>
+                                                    <tr data-bs-toggle="modal" data-bs-target="#withdrawActionSheet">
+                                                        <td scope="row">
+                                                            <p class="date">Open</p>
+                                                            <h4 class="comodity">
+                                                                <lable id="lblOpen1">0</lable>
+                                                            </h4>
+                                                        </td>
+                                                        <td>
+                                                            <p class="date">Volume</p>
+                                                            <h4 class="comodity">
+                                                                <lable id="lblVolume1">0</lable>
+                                                            </h4>
+                                                        </td>
+                                                        <td class="text-end text-primary">
+                                                            <p class="date">Last Traded Qty</p>
+                                                            <h4 class="comodity"><label id="lblLastTradedQty1">0</label>
+                                                            </h4>
+                                                        </td>
+                                                    </tr>
+                                                    <tr data-bs-toggle="modal" data-bs-target="#withdrawActionSheet">
+                                                        <td scope="row">
+                                                            <p class="date">Atp</p>
+                                                            <h4 class="comodity"><label id="lblAtp2"></label></h4>
+                                                        </td>
+                                                        <td>
+                                                            <p class="date">Lot Size</p>
+                                                            <h4 class="comodity"><label id="lblOpenInterest2"></h4>
+                                                        </td>
+                                                        <td class="text-end text-primary">
+                                                            <p class="date">Open Interest</p>
+                                                            <h4 class="comodity"><label id="lblOpenInterest2"></label>
+                                                            </h4>
+                                                        </td>
+                                                    </tr>
+                                                    <tr data-bs-toggle="modal" data-bs-target="#withdrawActionSheet">
+                                                        <td scope="row">
+                                                            <p class="date">Bid Qty</p>
+                                                            <h4 class="comodity"><label id="lblBidQty2"></label></h4>
+                                                        </td>
+                                                        <td>
+                                                            <p class="date">Ask Qty</p>
+                                                            <h4 class="comodity"><label id="lblAskQty2"></label></h4>
+                                                        </td>
+                                                        <td class="text-end text-primary">
+                                                            <p class="date">Prev. Close</p>
+                                                            <h4 class="comodity"><label id="lblprev_close_price1"></label>
+                                                            </h4>
+                                                        </td>
+                                                    </tr>
+                                                    <tr data-bs-toggle="modal" data-bs-target="#withdrawActionSheet">
+                                                        <td scope="row">
+                                                            <p class="date">Upper Circuit</p>
+                                                            <h4 class="comodity"><label id="lblUpperCircuit1">0</label>
+                                                            </h4>
+                                                        </td>
+                                                        <td>
+                                                            <p class="date">Lower Circuit</p>
+                                                            <h4 class="comodity"><label id="lblLowerCircuit1"></label>
+                                                            </h4>
+                                                        </td>
+                                                    </tr>
+
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                       </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
 @endsection
 
 @section('scripts')
-<script>
-    $(document).ready(function() {
-        // Initialize Bootstrap tabs
-        $('#marketTabs a').on('click', function(e) {
-            e.preventDefault();
-            $(this).tab('show');
-        });
-        
-        // Fix for Bootstrap 4 tab functionality
-        $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
-            // Update tables when tab is shown
-            updateMarketDataTables();
-            
-            // Track active tab
-            const activeTabId = $(e.target).attr('id');
-            let activeTabName = 'NSE';
-            
-            if (activeTabId === 'nse-tab') {
-                activeTabName = 'NSE';
-            } else if (activeTabId === 'bse-tab') {
-                activeTabName = 'Option';
-            } else if (activeTabId === 'mcx-tab') {
-                activeTabName = 'MCX';
-            } else if (activeTabId === 'forex-tab') {
-                activeTabName = 'Forex & Crypto';
-            }
-            
-            // Store active tab name in a global variable
-            window.activeTab = activeTabName;
-            
-            // Update active tab name in search modal if it's open
-            if (document.getElementById('active-tab-name')) {
-                document.getElementById('active-tab-name').textContent = activeTabName;
-            }
-        });
-        
-        // Set initial active tab
-        window.activeTab = 'NSE';
-        
-        // Bid/Ask WebSocket Functionality
-        const statusElement = document.getElementById('ws-status');
-        const nseDataBody = document.getElementById('nse-data-body');
-        const bseDataBody = document.getElementById('bse-data-body');
-        const mcxDataBody = document.getElementById('mcx-data-body');
-        const forexDataBody = document.getElementById('forex-data-body');
-        const connectBtn = document.getElementById('connect-btn');
-        const disconnectBtn = document.getElementById('disconnect-btn');
-        const clearBtn = document.getElementById('clear-btn');
-        const searchBox = document.getElementById('search-box');
-        
-        let socket;
-        let marketData = {};
-        let searchTerm = '';
-        
-        // Connect to WebSocket
-        function connect() {
-            try {
-                // Use the Node.js server WebSocket URL with explicit IP address
-                const wsUrl = 'ws://127.0.0.1:5005';
-                console.log('Attempting to connect to WebSocket at:', wsUrl);
-                statusElement.textContent = 'Connecting to WebSocket...';
-                
-                // Close existing socket if it exists
-                if (socket) {
-                    console.log('Closing existing socket connection');
-                    socket.close();
-                }
-                
-                // Create new WebSocket connection
-                socket = new WebSocket(wsUrl);
-                
-                socket.onopen = function() {
-                    console.log('WebSocket connection established successfully');
-                    statusElement.textContent = 'Connected to WebSocket';
-                    statusElement.className = 'status connected';
-                   
-                };
-                
-                socket.onclose = function(event) {
-                    console.log('WebSocket connection closed. Code:', event.code, 'Reason:', event.reason);
-                    statusElement.textContent = 'Disconnected from WebSocket';
-                    statusElement.className = 'status disconnected';
-                   
-                };
-                
-                socket.onerror = function(error) {
-                    console.error('WebSocket error:', error);
-                    statusElement.textContent = 'WebSocket connection error';
-                    statusElement.className = 'status error';
-                   
-                };
-                
-                socket.onmessage = function(event) {
-                    try {
-                        console.log('%c WebSocket message received', 'background: #222; color: #bada55; font-size: 16px; font-weight: bold;');
-                        
-                        // Log the raw message data immediately
-                        console.log('Raw WebSocket message:', event.data);
-                        
-                        // Initialize a debug counter if it doesn't exist
-                        if (!window.messageCounter) window.messageCounter = 0;
-                        window.messageCounter++;
-                        
-                        // Log every 10th message count for tracking
-                        if (window.messageCounter % 10 === 0) {
-                            console.log(`Received ${window.messageCounter} total WebSocket messages`);
-                        }
-                        
-                        // Parse the JSON data
-                        const data = JSON.parse(event.data);
-                        
-                        // Check if data is an array (as sent by the server)
-                        if (Array.isArray(data)) {
-                            console.log('Received array data with', data.length, 'items');
-                            // Process each item in the array
-                            data.forEach(function(item) {
-                                if (item && item.Data) {
-                                    // Always log data for debugging - regardless of whether rawData exists
-                                    console.log('%c === FYERS DATA FOR ' + item.name + ' ===', 'background: #0066cc; color: white; font-size: 14px; font-weight: bold; padding: 5px;');
-                                    
-                                    // Log the complete item data
-                                    console.log('%c Complete item:', 'color: green; font-weight: bold;');
-                                    console.dir(item);
-                                    
-                                    // Check if rawData exists and log it
-                                    if (item.Data && item.Data.rawData) {
-                                        console.log('%c Raw Fyers Data:', 'color: blue; font-weight: bold;');
-                                        console.dir(item.Data.rawData);
-                                        
-                                        // Add a debug counter to track how many messages we're receiving
-                                        if (!window.fyersMessageCount) window.fyersMessageCount = 0;
-                                        window.fyersMessageCount++;
-                                        
-                                        if (window.fyersMessageCount % 10 === 0) {
-                                            console.log('%c Received ' + window.fyersMessageCount + ' Fyers messages with raw data', 'color: purple; font-weight: bold;');
-                                        }
-                                    } else {
-                                        console.warn('No rawData found in the message for symbol:', item.name);
-                                    }
-                                    
-                                    console.log('%c ===========================', 'background: #0066cc; color: white; font-size: 14px; font-weight: bold; padding: 5px;');
-                                    
-                                    // Store or update market data
-                                    const symbol = item.name;
-                                    
-                                    // Format expiry date if it exists
-                                    let formattedExpiryDate = '';
-                                    if (item.Data.expiryDate) {
-                                        const expiryDate = new Date(item.Data.expiryDate);
-                                        if (!isNaN(expiryDate)) {
-                                            const day = expiryDate.getDate().toString().padStart(2, '0');
-                                            const month = (expiryDate.getMonth() + 1).toString().padStart(2, '0');
-                                            const year = expiryDate.getFullYear();
-                                            formattedExpiryDate = `${day}-${month}-${year}`;
-                                        }
-                                    }
-                                    
-                                    // Create market data object with all available fields
-                                    marketData[symbol] = {
-                                        symbol: symbol,
-                                        symbolShortName: item.Data.symbolShortName || '',
-                                        expiryDate: formattedExpiryDate,
-                                        ltp: item.Data.ltp || 0,
-                                        bid_price: item.Data.bid_price || 0,
-                                        ask_price: item.Data.ask_price || 0,
-                                        vol_traded_today: item.Data.vol_traded_today || 0,
-                                        open_price: item.Data.open_price || 0,
-                                        high_price: item.Data.high_price || 0,
-                                        low_price: item.Data.low_price || 0,
-                                        ch: item.Data.ch || 0,
-                                        chp: item.Data.chp || 0,
-                                        // Store all raw data fields for potential use
-                                        rawData: item.Data.rawData
-                                    };
-                                }
-                            });
-                            
-                            // Update the tables with the new data
-                            updateMarketDataTables();
-                        } else {
-                            console.log('Received non-array data:', data);
-                        }
-                    } catch (error) {
-                        console.error('Error parsing message:', error);
+    <script>
+        $(document).ready(function() {
+            // Initialize WebSocket connection
+            let socket;
+            let marketData = {};
+            let intervalId = null;
+            let cache = {}; // Simple cache object
+
+            // Connect to WebSocket
+            function connect() {
+                try {
+                   const userId = "{{ Auth::user()->id }}";
+                    const wsUrl = 'ws://namonode.marthub.in:5005/ws?userId='+userId;
+                    //   const wsUrl = 'ws://127.0.0.1:5005';
+                    console.log('Connecting to WebSocket at:', wsUrl);
+
+                    if (socket) {
+                        socket.close();
                     }
+
+                    socket = new WebSocket(wsUrl);
+
+                    socket.onopen = function() {
+                        console.log('WebSocket connected');
+                    };
+
+                    socket.onclose = function(event) {
+                        console.log('WebSocket disconnected');
+                    };
+
+                    socket.onerror = function(error) {
+                        console.error('WebSocket error:', error);
+                    };
+
+                    socket.onmessage = function(event) {
+                        try {
+                            const data = JSON.parse(event.data);
+
+                            if (Array.isArray(data)) {
+                                data.forEach(function(item) {
+
+                                    if (item && item.Data) {
+                                        const symbol = item.name;
+                                        cache[symbol] = item;
+                                        var exchange = symbol.split(":")[0];
+
+                                        // Update MCX table
+                                        if (symbol.slice(-2) === "CE" || symbol.slice(-2) === "PE") {
+                                             if ($("#" + CSS.escape(symbol)).length > 0) {
+
+                                                $("#" + CSS.escape(symbol) + " td:eq(0)").html(
+                                                    `<h4 class="comodity">${item.Data.symbolShortName}</h4>
+                                                    <p class="date">${item.Data.expiryDate || ''}</p>
+                                                    <p class="detail">Chg:<span>${parseFloat(item.Data.ch || 0).toFixed(2)}</span>H:<span>${parseFloat(item.Data.high_price || 0).toFixed(2)}</span></p>`
+                                                );
+
+                                                $("#" + CSS.escape(symbol) + " td:eq(1)").html(
+                                                    `<p class="text-white fw-bold badge badge-${parseFloat(item.Data.ltp || 0).toFixed(2) < parseFloat(item.Data.ask_price || 0).toFixed(2) ? 'danger' : 'success'}">${parseFloat(item.Data.bid_price || 0).toFixed(2)}</p>
+                                                    <p class="text-white fw-bold">L: <span>${parseFloat(item.Data.low_price || 0).toFixed(2)}</span></p>`
+                                                );
+
+                                                $("#" + CSS.escape(symbol) + " td:eq(2)").html(
+                                                    `<p class="text-white fw-bold badge badge-${parseFloat(item.Data.ltp || 0).toFixed(2) > parseFloat(item.Data.ask_price || 0).toFixed(2) ? 'danger' : 'success'}">${parseFloat(item.Data.ask_price || 0).toFixed(2)}</p>
+                                                    <p class="text-white fw-bold">O: ${parseFloat(item.Data.open_price || 0).toFixed(2)}</p>`
+                                                );
+
+                                            } else {
+
+                                            const rowHTML = `
+                                        <tr id="${symbol}" data-bs-toggle="modal" onclick="OPENMODALMCXNSE('${symbol}', 0, 0);">
+                                            <td scope="row">
+                                                <h4 class="comodity">${item.Data.symbolShortName}</h4>
+                                                <p class="date">${item.Data.expiryDate || ''}</p>
+                                                <p class="detail">Chg:<span>${parseFloat(item.Data.ch || 0).toFixed(2)}</span>H:<span>${parseFloat(item.Data.high_price || 0).toFixed(2)}</span></p>
+                                            </td>
+                                            <td>
+                                                <p class="text-white fw-bold badge badge-${parseFloat(item.Data.ltp || 0).toFixed(2) < parseFloat(item.Data.ask_price || 0).toFixed(2) ? 'danger' : 'success'}">${parseFloat(item.Data.bid_price || 0).toFixed(2)}</p>
+                                                <p class="text-white fw-bold">L: <span>${item.Data.low_price || 0}</span></p>
+                                            </td>
+                                            <td class="text-end text-primary">
+                                                <p class="text-white fw-bold badge badge-${parseFloat(item.Data.ltp || 0).toFixed(2) > parseFloat(item.Data.ask_price || 0).toFixed(2) ? 'danger' : 'success'}">${parseFloat(item.Data.ask_price || 0).toFixed(2)}</p>
+                                                <p class="text-white fw-bold">O: ${parseFloat(item.Data.open_price || 0).toFixed(2)}</p>
+                                            </td>
+                                        </tr>`;
+                                            $("#tblOPTIONS").append(rowHTML);
+                                    }
+                                        } else if (exchange == 'MCX') {
+
+                                            if ($("#" + CSS.escape(symbol)).length > 0) {
+
+                                                $("#" + CSS.escape(symbol) + " td:eq(0)").html(
+                                                    `<h4 class="comodity">${item.Data.symbolShortName}</h4>
+                                                    <p class="date">${item.Data.expiryDate || ''}</p>
+                                                    <p class="detail">Chg:<span>${parseFloat(item.Data.ch || 0).toFixed(2)}</span>H:<span>${parseFloat(item.Data.high_price || 0).toFixed(2)}</span></p>`
+                                                );
+
+                                                $("#" + CSS.escape(symbol) + " td:eq(1)").html(
+                                                    `<p class="text-white fw-bold badge badge-${parseFloat(item.Data.ltp || 0).toFixed(2) < parseFloat(item.Data.ask_price || 0).toFixed(2) ? 'danger' : 'success'}">${parseFloat(item.Data.bid_price || 0).toFixed(2)}</p>
+                                                    <p class="text-white fw-bold">L: <span>${parseFloat(item.Data.low_price || 0).toFixed(2)}</span></p>`
+                                                );
+
+                                                $("#" + CSS.escape(symbol) + " td:eq(2)").html(
+                                                    `<p class="text-white fw-bold badge badge-${parseFloat(item.Data.ltp || 0).toFixed(2) > parseFloat(item.Data.ask_price || 0).toFixed(2) ? 'danger' : 'success'}">${parseFloat(item.Data.ask_price || 0).toFixed(2)}</p>
+                                                    <p class="text-white fw-bold">O: ${parseFloat(item.Data.open_price || 0).toFixed(2)}</p>`
+                                                );
+
+                                            } else {
+
+                                                const rowHTML = `
+                                        <tr id="${symbol}" data-bs-toggle="modal" onclick="OPENMODALMCXNSE('${symbol}', 0, 0);">
+                                            <td scope="row">
+                                                <h4 class="comodity">${item.Data.symbolShortName}</h4>
+                                                <p class="date">${item.Data.expiryDate || ''}</p>
+                                                <p class="detail">Chg:<span>${parseFloat(item.Data.ch || 0).toFixed(2)}</span>H:<span>${parseFloat(item.Data.high_price || 0).toFixed(2)}</span></p>
+                                            </td>
+                                            <td>
+                                                <p class="text-white fw-bold badge badge-${parseFloat(item.Data.ltp || 0).toFixed(2) < parseFloat(item.Data.ask_price || 0).toFixed(2) ? 'danger' : 'success'}">${parseFloat(item.Data.bid_price || 0).toFixed(2)}</p>
+                                                <p class="text-white fw-bold">L: <span>${item.Data.low_price || 0}</span></p>
+                                            </td>
+                                            <td class="text-end text-primary">
+                                                <p class="text-white fw-bold badge badge-${parseFloat(item.Data.ltp || 0).toFixed(2) > parseFloat(item.Data.ask_price || 0).toFixed(2) ? 'danger' : 'success'}">${parseFloat(item.Data.ask_price || 0).toFixed(2)}</p>
+                                                <p class="text-white fw-bold">O: ${parseFloat(item.Data.open_price || 0).toFixed(2)}</p>
+                                            </td>
+                                        </tr>`;
+                                                $("#btlMCX").append(rowHTML);
+                                            }
+                                        } else if (exchange == 'NSE') {
+                                            if ($("#" + CSS.escape(symbol)).length > 0) {
+
+                                                $("#" + CSS.escape(symbol) + " td:eq(0)").html(
+                                                    `<h4 class="comodity">${item.Data.symbolShortName}</h4>
+                                                    <p class="date">${item.Data.expiryDate || ''}</p>
+                                                    <p class="detail">Chg:<span>${parseFloat(item.Data.ch || 0).toFixed(2)}</span>H:<span>${parseFloat(item.Data.high_price || 0).toFixed(2)}</span></p>`
+                                                );
+
+                                                $("#" + CSS.escape(symbol) + " td:eq(1)").html(
+                                                    `<p class="text-white fw-bold badge badge-${parseFloat(item.Data.ltp || 0).toFixed(2) < parseFloat(item.Data.ask_price || 0).toFixed(2) ? 'danger' : 'success'}">${parseFloat(item.Data.bid_price || 0).toFixed(2)}</p>
+                                                    <p class="text-white fw-bold">L: <span>${parseFloat(item.Data.low_price || 0).toFixed(2)}</span></p>`
+                                                );
+
+                                                $("#" + CSS.escape(symbol) + " td:eq(2)").html(
+                                                    `<p class="text-white fw-bold badge badge-${parseFloat(item.Data.ltp || 0).toFixed(2) > parseFloat(item.Data.ask_price || 0).toFixed(2) ? 'danger' : 'success'}">${parseFloat(item.Data.ask_price || 0).toFixed(2)}</p>
+                                                    <p class="text-white fw-bold">O: ${parseFloat(item.Data.open_price || 0).toFixed(2)}</p>`
+                                                );
+
+                                            } else {
+                                                const rowHTML = `
+                                        <tr id="${symbol}" data-bs-toggle="modal" onclick="OPENMODALMCXNSE('${symbol}', 0, 0);">
+                                            <td scope="row">
+                                                <h4 class="comodity">${item.Data.symbolShortName}</h4>
+                                                <p class="date">${item.Data.expiryDate || ''}</p>
+                                                <p class="detail">Chg:<span>${parseFloat(item.Data.ch || 0).toFixed(2)}</span>H:<span>${parseFloat(item.Data.high_price || 0).toFixed(2)}</span></p>
+                                            </td>
+                                            <td>
+                                                <p class="text-white fw-bold badge badge-${parseFloat(item.Data.ltp || 0).toFixed(2) < parseFloat(item.Data.ask_price || 0).toFixed(2) ? 'danger' : 'success'}">${parseFloat(item.Data.bid_price || 0).toFixed(2)}</p>
+                                                <p class="text-white fw-bold">L: <span>${item.Data.low_price || 0}</span></p>
+                                            </td>
+                                            <td class="text-end text-primary">
+                                                <p class="text-white fw-bold badge badge-${parseFloat(item.Data.ltp || 0).toFixed(2) > parseFloat(item.Data.ask_price || 0).toFixed(2) ? 'danger' : 'success'}">${parseFloat(item.Data.ask_price || 0).toFixed(2)}</p>
+                                                <p class="text-white fw-bold">O: ${parseFloat(item.Data.open_price || 0).toFixed(2)}</p>
+                                            </td>
+                                        </tr>`;
+                                                $("#tblNSE").append(rowHTML);
+                                            }
+                                        } else if (exchange == 'OPTIONS') {
+                                            if ($("#" + CSS.escape(symbol)).length > 0) {
+
+                                                $("#" + CSS.escape(symbol) + " td:eq(0)").html(
+                                                    `<h4 class="comodity">${item.Data.symbolShortName}</h4>
+                                                    <p class="date">${item.Data.expiryDate || ''}</p>
+                                                    <p class="detail">Chg:<span>${parseFloat(item.Data.ch || 0).toFixed(2)}</span>H:<span>${parseFloat(item.Data.high_price || 0).toFixed(2)}</span></p>`
+                                                );
+
+                                                $("#" + CSS.escape(symbol) + " td:eq(1)").html(
+                                                    `<p class="text-white fw-bold badge badge-${parseFloat(item.Data.ltp || 0).toFixed(2) < parseFloat(item.Data.ask_price || 0).toFixed(2) ? 'danger' : 'success'}">${parseFloat(item.Data.bid_price || 0).toFixed(2)}</p>
+                                                    <p class="text-white fw-bold">L: <span>${parseFloat(item.Data.low_price || 0).toFixed(2)}</span></p>`
+                                                );
+
+                                                $("#" + CSS.escape(symbol) + " td:eq(2)").html(
+                                                    `<p class="text-white fw-bold badge badge-${parseFloat(item.Data.ltp || 0).toFixed(2) > parseFloat(item.Data.ask_price || 0).toFixed(2) ? 'danger' : 'success'}">${parseFloat(item.Data.ask_price || 0).toFixed(2)}</p>
+                                                    <p class="text-white fw-bold">O: ${parseFloat(item.Data.open_price || 0).toFixed(2)}</p>`
+                                                );
+
+                                            } else {
+
+                                                const rowHTML = `
+                                        <tr id="mcx" data-bs-toggle="modal" onclick="OPENMODALMCXNSE('${symbol}', 0, 0);">
+                                            <td scope="row">
+                                                <h4 class="comodity">${item.Data.symbolShortName}</h4>
+                                                <p class="date">${item.Data.expiryDate || ''}</p>
+                                                <p class="detail">Chg:<span>${parseFloat(item.Data.ch || 0).toFixed(2)}</span>H:<span>${parseFloat(item.Data.high_price || 0).toFixed(2)}</span></p>
+                                            </td>
+                                            <td>
+                                                <p class="text-white fw-bold badge badge-${parseFloat(item.Data.ltp || 0).toFixed(2) < parseFloat(item.Data.ask_price || 0).toFixed(2) ? 'danger' : 'success'}">${parseFloat(item.Data.bid_price || 0).toFixed(2)}</p>
+                                                <p class="text-white fw-bold">L: <span>${item.Data.low_price || 0}</span></p>
+                                            </td>
+                                            <td class="text-end text-primary">
+                                                <p class="text-white fw-bold badge badge-${parseFloat(item.Data.ltp || 0).toFixed(2) > parseFloat(item.Data.ask_price || 0).toFixed(2) ? 'danger' : 'success'}">${parseFloat(item.Data.ask_price || 0).toFixed(2)}</p>
+                                                <p class="text-white fw-bold">O: ${parseFloat(item.Data.open_price || 0).toFixed(2)}</p>
+                                            </td>
+                                        </tr>`;
+                                                $("#tblOPTIONS").append(rowHTML);
+                                            }
+                                        } else if (exchange == 'COMEX') {
+                                            if ($("#" + CSS.escape(symbol)).length > 0) {
+
+                                                $("#" + CSS.escape(symbol) + " td:eq(0)").html(
+                                                    `<h4 class="comodity">${item.Data.symbolShortName}</h4>
+                                                    <p class="date">${item.Data.expiryDate || ''}</p>
+                                                    <p class="detail">Chg:<span>${parseFloat(item.Data.ch || 0).toFixed(2)}</span>H:<span>${parseFloat(item.Data.high_price || 0).toFixed(2)}</span></p>`
+                                                );
+
+                                                $("#" + CSS.escape(symbol) + " td:eq(1)").html(
+                                                    `<p class="text-white fw-bold badge badge-${parseFloat(item.Data.ltp || 0).toFixed(2) < parseFloat(item.Data.ask_price || 0).toFixed(2) ? 'danger' : 'success'}">${parseFloat(item.Data.bid_price || 0).toFixed(2)}</p>
+                                                    <p class="text-white fw-bold">L: <span>${parseFloat(item.Data.low_price || 0).toFixed(2)}</span></p>`
+                                                );
+
+                                                $("#" + CSS.escape(symbol) + " td:eq(2)").html(
+                                                    `<p class="text-white fw-bold badge badge-${parseFloat(item.Data.ltp || 0).toFixed(2) > parseFloat(item.Data.ask_price || 0).toFixed(2) ? 'danger' : 'success'}">${parseFloat(item.Data.ask_price || 0).toFixed(2)}</p>
+                                                    <p class="text-white fw-bold">O: ${parseFloat(item.Data.open_price || 0).toFixed(2)}</p>`
+                                                );
+
+                                            } else {
+
+                                                const rowHTML = `
+                                        <tr id="mcx" data-bs-toggle="modal" onclick="OPENMODALMCXNSE('${symbol}', 0, 0);">
+                                            <td scope="row">
+                                                <h4 class="comodity">${item.Data.symbolShortName}</h4>
+                                                <p class="date">${item.Data.expiryDate || ''}</p>
+                                                <p class="detail">Chg:<span>${parseFloat(item.Data.ch || 0).toFixed(2)}</span>H:<span>${parseFloat(item.Data.high_price || 0).toFixed(2)}</span></p>
+                                            </td>
+                                            <td>
+                                                <p class="text-white fw-bold badge badge-${parseFloat(item.Data.ltp || 0).toFixed(2) < parseFloat(item.Data.ask_price || 0).toFixed(2) ? 'danger' : 'success'}">${parseFloat(item.Data.bid_price || 0).toFixed(2)}</p>
+                                                <p class="text-white fw-bold">L: <span>${item.Data.low_price || 0}</span></p>
+                                            </td>
+                                            <td class="text-end text-primary">
+                                                <p class="text-white fw-bold badge badge-${parseFloat(item.Data.ltp || 0).toFixed(2) > parseFloat(item.Data.ask_price || 0).toFixed(2) ? 'danger' : 'success'}">${parseFloat(item.Data.ask_price || 0).toFixed(2)}</p>
+                                                <p class="text-white fw-bold">O: ${parseFloat(item.Data.open_price || 0).toFixed(2)}</p>
+                                            </td>
+                                        </tr>`;
+                                                $("#btlCOMEX").append(rowHTML);
+                                            }
+                                        }
+
+                                        // Store market data
+                                        marketData[symbol] = item.Data;
+                                    }
+                                });
+                            }
+                        } catch (error) {
+                            console.error('Error processing message:', error);
+                        }
+                    };
+                } catch (error) {
+                    console.error('WebSocket setup error:', error);
+                }
+            }
+
+            // Original OPENMODALMCXNSE function with minimal changes
+            function OPENMODALMCXNSE(symbol, BuyPrice, Sellprice) {
+                // Clear previous interval
+                if (intervalId) {
+                    clearInterval(intervalId);
+                    intervalId = null;
+                }
+
+                $("#lblsymbol").html(symbol);
+                $("#tblfcsellprice").html('0');
+                $("#tblfcbuyprice").html('0');
+                $("#lblLotSize").html('1');
+                $("#lblVolume1").html('1');
+
+                // Get lot size
+                var _data = {
+                    Symbol: symbol
                 };
-            } catch (error) {
-                console.error('Error setting up WebSocket:', error);
-                statusElement.textContent = 'Error setting up WebSocket';
-                statusElement.className = 'status error';
-                connectBtn.disabled = false;
-                disconnectBtn.disabled = true;
-            }
-        }
-        
-        // Filter market data based on search term and exchange
-        function filterMarketData(exchange) {
-            return Object.entries(marketData).filter(function(entry) {
-                const symbol = entry[0];
-                const data = entry[1];
-                
-                // Apply search filter if there is a search term
-                if (searchTerm && !symbol.toLowerCase().includes(searchTerm.toLowerCase())) {
-                    return false;
+                _data = JSON.stringify(_data);
+                        $.ajax({
+                type: "POST",
+                url: "{{ route('get.symbol') }}",
+                data: {
+                    _token: "{{ csrf_token() }}",  
+                    Symbol: $("#symbolInput").val()
+                },
+                success: function(data) {
+                    if (data.segment && data.segment !== '') {
+                        $("#lblLotSize").html(data.segment);
+                        $("#lblVolume1").html(data.segment);
+                    }
+                },
+                error: function(xhr) {
+                    console.error("Error:", xhr.responseText);
                 }
+            });
+
+
                 
-                // Filter by exchange
-                if (exchange === 'nse') {
-                    return symbol.startsWith('NSE:');
-                } else if (exchange === 'bse') {
-                    return symbol.startsWith('BSE:');
-                } else if (exchange === 'mcx') {
-                    return symbol.startsWith('MCX:');
-                } else if (exchange === 'forex') {
-                    return symbol.startsWith('FOREX:') || symbol.startsWith('CRYPTO:');
-                }
-                
-                return false; // Should not reach here
-            });
-        }
-        
-        // Update all market data tables
-        function updateMarketDataTables() {
-            // Clear all tables
-            nseDataBody.innerHTML = '';
-            bseDataBody.innerHTML = '';
-            mcxDataBody.innerHTML = '';
-            forexDataBody.innerHTML = '';
-            
-            // Update NSE table
-            const nseData = filterMarketData('nse');
-            nseData.sort(function(a, b) {
-                return a[0].localeCompare(b[0]);
-            });
-            
-            nseData.forEach(function(entry) {
-                const symbol = entry[0];
-                const data = entry[1];
-                const row = createTableRow(symbol, data);
-                nseDataBody.appendChild(row);
-            });
-            
-            // Update BSE table (Option)
-            const bseData = filterMarketData('bse');
-            bseData.sort(function(a, b) {
-                return a[0].localeCompare(b[0]);
-            });
-            
-            bseData.forEach(function(entry) {
-                const symbol = entry[0];
-                const data = entry[1];
-                const row = createTableRow(symbol, data);
-                bseDataBody.appendChild(row);
-            });
-            
-            // Update MCX table
-            const mcxData = filterMarketData('mcx');
-            mcxData.sort(function(a, b) {
-                return a[0].localeCompare(b[0]);
-            });
-            
-            mcxData.forEach(function(entry) {
-                const symbol = entry[0];
-                const data = entry[1];
-                const row = createTableRow(symbol, data);
-                mcxDataBody.appendChild(row);
-            });
-            
-            // Update Forex & Crypto table
-            const forexData = filterMarketData('forex');
-            forexData.sort(function(a, b) {
-                return a[0].localeCompare(b[0]);
-            });
-            
-            forexData.forEach(function(entry) {
-                const symbol = entry[0];
-                const data = entry[1];
-                const row = createTableRow(symbol, data);
-                forexDataBody.appendChild(row);
-            });
-        }
-        
-        // Create a table row for market data
-        function createTableRow(symbol, data) {
-            const row = document.createElement('tr');
-            
-            // Add click event to show buy/sell action sheet
-            row.addEventListener('click', function() {
-                showBuySellActionSheet(symbol, data);
-            });
-            
-            // Add cursor pointer style
-            row.style.cursor = 'pointer';
-                
-            // Create table cells using standard DOM methods
-            const cells = [
-                createCell(symbol),
-                createCell(data.symbolShortName || ''),
-                createCell(data.expiryDate || ''),
-                createCell(data.ltp || 0),
-                createCell(data.bid_price || 0, data.bid_price == 0 ? 'zero-value' : ''),
-                createCell(data.ask_price || 0, data.ask_price == 0 ? 'zero-value' : ''),
-                createCell(data.ch || 0, parseFloat(data.ch || 0) > 0 ? 'positive-change' : parseFloat(data.ch || 0) < 0 ? 'negative-change' : ''),
-                createCell((data.chp || 0) + '%', parseFloat(data.chp || 0) > 0 ? 'positive-change' : parseFloat(data.chp || 0) < 0 ? 'negative-change' : ''),
-                createCell(data.vol_traded_today || 0),
-                createCell(data.open_price || 0)
-            ];
-            
-            cells.forEach(function(cell) {
-                row.appendChild(cell);
-            });
-            
-            return row;
-        }
-        
-        // Show buy/sell action sheet for the selected symbol
-        function showBuySellActionSheet(symbol, data) {
-            // Update action sheet with symbol data
-            document.getElementById('selected-symbol').textContent = symbol;
-            document.getElementById('bid-price-value').textContent = data.bid_price || '0.00';
-            document.getElementById('ask-price-value').textContent = data.ask_price || '0.00';
-            
-            // Show the action sheet
-            $('#buyActionSheet').modal('show');
-        }
-        
-        // Helper function to create table cell
-        function createCell(content, className) {
-            const cell = document.createElement('td');
-            cell.textContent = content;
-            if (className) {
-                cell.className = className;
+
+                // Show modal
+                $("#withdrawActionSheetForex_Crypto").modal('show');
+
+                // Update data when modal is shown
+                $('#withdrawActionSheetForex_Crypto').on('shown.bs.modal', function() {
+                    intervalId = setInterval(function() {
+                        const symbolKey = symbol.includes(':') ? symbol.split(':')[1] : symbol;
+                        const item = cache[symbolKey] || cache[symbol]; // Try both keys
+
+                        if (!item || !item.Data) {
+                            console.log('No data for symbol:', symbolKey);
+                            return;
+                        }
+
+                        const data = item.Data;
+
+                        // Update prices
+                        $("#tblfcbuyprice").html(data.bid_price || '0');
+                        $("#tblfcsellprice").html(data.ask_price || '0');
+
+                        // Update other fields exactly as in your original code
+                        $("#lblBid").html(data.ask_price || '0');
+                        $("#lblbid").html(data.bid_price || '0');
+                        $("#lblLast").html(data.ltp || '0');
+                        $("#lblLast1").html(data.ltp || '0');
+                        $("#lblHigh1").html(data.high_price || '0');
+                        $("#lblHigh").html(data.high_price || '0');
+                        $("#lblLow1").html(data.low_price || '0');
+                        $("#lblLow").html(data.low_price || '0');
+                        $("#lblChange").html(data.ch || '0');
+                        $("#lblChange1").html(data.ch || '0');
+                        $("#lblBidQty").html(data.ask_size || '0');
+                        $("#lblBidQty1").html(data.ask_size || '0');
+                        $("#lblBidQty2").html(data.ask_size || '0');
+                        $("#lblAskQty").html(data.bid_size || '0');
+                        $("#lblAskQt1").html(data.bid_size || '0');
+                        $("#lblVolume").html(data.vol_traded_today || '0');
+                        $("#lblOpen1").html(data.open_price || '0');
+                        $("#lblOpenInterest2").html(data.open_price || '0');
+                        $("#lblOpen").html(data.open_price || '0');
+                        $("#lblASK").html(data.ask_price || '0');
+                        $("#lblAsk").html(data.bid_price || '0');
+                        $("#lblLastTradedQty").html(data.last_traded_qty || '0');
+                        $("#lblLastTradedQty1").html(data.last_traded_qty || '0');
+                        $("#lblUpperCircuit").html(data.upper_ckt || '0');
+                        $("#lblLowerCircuit").html(data.lower_ckt || '0');
+                        $("#lblUpperCircuit1").html(data.upper_ckt || '0');
+                        $("#lblLowerCircuit1").html(data.lower_ckt || '0');
+                        $("#lblprev_close_price1").html(data.prev_close_price || '0');
+                        $("#lblprev_close_price").html(data.prev_close_price || '0');
+                        $("#lblPrevClose").html(data.prev_close_price || '0');
+                        $("#lblPrevClose1").html(data.prev_close_price || '0');
+                        $("#lblAtp").html(data.avg_trade_price || '0');
+                        $("#lblAtp1").html(data.avg_trade_price || '0');
+                        $("#lblAtp2").html(data.avg_trade_price || '0');
+
+                    }, 100); // 100ms refresh as in original
+                });
+
+                // Clean up when modal closes
+                $('#withdrawActionSheetForex_Crypto').on('hidden.bs.modal', function() {
+                    if (intervalId) {
+                        clearInterval(intervalId);
+                        intervalId = null;
+                    }
+                });
             }
-            return cell;
+
+            // Initialize connection
+            connect();
+
+            // Make function available globally
+            window.OPENMODALMCXNSE = OPENMODALMCXNSE;
+        });
+       function seachFilter() {
+            $('#search_datamain').html('');
+            input = document.getElementById("mcx_filter")
+            
+            OpenWatchListModal(OptionSearch, input);
+            //var input, filter, table, tr, td, i, txtValue;
+            //input = document.getElementById("mcx_filter");
+            //filter = input.value.toUpperCase();
+            //table = document.getElementById("search_datamain");
+            //tr = table.getElementsByTagName("tr");
+            //for (i = 0; i < tr.length; i++) {
+            //    td = tr[i].getElementsByTagName("td")[0];
+            //    if (td) {
+            //        txtValue = td.textContent || td.innerText;
+            //        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+            //            tr[i].style.display = "";
+            //        } else {
+            //            tr[i].style.display = "none";
+            //        }
+            //    }
+            //}
         }
+
+        function OpenWatchListModal(Option, textbox) {
+    // Set global search option
+    OptionSearch = Option;
+    ClientId = 1;
+    
+    // Only proceed if we have a valid option
+    if (Option != '') {
+        // Show loading state
+        $('#search_datamain').html('<tr><td colspan="6"><div class="text-center py-3">Loading instruments...</div></td></tr>');
+        $("#mcxpop").modal('show');
         
-        // Helper functions for market data
-        
+        // Make API request
+        fetch(`/getdata/?query=${encodeURIComponent(textbox.value)}&type=${Option}&clientid=${ClientId}`)
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error(`Network error: ${res.status} ${res.statusText}`);
+                }
+                return res.json();
+            })
+            .then(data => {
+                console.log('API Response Data:', data);
+                
+                // Handle empty results
+                if (!data || data.length === 0) {
+                    $('#search_datamain').html('<tr><td colspan="6"><div class="text-center py-3">No matching instruments found</div></td></tr>');
+                    return;
+                }
+
+                let html = '';
+                
+                // Process each instrument
+                data.forEach(item => {
+                    const symbol = item.Symbol || 'N/A';
+                    const description = item.Description || symbol;
+                    const exchange = item.TERMINAL || item.Exchange || 'N/A';
+                    const isActive = Boolean(item.ckecked || item.ckecked);
+                    const lotSize = item.LotSize ? parseInt(item.LotSize) : 'N/A';
+                    const instrumentType = item.InstrumentType || 'N/A';
+                    
+                    // Extract market data
+                    const marketData = item.Data || {};
+                    const lastUpdate = marketData.last_traded_time ? 
+                        new Date(marketData.last_traded_time * 1000).toLocaleString() : 'N/A';
+                    const expiryDate = marketData.expiry_date ? 
+                        new Date(marketData.expiry_date).toLocaleDateString() : 'N/A';
+                    const strikePrice = marketData.strike_price || 'N/A';
+                    const optionType = marketData.option_type || '';
+                    
+                    // Build instrument info string
+                    let infoString = `Lot: ${lotSize}`;
+                    if (expiryDate !== 'N/A') infoString += ` | Exp: ${expiryDate}`;
+                    if (strikePrice !== 'N/A') infoString += ` | Strike: ${strikePrice}`;
+                    if (optionType) infoString += ` (${optionType})`;
+                    
+                    // Determine price display based on instrument type
+                    let priceDisplay = '';
+                    if (['CE', 'PE', 'FUT'].includes(instrumentType)) {
+                        priceDisplay = `
+                            <p class="chg">LTP: <span id="search_${symbol}_Price">${marketData.last_price || 'N/A'}</span></p>
+                            <p class="chg">OI: <span id="search_${symbol}_OI">${marketData.open_interest || 'N/A'}</span></p>
+                        `;
+                    } else {
+                        priceDisplay = `
+                            <p class="chg">Bid: <span id="search_${symbol}_Bid">${marketData.bid_price || 'N/A'}</span></p>
+                            <p class="chg">Ask: <span id="search_${symbol}_Ask">${marketData.ask_price || 'N/A'}</span></p>
+                        `;
+                    }
+                    
+                    // Build the table row
+                    html += `
+                    <tr>
+                        <td>
+                            <div class="list_cntnt">
+                                <p class="title">${symbol}</p>
+                                <p class="id">${description}</p>
+                                <p class="chg">${infoString}</p>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="list_cntnt">
+                                ${priceDisplay}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="list_cntnt">
+                                <p class="title_number">${exchange}</p>
+                                <p class="chg">${instrumentType}</p>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="list_cntnt">
+                                <p class="chg">Updated: ${lastUpdate}</p>
+                                <p class="chg">Tick: ${marketData.tick_size || 'N/A'}</p>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="list_cntnt">
+                                ${isActive ?
+                                    `<input type="checkbox" name="market_search" id="search_${symbol}_check" checked 
+                                        class="check_box" onclick="toggleMarketWatch('${symbol}', '${exchange}', false);">` :
+                                    `<input type="checkbox" name="market_search" id="search_${symbol}_check" 
+                                        class="check_box" onclick="toggleMarketWatch('${symbol}', '${exchange}', true);">`
+                                }
+                                <div class="check_mark"></div>
+                            </div>
+                        </td>
+                    </tr>`;
+                });
+
+                // Update the table and show modal
+                $('#search_datamain').html(html);
+                
+                // Initialize tooltips if using Bootstrap
+                if (typeof $().tooltip === 'function') {
+                    $('[data-toggle="tooltip"]').tooltip();
+                }
+            })
+            .catch(error => {
+                console.error('Market Data Error:', error);
+                $('#search_datamain').html(`
+                    <tr>
+                        <td colspan="6">
+                            <div class="alert alert-danger m-2">
+                                Failed to load instruments: ${error.message}
+                                <button onclick="OpenWatchListModal('${Option}', document.getElementById('${textbox.id}'))" 
+                                    class="btn btn-sm btn-warning float-right">Retry</button>
+                            </div>
+                        </td>
+                    </tr>
+                `);
+            });
+    }
+}
+
+// Helper function for watchlist toggle
+function toggleMarketWatch(symbol, exchange, shouldAdd) {
+    const action = shouldAdd ? 'add' : 'remove';
+    console.log(`${action.toUpperCase()} ${symbol} from ${exchange} watchlist`);
+  const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    fetch("{{route('watchlist.update')}}", {
+        method: 'POST',
+         headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        },
+         body: JSON.stringify({
+            action:action,
+            symbol: symbol,
+            exchange: exchange,
+            clientId: ClientId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const checkbox = document.getElementById(`search_${symbol}_check`);
+            if (checkbox) {
+                checkbox.checked = shouldAdd;
+                checkbox.onclick = function() {
+                    toggleMarketWatch(symbol, exchange, !shouldAdd);
+                };
+            }
+        } else {
+            alert(`Failed to ${action} instrument: ${data.message}`);
+        }
+    })
+    .catch(error => {
+        console.error(`Watchlist ${action} error:`, error);
+        alert(`Network error - please try again`);
+    });
+}
+
+
+          function convertToDate(timestamp) {
+
+            var dateUtc = new Date(timestamp * 1000);
+
+            // Convert to IST
+            var dateIst = new Date(dateUtc.getTime() + (5.5 * 60 * 60 * 1000));
+
+            // Format to dd-mm-yyyy
+            var day = String(dateIst.getDate()).padStart(2, '0');
+            var month = String(dateIst.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+            var year = dateIst.getFullYear();
+
+            var formattedDate = `${day}-${month}-${year}`;
+            return formattedDate;
+        }
+
 
         
-        // Event listeners
-        // connectBtn.addEventListener('click', function() {
-        //     if (!socket || socket.readyState !== WebSocket.OPEN) {
-        //         connect();
-        //     }
-        // });
-        
-        // disconnectBtn.addEventListener('click', function() {
-        //     if (socket && socket.readyState === WebSocket.OPEN) {
-        //         socket.close();
-        //     }
-        // });
-        
-        // clearBtn.addEventListener('click', function() {
-        //     marketData = {};
-        //     updateMarketDataTables();
-        //     updateStats();
-        // });
-        
-        // searchBox.addEventListener('input', function(e) {
-        //     searchTerm = e.target.value;
-        //     updateMarketDataTables();
-        // });
-        
-        // Auto-connect when the page loads
-        connect();
-        
-        // Handle buy button click
-        document.getElementById('buy-button').addEventListener('click', function() {
-            const symbol = document.getElementById('selected-symbol').textContent;
-            const quantity = document.getElementById('trade-quantity').value;
-            const price = document.getElementById('ask-price-value').textContent;
-            
-            // Here you would typically send the buy order to your backend
-            console.log('BUY Order:', { symbol, quantity, price });
-            
-            // Show confirmation
-            alert('Buy order placed for ' + quantity + ' ' + symbol + ' at price ' + price);
-            
-            // Close the action sheet
-            $('#buyActionSheet').modal('hide');
-        });
-        
-        // Handle sell button click
-        document.getElementById('sell-button').addEventListener('click', function() {
-            const symbol = document.getElementById('selected-symbol').textContent;
-            const quantity = document.getElementById('trade-quantity').value;
-            const price = document.getElementById('bid-price-value').textContent;
-            
-            // Here you would typically send the sell order to your backend
-            console.log('SELL Order:', { symbol, quantity, price });
-            
-            // Show confirmation
-            alert('Sell order placed for ' + quantity + ' ' + symbol + ' at price ' + price);
-            
-            // Close the action sheet
-            $('#buyActionSheet').modal('hide');
-        });
-        
-        // Handle close button click
-        document.getElementById('close-action-sheet').addEventListener('click', function() {
-            $('#buyActionSheet').modal('hide');
-        });
-        
-        // Handle search close button click
-        document.getElementById('close-search-sheet').addEventListener('click', function() {
-            $('#searchActionSheet').modal('hide');
-        });
-        
-        // Handle main search box click to open fullscreen search
-        searchBox.addEventListener('click', function(e) {
-            // Show the search action sheet
-            $('#searchActionSheet').modal('show');
-            
-            // Clear the modal search box
-            document.getElementById('modal-search-box').value = '';
-            
-            // Set focus on the modal search box
-            setTimeout(() => {
-                document.getElementById('modal-search-box').focus();
-                
-                // Update active tab name in search modal
-                document.getElementById('active-tab-name').textContent = window.activeTab || 'NSE';
-                
-                // Show initial sample data for the active tab
-                showSearchResults('');
-            }, 300);
-        });
-        
-        // Handle modal search input
-        document.getElementById('modal-search-box').addEventListener('input', function(e) {
-            const searchTerm = e.target.value.trim();
-            if (searchTerm.length >= 2) {
-                // In a real implementation, you would fetch data from your API here
-                // For now, we'll use sample data
-                showSearchResults(searchTerm);
-            } else {
-                // Clear results but keep modal open
-                document.getElementById('search-results-body').innerHTML = '';
+function buyfc() {
+    if ($("#textfclot").val() !== '' && $("#textfclot").val() !== '0') {
+
+        let _data = {
+            _token: "{{ csrf_token() }}", // Laravel CSRF token
+            Mode: 'BUY',
+            Symbol: $("#lblsymbol").html(),
+            textfclot: $("#textfclot").val(),
+            Min: document.getElementById("chkminMarket").checked,
+            Mega: document.getElementById("chkmegaMarket").checked,
+            Lots: $("#textfclot").val(),
+            lblBid: $("#lblBid").html(),
+            lblAsk: $("#lblAsk").html(),
+            lblLast: $("#lblLast").html(),
+            lblHigh: $("#lblHigh").html(),
+            lblLow: $("#lblLow").html(),
+            lblChange: $("#lblChange").html(),
+            lblOpen: $("#lblOpen").html(),
+            lblVolume: $("#lblVolume").html(),
+            lblLastTradedQty: $("#lblLastTradedQty").html(),
+            lblAtp: $("#lblAtp").html(),
+            lblLotSize: $("#lblLotSize").html(),
+            lblOpenInterest: $("#lblOpenInterest").html(),
+            lblBidQty: $("#lblBidQty").html(),
+            lblAskQty: $("#lblAskQty").html(),
+            lblPrevClose: $("#lblPrevClose").html(),
+            lblUpperCircuit: $("#lblUpperCircuit").html(),
+            lblLowerCircuit: $("#lblLowerCircuit").html(),
+            tblfcbuyprice: $("#tblfcbuyprice").html(),
+            tblfcsellprice: $("#tblfcsellprice").html(),
+            Price: '0',
+            TransactionMode: $("#lblTransactionMode").html()
+        };
+
+        $.ajax({
+            type: "POST",
+            url: "{{ url('/save-transaction') }}",
+            data: _data,
+            success: function (response) {
+                alert(response.message); // or response.error
+            },
+            error: function (xhr) {
+                alert('Something went wrong: ' + xhr.responseText);
             }
         });
-        
-        // Show search results
-        function showSearchResults(searchTerm) {
-            const searchResultsBody = document.getElementById('search-results-body');
-            searchResultsBody.innerHTML = '';
-            
-            // Get current active tab
-            const activeTab = window.activeTab || 'NSE';
-            
-            // Sample data - in a real implementation, this would come from your API based on active tab
-            const sampleResults = [
-                {
-                    scriptName: 'NSE:RELIANCE',
-                    timestamp: '22-06-2025',
-                    lotsize: '100',
-                    Yhigh: '2750.50',
-                    Ylow: '2720.25',
-                    bid_price: '2735.60',
-                    ask_price: '2736.20',
-                    open_price: '2725.00',
-                    scriptId: 'NSE_RELIANCE',
-                    marketType: 'NSE',
-                    isActive: true
-                },
-                {
-                    scriptName: 'NSE:TATASTEEL',
-                    timestamp: '22-06-2025',
-                    lotsize: '250',
-                    Yhigh: '185.75',
-                    Ylow: '182.30',
-                    bid_price: '183.40',
-                    ask_price: '183.55',
-                    open_price: '184.20',
-                    scriptId: 'NSE_TATASTEEL',
-                    marketType: 'NSE',
-                    isActive: false
-                },
-                {
-                    scriptName: 'BSE:INFY',
-                    timestamp: '22-06-2025',
-                    lotsize: '50',
-                    Yhigh: '1650.25',
-                    Ylow: '1630.80',
-                    bid_price: '1642.50',
-                    ask_price: '1643.10',
-                    open_price: '1635.00',
-                    scriptId: 'BSE_INFY',
-                    marketType: 'BSE',
-                    isActive: true
-                },
-                {
-                    scriptName: 'MCX:GOLD',
-                    timestamp: '22-06-2025',
-                    lotsize: '1',
-                    Yhigh: '72450.00',
-                    Ylow: '72100.00',
-                    bid_price: '72350.00',
-                    ask_price: '72375.00',
-                    open_price: '72200.00',
-                    scriptId: 'MCX_GOLD',
-                    marketType: 'MCX',
-                    isActive: false
-                },
-                {
-                    scriptName: 'FOREX:USDINR',
-                    timestamp: '22-06-2025',
-                    lotsize: '1000',
-                    Yhigh: '83.25',
-                    Ylow: '83.05',
-                    bid_price: '83.15',
-                    ask_price: '83.18',
-                    open_price: '83.10',
-                    scriptId: 'FOREX_USDINR',
-                    marketType: 'FOREX',
-                    isActive: true
-                }
-            ];
-            
-            // Filter results based on active tab first
-            let filteredResults = sampleResults.filter(item => {
-                // Filter by active tab
-                if (activeTab === 'NSE' && item.marketType === 'NSE') {
-                    return true;
-                } else if (activeTab === 'Option' && item.marketType === 'BSE') {
-                    return true;
-                } else if (activeTab === 'MCX' && item.marketType === 'MCX') {
-                    return true;
-                } else if (activeTab === 'Forex & Crypto' && 
-                          (item.marketType === 'FOREX' || item.scriptName.startsWith('FOREX:') || 
-                           item.marketType === 'CRYPTO' || item.scriptName.startsWith('CRYPTO:'))) {
-                    return true;
-                }
-                return false;
-            });
-            
-            // Then filter by search term if not empty
-            if (searchTerm.trim() !== '') {
-                filteredResults = filteredResults.filter(item => 
-                    item.scriptName.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    } else {
+        alert('Please enter amount');
+        return;
+    }
+}
+
+
+function sellfc() {
+    if ($("#textfclot").val() !== '' && $("#textfclot").val() !== '0') {
+
+        let _data = {
+            _token: "{{ csrf_token() }}", // Laravel CSRF
+            Mode: 'SELL',
+            Symbol: $("#lblsymbol").html(),
+            textfclot: $("#textfclot").val(),
+            Min: document.getElementById("chkminMarket").checked,
+            Mega: document.getElementById("chkmegaMarket").checked,
+            Lots: $("#textfclot").val(),
+            lblBid: $("#lblBid").html(),
+            lblAsk: $("#lblAsk").html(),
+            lblLast: $("#lblLast").html(),
+            lblHigh: $("#lblHigh").html(),
+            lblLow: $("#lblLow").html(),
+            lblChange: $("#lblChange").html(),
+            lblOpen: $("#lblOpen").html(),
+            lblVolume: $("#lblVolume").html(),
+            lblLastTradedQty: $("#lblLastTradedQty").html(),
+            lblAtp: $("#lblAtp").html(),
+            lblLotSize: $("#lblLotSize").html(),
+            lblOpenInterest: $("#lblOpenInterest").html(),
+            lblBidQty: $("#lblBidQty").html(),
+            lblAskQty: $("#lblAskQty").html(),
+            lblPrevClose: $("#lblPrevClose").html(),
+            lblUpperCircuit: $("#lblUpperCircuit").html(),
+            lblLowerCircuit: $("#lblLowerCircuit").html(),
+            tblfcbuyprice: $("#tblfcbuyprice").html(),
+            tblfcsellprice: $("#tblfcsellprice").html(),
+            Price: '0',
+            TransactionMode: $("#lblTransactionMode").html()
+        };
+
+        $.ajax({
+            type: "POST",
+            url: "{{ route('save.transaction') }}",
+            data: _data,
+            success: function(response) {
+                alert(response.message); 
+            },
+            error: function(xhr) {
+                alert('Something went wrong: ' + xhr.responseText);
             }
-            
-            // Create HTML for each result
-            filteredResults.forEach(item => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>
-                        <div class="list_cntnt">
-                            <p class="title">${item.scriptName}</p>
-                            <p class="id">${item.timestamp}</p>
-                            <p class="chg">Lot Size: ${item.lotsize}</p>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="list_cntnt">
-                            <p class="chg">H:<span id="search_${item.scriptName}_High">${item.Yhigh}</span></p>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="list_cntnt">
-                            <p class="title_number" id="search_${item.scriptName}_Bid">${item.bid_price}</p>
-                            <p class="chg">L: <span id="search_${item.scriptName}_Low">${item.Ylow}</span></p>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="list_cntnt">
-                            <p class="title_number" id="search_${item.scriptName}_Ask">${item.ask_price}</p>
-                            <p class="chg">O: ${item.open_price}</p>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="list_cntnt">
-                            ${item.isActive 
-                                ? `<input type="checkbox" name="mcx_search" id="search_${item.scriptName}_check" checked class="check_box" onclick="process_market_watch('${item.scriptId}', '${item.marketType}',0);" >`
-                                : `<input type="checkbox" name="mcx_search" id="search_${item.scriptName}_check" class="check_box" onclick="process_market_watch('${item.scriptId}', '${item.marketType}',1);" >`
-                            }
-                            <div class="check_mark"></div>
-                        </div>
-                    </td>
-                `;
-                
-                searchResultsBody.appendChild(row);
-            });
-            
-            // Show the search action sheet
-            $('#searchActionSheet').modal('show');
+        });
+
+    } else {
+        alert('Please enter amount');
+        return;
+    }
+}
+
+        function ChangeText(lblTransactionMode) {
+            $("#lblTransactionMode").html(lblTransactionMode);
         }
-    });
+
 </script>
+
+
 @endsection

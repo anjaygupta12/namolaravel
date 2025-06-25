@@ -19,7 +19,7 @@ class AuthController extends Controller
     {
         // If admin is already logged in, redirect to dashboard
         if (Session::has('admin_id')) {
-            return redirect()->route('admin.dashboard');
+            return redirect()->route('admin.users');
         }
         
         return view('admin.auth.login');
@@ -66,7 +66,7 @@ class AuthController extends Controller
             'user_agent' => $request->userAgent(),
         ]);
         
-        return redirect()->route('admin.dashboard');
+        return redirect()->route('admin.users');
     }
 
     /**

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class MarketBidMaster extends Model
 {
-    protected $table = 'MarketBidMaster';
+    protected $table = 'marketbidmaster';
     protected $primaryKey = 'Pk_id';
     public $timestamps = false;
     
@@ -16,7 +16,7 @@ class MarketBidMaster extends Model
         'Volume', 'LastTradeQty', 'Atp', 'LotSize', 'OpenInterest',
         'BidQty', 'AskQty', 'PrevClose', 'UpperCircuit', 'LowerCircuit',
         'Timestamp', 'Lastmodify', 'Isactive', 'UserId', 'Symbol',
-        'IsMin', 'IsMega', 'Lots', 'Price', 'IpAddress'
+        'IsMin', 'IsMega', 'Lots', 'Price', 'IpAddress','OPTION','Min','Mega'
     ];
     
     protected $casts = [

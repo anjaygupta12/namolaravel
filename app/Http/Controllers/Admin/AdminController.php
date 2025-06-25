@@ -779,6 +779,12 @@ class AdminController extends Controller
     /**
      * View user details
      */
+    public function resetAccount(Request $request){
+        dd($request->all());
+    }
+        public function recalculateBrokerage(Request $request){
+        dd($request->all());
+    }
     public function viewUser($id)
     {
         $user = TradeUser::findOrFail($id);
