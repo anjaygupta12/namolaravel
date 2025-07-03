@@ -12,6 +12,16 @@
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 @endif
+                @if ($errors->any())
+                        <div class="alert alert-danger">
+                            <ul class="mb-0">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
                 <div class="card">
                     <div class="card-header ">
                         <h4 class="card-title">Change Transaction Password</h4>
@@ -20,7 +30,7 @@
                     <div class="card-body">
                         <form method="POST" action="{{ route('admin.update-transaction-password') }}">
                             @csrf
-                            <div class="row">
+                            {{-- <div class="row">
                                 <div class="col-md-12">
                                     <div class="form-group">
                                         <label class="bmd-label-floating">Current Transaction Password</label>
@@ -30,16 +40,16 @@
                                         @enderror
                                     </div>
                                 </div>
-                            </div>
+                            </div> --}}
                             <div class="row">
                                 <div class="col-md-12">
                                     <div class="form-group">
                                         <label class="bmd-label-floating">New Transaction Password</label>
-                                        <input type="password" name="new_password" class="form-control" required>
+                                        <input type="password" name="new_password" class="form-control new_password" required>
                                     </div>
                                 </div>
                             </div>
-                            <div class="row">
+                            {{-- <div class="row">
                                 <div class="col-md-12">
                                     <div class="form-group">
                                         <label class="bmd-label-floating">Confirm New Transaction Password</label>
@@ -47,7 +57,7 @@
                                             required>
                                     </div>
                                 </div>
-                            </div>
+                            </div> --}}
                             <button type="submit" class="btn btn-primary pull-right">Update Transaction Password</button>
                             <div class="clearfix"></div>
                         </form>
@@ -81,31 +91,21 @@
 @endsection
 
 @section('scripts')
-    <script>
-        $(document).ready(function() {
-            // Form validation
-            $('form').submit(function(e) {
-                e.preventDefault();
+<script>
+    $(document).ready(function () {
+        $('form').submit(function (e) {
+            // Get form values
+            var newPassword = $(".new_password").val();
 
-                // Get form values
-                var currentPassword = $('input[type="password"]').eq(0).val();
-                var newPassword = $('input[type="password"]').eq(1).val();
-                var confirmPassword = $('input[type="password"]').eq(2).val();
-
-                // Validate
-                if (!currentPassword || !newPassword || !confirmPassword) {
-                    alert('All fields are required');
-                    return false;
-                }
-
-                if (newPassword !== confirmPassword) {
-                    alert('New password and confirmation do not match');
-                    return false;
-                }
-
-                // Show success message (in a real app, this would be an AJAX call)
-                alert('Transaction password updated successfully!');
-            });
+            // Validate
+            if (!newPassword) {
+                e.preventDefault(); // Prevent submission only on error
+                alert('All fields are required');
+                return false;
+            }
+             alert('Transaction Password changed Successfully.');
         });
-    </script>
+    });
+</script>
+
 @endsection

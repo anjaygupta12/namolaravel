@@ -46,6 +46,7 @@
                                         <th style="width: 10%;">File</th>
                                         <th style="width: 10%;">Amount</th>
                                         <th style="width: 10%;">Time</th>
+                                        <th>Type</th>
                                         <th style="width: 10%;">Status</th>
                                         <th style="width: 20%;">Actions</th>
                                     </tr>
@@ -54,12 +55,14 @@
                                 <tbody>
                                     @foreach ($data as $val)
                                         <tr>
-                                            <td>{{ $val->PK_Id }}</td>
+                                            <td>{{ $val->user->id }}</td>
                                             <td>{{ $val->user->Username }}</td>
+                                           
                                             <td>{{ $val->Amount }}</td>
                                             <td>{{ $val->Amount }}</td>
-                                            <td>{{ $val->Amount }}6</td>
+                                            <td>{{ $val->Amount }}</td>
                                             <td>{{ $val->Timestamp }}</td>
+                                             <td><span class="badge badge-warning">{{ ($val->type==1)? 'Deposit':'withdraw' }}</span></td>
                                             <td><span class="badge badge-warning">{{ $val->Approve_Status }}</span></td>
                                             <td>
                                                 <div class="d-flex">

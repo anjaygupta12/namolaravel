@@ -32,6 +32,19 @@
             justify-content: center;
             font-weight: 400;
         }
+
+
+    /* Force modal width and center it */
+    .modal.custom-centered .modal-dialog {
+        width: 380px;
+        max-width: 100%;
+        margin: auto;
+    }
+
+    .modal.custom-centered .modal-content {
+        text-align: center;
+        background-color: #311b7f;
+    }
     </style>
     @yield('styles')
 </head>
@@ -58,6 +71,19 @@
                 <i class="fas fa-share-alt" aria-hidden="true"></i>
                 <span>Share</span>
             </a>
+        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+            @csrf
+        </form>
+
+        <a type="button" class="headerButton icon" data-bs-toggle="modal" data-bs-target="#logoutConfirmation">
+     <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+            <span>Logout</span> </a>
+
+        {{-- <a href="#" class="headerButton icon" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+            <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+            <span>Logout</span>
+        </a> --}}
+
         </div>
     </div>
 
@@ -175,6 +201,36 @@
         </div>
     </div>
     <!-- * App Sidebar -->
+
+    <!-- Logout Confirmation Modal -->
+<div class="modal fade custom-centered" id="logoutConfirmation" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header border-0 bg-danger">
+                <h5 class="modal-title text-white fw-bold">
+                    Are you sure you want to logout?
+                </h5>
+            </div>
+            <div class="modal-body">
+                <div class="card bg-transparent border-0">
+                    <div class="card-body pt-0">
+                        <div class="form-group basic">
+                            <div class="d-flex justify-content-center gap-2">
+                                <button type="button" class="btn btn-success" onclick="document.getElementById('logout-form').submit();" style="border-radius: 0; min-width: 130px;">
+                                    Confirm
+                                </button>
+                                <button type="button" class="btn btn-danger" data-bs-dismiss="modal" style="border-radius: 0; min-width: 130px;">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 
     <!-- Scripts -->
     <script type="text/javascript" src="https://code.jquery.com/jquery-3.7.1.min.js"></script>

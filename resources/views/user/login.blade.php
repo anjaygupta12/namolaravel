@@ -100,9 +100,9 @@
         <form action="{{ route('user.login') }}" method="POST">
             @csrf
             <div class="form-floating mb-3">
-                <input type="text" class="form-control" id="username" name="email" placeholder="Username"
+                <input type="text" class="form-control" id="username" name="login" placeholder="Username"
                     required>
-                <label for="email">Email</label>
+                <label for="email">Username or phone</label>
             </div>
 
             <div class="form-floating mb-3">

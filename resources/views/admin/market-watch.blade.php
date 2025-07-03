@@ -514,7 +514,7 @@
         function connect() {
             try {
                 // Use the Node.js server WebSocket URL with explicit IP address
-                const wsUrl = 'ws://namonode.marthub.in:5005/ws?isAdmin=true';
+                const wsUrl = 'ws://namotraders.in:5005/ws?isAdmin=true';
                 console.log('Attempting to connect to WebSocket at:', wsUrl);
                 statusElement.textContent = 'Connecting to WebSocket...';
                 

@@ -20,7 +20,8 @@
     <!-- Additional CSS -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
-
+ <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.0.0/css/all.css">
+ 
     <style>
         /* Basic layout structure */
         #wrapper {
@@ -119,10 +120,7 @@
         }
 
         /* Container Adjustments */
-        .container-fluid {
-            padding: 1.5rem;
-            width: 100%;
-        }
+    
 
         /* Mobile Responsive Adjustments */
         @media (max-width: 991.98px) {
@@ -499,7 +497,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- Material Dashboard Core JS -->
-    <script src="{{ asset('admin-assets/js/material-dashboard.js') }}"></script>
+    <script src="{{ asset('admin-assets/js/material-dashboard.min.js') }}"></script>
 
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.5.1/dist/chart.min.js"></script>

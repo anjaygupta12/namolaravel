@@ -30,7 +30,7 @@
                                             <div class="card bg-light">
                                                 <div class="card-body">
                                                     <h5 class="card-title">Current Balance</h5>
-                                                    <h3 class="text-primary">₹ {{ number_format($user->balance, 2) }}</h3>
+                                                    <h3 class="text-primary">₹ {{ number_format($user->funds+$totalDeposit-$totalWithdrawals, 2) }}</h3>
                                                 </div>
                                             </div>
                                         </div>
@@ -39,7 +39,7 @@
                                             <div class="card bg-light">
                                                 <div class="card-body">
                                                     <h5 class="card-title">Total Deposits</h5>
-                                                    <h3 class="text-success">₹ {{ number_format($user->total_deposits ?? 0, 2) }}</h3>
+                                                    <h3 class="text-success">₹ {{ number_format($totalDeposit ?? 0, 2) }}</h3>
                                                 </div>
                                             </div>
                                         </div>
@@ -48,7 +48,7 @@
                                             <div class="card bg-light">
                                                 <div class="card-body">
                                                     <h5 class="card-title">Total Withdrawals</h5>
-                                                    <h3 class="text-danger">₹ {{ number_format($user->total_withdrawals ?? 0, 2) }}</h3>
+                                                    <h3 class="text-danger">₹ {{ number_format($totalWithdrawals ?? 0, 2) }}</h3>
                                                 </div>
                                             </div>
                                         </div>
@@ -57,8 +57,8 @@
                                             <div class="card bg-light">
                                                 <div class="card-body">
                                                     <h5 class="card-title">Net P/L</h5>
-                                                    <h3 class="{{ ($user->net_pl ?? 0) >= 0 ? 'text-success' : 'text-danger' }}">
-                                                        ₹ {{ number_format($user->net_pl ?? 0, 2) }}
+                                                    <h3 class="{{ ($netPA ?? 0) >= 0 ? 'text-success' : 'text-danger' }}">
+                                                        ₹ {{ number_format($netPA ?? 0, 2) }}
                                                     </h3>
                                                 </div>
                                             </div>
@@ -152,12 +152,12 @@
                                 <div class="card-body">
                                     <div class="row">
                                         <div class="col-md-6">
-                                            <a href="{{ route('admin.create-funds', $user->UserId) }}" class="btn btn-success btn-block mb-3">
+                                            <a href="{{ route('admin.create-funds', $user->id) }}" class="btn btn-success btn-block mb-3">
                                                 <i class="material-icons">add</i> Add Funds
                                             </a>
                                         </div>
                                         <div class="col-md-6">
-                                            <a href="{{ route('admin.create-funds-wd', $user->UserId) }}" class="btn btn-danger btn-block mb-3">
+                                            <a href="{{ route('admin.create-funds-wd', $user->id) }}" class="btn btn-danger btn-block mb-3">
                                                 <i class="material-icons">remove</i> Withdraw Funds
                                             </a>
                                         </div>

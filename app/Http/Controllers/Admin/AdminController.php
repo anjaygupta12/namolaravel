@@ -23,6 +23,16 @@ use App\Exports\FundsExport;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Models\Broker;
 use App\Models\Fund;
+use App\Models\MarketBidMaster;
+use App\Models\WithdrawlMaster;
+use App\Models\MarketPlaceMaster;
+use Illuminate\Support\Facades\Schema;
+use App\Exports\TradeExport;
+use App\Models\ForexOption;
+use Crabon\Crabon;
+
+use Barryvdh\DomPDF\Facade\Pdf;
+
 class AdminController extends Controller
 {
     /**
@@ -32,7 +42,7 @@ class AdminController extends Controller
     {
         // Get user statistics
         $totalUsers = TradeUser::count();
-        $activeUsers = TradeUser::where('is_active', 1)->count();
+        $activeUsers = TradeUser::where('IsActive', 1)->count();
         $newUsers = TradeUser::whereDate('created_at', Carbon::today())->count();
 
         // Get transaction statistics
@@ -59,6 +69,8 @@ class AdminController extends Controller
                 'activity' => 'Viewed admin dashboard',
                 'ip_address' => request()->ip()
             ]);
+        } else {
+            return redirect('admin/login');
         }
 
         return view('admin.dashboard', compact(
@@ -94,6 +106,8 @@ class AdminController extends Controller
                 'activity' => 'Viewed change password page',
                 'ip_address' => request()->ip()
             ]);
+        } else {
+            return redirect('admin/login');
         }
         return view('admin.change-password');
     }
@@ -149,6 +163,8 @@ class AdminController extends Controller
                 'activity' => 'Viewed change transaction password page',
                 'ip_address' => request()->ip()
             ]);
+        } else {
+            return redirect('admin/login');
         }
         return view('admin.transaction-password');
     }
@@ -160,27 +176,26 @@ class AdminController extends Controller
     {
 
         $request->validate([
-            'current_password' => 'required',
-            'new_password' => 'required|confirmed|min:6',
+            'new_password' => 'required',
         ]);
 
         $user = AdminLogin::find(Session::get('admin_id'));
 
         if ($request->has('Login')) {
 
-            if (!Hash::check($request->current_password, $user->Password)) {
-                return back()->withErrors(['current_password' => 'Current transaction password is incorrect.']);
-            }
-
+            // if (!Hash::check($request->current_password, $user->Password)) {
+            //     return back()->withErrors(['current_password' => 'Current transaction password is incorrect.']);
+            // }
             $user->Password = Hash::make($request->new_password);
-        } else {
-            if (!Hash::check($request->current_password, $user->TransPass)) {
-                return back()->withErrors(['current_password' => 'Current transaction password is incorrect.']);
-            }
+        } 
+        else {
+            // if (!Hash::check($request->current_password, $user->TransPass)) {
+            //     return back()->withErrors(['current_password' => 'Current transaction password is incorrect.']);
+            // }
             $user->TransPass = Hash::make($request->new_password);
         }
         $user->save();
-
+        
         return back()->with('success', 'Transaction password updated successfully.');
 
         $validator = Validator::make($request->all(), [
@@ -577,6 +592,8 @@ class AdminController extends Controller
                 'activity' => 'Viewed negative balance users',
                 'ip_address' => request()->ip()
             ]);
+        } else {
+            return redirect('admin/login');
         }
 
         return view('admin.negative-balance', compact('users'));
@@ -599,6 +616,8 @@ class AdminController extends Controller
                 'activity' => 'Viewed market watch',
                 'ip_address' => request()->ip()
             ]);
+        } else {
+            return redirect('admin/login');
         }
 
         return view('admin.market-watch', compact('marketData'));
@@ -619,7 +638,8 @@ class AdminController extends Controller
                 'ip_address' => request()->ip()
             ]);
         }
-        $marketStats = DB::table('MarketBidMaster')
+
+        $marketStats = DB::table('marketbidmaster')
             ->selectRaw('
         Symbol,
         COUNT(*)            AS TotalUser,
@@ -688,23 +708,68 @@ class AdminController extends Controller
     public function users(Request $request)
     {
         // Start with a base query
-        $query = TradeUser::query();
+        $query = TradeUser::query()->with('transactions')
+            ->select(['id', 'user_id','FullName', 'Username', 'IsActive', 'IsDemo', 'created_at', 'funds']);
 
         // Apply filters if provided
-        if ($request->has('search_name') && !empty($request->search_name)) {
-            $query->where('name', 'like', '%' . $request->search_name . '%');
+        if ($request->filled('username') && $request->username != '') {
+            $query->where('Username', 'like', $request->username . '%');
         }
 
-        if ($request->has('search_email') && !empty($request->search_email)) {
-            $query->where('email', 'like', '%' . $request->search_email . '%');
+        if ($request->filled('user_id') && $request->user_id != '') {
+            $query->where('user_id', $request->user_id);
         }
 
-        if ($request->has('search_status') && $request->search_status !== '') {
-            $query->where('is_active', $request->search_status);
+        if ($request->has('status') && $request->status != '') {
+            $query->where('IsActive', $request->search_status);
         }
 
         // Get users data
         $users = $query->orderBy('created_at', 'desc')->get();
+
+        // Map to calculate deposit and withdraw
+        $users = $users->map(function ($q) {
+
+            $deposit = $q->transactions->where('Type', '+')->where('AdminStatus', 'APPROVED')->sum('Amount');
+            $withdraw = $q->transactions->where('Type', '-')->where('AdminStatus', 'APPROVED')->sum('Amount');
+            $q->deposit = $deposit;
+            $q->withdraw = $withdraw;
+           
+            $q->funds = $q->funds + $deposit - $withdraw;
+
+            return $q;
+        });
+
+       
+        if (Session::has('admin_id')) {
+            AdminLog::create([
+                'admin_id' => Session::get('admin_id'),
+                'activity' => 'Viewed users list',
+                'ip_address' => request()->ip()
+            ]);
+        } else {
+            return redirect('admin/login');
+        }
+
+        return view('admin.users', compact('users'));
+    }
+    public function createUsers()
+    {
+        if (Session::has('admin_id')) {
+            AdminLog::create([
+                'admin_id' => Session::get('admin_id'),
+                'activity' => 'Viewed users list',
+                'ip_address' => request()->ip()
+            ]);
+        } else {
+            return redirect('admin/login');
+        }
+        $brokers = Broker::all();
+        return view('admin/create-user', compact('brokers'));
+    }
+
+    public function storeTradeUser(Request $request)
+    {
 
         if (Session::has('admin_id')) {
             AdminLog::create([
@@ -712,82 +777,267 @@ class AdminController extends Controller
                 'activity' => 'Viewed users list',
                 'ip_address' => request()->ip()
             ]);
+        } else {
+            return redirect('admin/login');
         }
 
-        return view('admin.users', compact('users'));
-    }
-    public function createUsers()
-    {
-      
-        return view('admin/create-user');
+        $validator = Validator::make($request->all(), [
+            'fullname' => 'required|string|max:255',
+            'username' => 'required|string|max:255',
+            'mobile' => 'nullable|string|max:20',
+            'city' => 'nullable|string|max:255',
+            'transaction_password' => 'nullable|string|min:6',
+            'auto_square_off_percentage' => 'nullable|numeric',
+            'notify_percentage' => 'nullable|numeric',
+            'profit_book_interval' => 'nullable|numeric',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+        $adminUser = AdminLogin::where('PK_ID', Session::get('admin_id'))->first();
+
+        if (!Hash::check($request->input('transaction_password'), $adminUser->TransPass)) {
+            return redirect()->back()->with('error', 'Invalid transaction password.');
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Create or update user
+            $user = $request->id ? TradeUser::findOrFail($request->id) : new TradeUser();
+            // dd($request->status,$request->has('status'),$request->has('Mcxusers.demo'));
+            // Basic information
+            if(!$request->id){
+                $user->user_id= rand(10000, 99999);
+                $user->Password = bcrypt($request->input('password'));
+                 $user->funds = $request->funds;
+            }
+            $user->FullName = $request->input('fullname');
+            $user->Username = $request->input('username');
+          
+            $user->Mobile = $request->input('mobile');
+            $user->City = $request->input('city');
+            $user->TransPass = bcrypt($request->input('transaction_password'));
+            $user->broker_id = $request->input('broker_id', 0);
+            $user->Notes = $request->input('notes');
+
+            // Account settings
+            $user->IsDemo = $request->Mcxusers['demo'] ? 1 : 0;
+            $user->IsActive = $request->has('status') ? 1 : 0;
+            $user->AutoSquareOff = $request->auto_square_off;
+            $user->TradeEquityAsUnits = $request->trade_equity_as_units;
+            $user->AllowOrdersBeyondHighLow = $request->allow_orders_beyond_high_low;
+            $user->AllowOrdersBetweenHighLow = $request->allow_orders_between_high_low;
+
+            // Risk management
+            $user->AutoSquareOffPercentage = $request->input('auto_square_off_percentage', 90);
+            $user->NotifyPercentage = $request->input('notify_percentage', 70);
+            $user->ProfitBookInterval = $request->input('profit_book_interval', 120);
+
+            // MCX settings
+            $user->MCXEnabled = $request->mcx_enabled;
+            $user->MCXMinLotPerTrade = $request->input('mcx_min_lot_per_trade', 0);
+            $user->MCXMaxLotPerTrade = $request->input('mcx_max_lot_per_trade', 20);
+            $user->MCXMaxLotPerScrip = $request->input('mcx_max_lot_per_scrip', 50);
+            $user->MaxCommodityLots = $request->input('max_commodity_lots', 100);
+            $user->ComexbrokerageType = $request->input('mcx_brokerage_type', 'per_crore');
+            $user->MCXBrokerage = $request->input('mcx_brokerage', 800);
+            $user->MCXExposureType = $request->input('mcx_exposure_type', 'per_turnover');
+            $user->MCXIntradayMargin = $request->input('mcx_intraday_margin', 500);
+            $user->MCXHoldingMargin = $request->input('mcx_holding_margin', 100);
+            $user->MCXLotMarginJSON = json_encode($request->input('mcx_lot_margin', []));
+            $user->MCXLotBrokerageJSON = json_encode($request->input('mcx_lot_brokerage', []));
+            $user->MCXBidGapJSON = json_encode($request->input('mcx_bid_gap', []));
+
+            // NSE Futures
+            $user->NSEFuturesEnabled = $request->has('nse_enabled') ? 1 : 0;
+            $user->NSEFuturesBrokerage = $request->input('nse_brokerage', 800);
+            $user->NSEFuturesMinLotPerTrade = $request->input('nse_equity_min_lot_per_trade', 0);
+            $user->NSEFuturesMaxLotPerTrade = $request->input('nse_equity_max_lot_per_trade', 50);
+            $user->NSEIndexMinLotPerTrade = $request->input('nse_index_min_lot_per_trade', 0);
+            $user->NSEIndexMaxLotPerTrade = $request->input('nse_index_max_lot_per_trade', 20);
+            $user->NSEFuturesMaxLotPerScrip = $request->input('nse_equity_max_lot_per_scrip', 100);
+            $user->NSEIndexMaxLotPerScrip = $request->input('nse_index_max_lot_per_scrip', 100);
+            $user->MaxNSEFuturesLots = $request->input('max_nse_equity_lots', 100);
+            $user->MaxNSEIndexLots = $request->input('max_nse_index_lots', 100);
+            $user->NSEFuturesIntradayMargin = $request->input('nse_intraday_margin', 500);
+            $user->NSEFuturesHoldingMargin = $request->input('nse_holding_margin', 100);
+            $user->NSEBidGapPercentage = $request->input('nse_bid_gap_percentage', 0);
+
+            // NSE Options
+            $user->NSEOptionsEnabled = $request->has('options_enabled') ? 1 : 0;
+            $user->EquityOptionsEnabled = $request->has('equity_options_enabled') ? 1 : 0;
+            $user->OptionsBrokerageType = $request->input('options_brokerage_type', 'per_lot');
+            $user->OptionsBrokerage = $request->input('options_brokerage', 25);
+            $user->OptionsEquityBrokerageType = $request->input('options_equity_brokerage_type', 'per_lot');
+            $user->OptionsEquityBrokerage = $request->input('options_equity_brokerage', 40);
+            $user->OptionsMinimumBid = $request->input('options_minimum_bid', 2);
+            $user->OptionsShortSellingAllowed = $request->input('options_short_selling_allowed', 1);
+            $user->OptionsEquityShortSellingAllowed = $request->input('options_equity_short_selling_allowed', 0);
+            $user->OptionsEquityMinLotPerTrade = $request->input('options_equity_min_lot_per_trade', 1);
+            $user->OptionsEquityMaxLotPerTrade = $request->input('options_equity_max_lot_per_trade', 10);
+            $user->OptionsIndexMinLotPerTrade = $request->input('options_index_min_lot_per_trade', 1);
+            $user->OptionsIndexMaxLotPerTrade = $request->input('options_index_max_lot_per_trade', 20);
+            $user->OptionsEquityMaxLotPerScrip = $request->input('options_equity_max_lot_per_scrip', 10);
+            $user->OptionsIndexMaxLotPerScrip = $request->input('options_index_max_lot_per_scrip', 20);
+            $user->MaxOptionsEquityLots = $request->input('max_options_equity_lots', 10);
+            $user->MaxOptionsIndexLots = $request->input('max_options_index_lots', 10);
+            $user->OptionsIntradayMargin = $request->input('options_intraday_margin', 7);
+            $user->OptionsHoldingMargin = $request->input('options_holding_margin', 3);
+            $user->OptionsEquityIntradayMargin = $request->input('options_equity_intraday_margin', 10);
+            $user->OptionsEquityHoldingMargin = $request->input('options_equity_holding_margin', 3);
+            $user->OptionsBidGapPercentage = $request->input('options_bid_gap_percentage', 0);
+
+            // MCX Options
+            $user->MCXOptionsEnabled = $request->has('mcx_options_enabled') ? 1 : 0;
+            $user->OptionsMCXBrokerageType = $request->input('options_mcx_brokerage_type', 'per_lot');
+            $user->OptionsMCXBrokerage = $request->input('options_mcx_brokerage', 50);
+            $user->OptionsMCXShortSellingAllowed = $request->input('options_mcx_short_selling_allowed', 0);
+            $user->OptionsMCXMinLotPerTrade = $request->input('options_mcx_min_lot_per_trade', 1);
+            $user->OptionsMCXMaxLotPerTrade = $request->input('options_mcx_max_lot_per_trade', 20);
+            $user->OptionsMCXMaxLotPerScrip = $request->input('options_mcx_max_lot_per_scrip', 10);
+            $user->MaxOptionsMCXLots = $request->input('max_options_mcx_lots', 10);
+            $user->OptionsMCXIntradayMargin = $request->input('options_mcx_intraday_margin', 10);
+            $user->OptionsMCXHoldingMargin = $request->input('options_mcx_holding_margin', 3);
+
+            // Options Shortselling Config
+            $user->OptionsSSBrokerageType = $request->input('options_ss_brokerage_type', 'per_lot');
+            $user->OptionsSSBrokerage = $request->input('options_ss_brokerage', 50);
+            $user->OptionsSSEquityBrokerageType = $request->input('options_ss_equity_brokerage_type', 'per_lot');
+            $user->OptionsSSEquityBrokerage = $request->input('options_ss_equity_brokerage', 20);
+            $user->OptionsSSMCXBrokerageType = $request->input('options_ss_mcx_brokerage_type', 'per_lot');
+            $user->OptionsSSMCXBrokerage = $request->input('options_ss_mcx_brokerage', 20);
+            $user->OptionsSSEquityMinLotPerTrade = $request->input('options_ss_equity_min_lot_per_trade', 0);
+            $user->OptionsSSEquityMaxLotPerTrade = $request->input('options_ss_equity_max_lot_per_trade', 2);
+            $user->OptionsSSMCXMinLotPerTrade = $request->input('options_ss_mcx_min_lot_per_trade', 1);
+            $user->OptionsSSMCXMaxLotPerTrade = $request->input('options_ss_mcx_max_lot_per_trade', 3);
+            $user->OptionsSSIndexMinLotPerTrade = $request->input('options_ss_index_min_lot_per_trade', 0);
+            $user->OptionsSSIndexMaxLotPerTrade = $request->input('options_ss_index_max_lot_per_trade', 10);
+            $user->OptionsSSEquityMaxLotPerScrip = $request->input('options_ss_equity_max_lot_per_scrip', 5);
+            $user->OptionsSSIndexMaxLotPerScrip = $request->input('options_ss_index_max_lot_per_scrip', 10);
+            $user->OptionsSSMCXMaxLotPerScrip = $request->input('options_ss_mcx_max_lot_per_scrip', 7);
+            $user->MaxOptionsSSEquityLots = $request->input('max_options_ss_equity_lots', 10);
+            $user->MaxOptionsSSIndexLots = $request->input('max_options_ss_index_lots', 10);
+            $user->MaxOptionsSSMCXLots = $request->input('max_options_ss_mcx_lots', 30);
+            $user->OptionsSSIntradayMargin = $request->input('options_ss_intraday_margin', 2);
+            $user->OptionsSSHoldingMargin = $request->input('options_ss_holding_margin', 1);
+            $user->OptionsSSEquityIntradayMargin = $request->input('options_ss_equity_intraday_margin', 3);
+            $user->OptionsSSEquityHoldingMargin = $request->input('options_ss_equity_holding_margin', 2);
+            $user->OptionsSSMCXIntradayMargin = $request->input('options_ss_mcx_intraday_margin', 5);
+            $user->OptionsSSMCXHoldingMargin = $request->input('options_ss_mcx_holding_margin', 3);
+
+           
+            // Set created/modified info
+            if ($request->id) {
+                $user->ModifiedBy = Session::get('admin_id');
+                $user->ModifiedDate = now();
+            } else {
+                $user->CreatedBy = Session::get('admin_id');
+                $user->CreatedDate = now();
+            }
+            $user->save();
+            DB::commit();
+            return redirect()->route('admin.users')->with('success', 'User ' . ($request->id ? 'updated' : 'created') . ' successfully!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Error ' . ($request->id ? 'updating' : 'creating') . ' user: ' . $e->getMessage())
+                ->withInput();
+        }
     }
 
     /**
      * Show form to create a new user
      */
-    public function createUser()
-    {
-        if (Session::has('admin_id')) {
-            AdminLog::create([
-                'admin_id' => Session::get('admin_id'),
-                'activity' => 'Accessed create user form',
-                'ip_address' => request()->ip()
-            ]);
-        }
+    // public function createUser()
+    // {
+    //     if (Session::has('admin_id')) {
+    //         AdminLog::create([
+    //             'admin_id' => Session::get('admin_id'),
+    //             'activity' => 'Accessed create user form',
+    //             'ip_address' => request()->ip()
+    //         ]);
+    //     }
 
-        return view('admin.users-create');
-    }
+    //     return view('admin.users-create');
+    // }
 
     /**
      * Store a new user
      */
-    public function storeUser(Request $request)
-    {
-        // Validate the request
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:trade_users,email',
-            'mobile' => 'nullable|string|max:15',
-            'password' => 'required|string|min:6',
-            'address' => 'nullable|string',
-            'city' => 'nullable|string|max:100',
-            'state' => 'nullable|string|max:100',
-            'pin_code' => 'nullable|string|max:10',
-            'pan' => 'nullable|string|max:10',
-            'aadhar' => 'nullable|string|max:12',
-            'is_active' => 'boolean',
-            'is_demo' => 'boolean',
-        ]);
+    // public function storeUser(Request $request)
+    // {
+    //     // Validate the request
+    //     $validated = $request->validate([
+    //         'name' => 'required|string|max:255',
+    //         'email' => 'required|email|unique:trade_users,email',
+    //         'mobile' => 'nullable|string|max:15',
+    //         'password' => 'required|string|min:6',
+    //         'address' => 'nullable|string',
+    //         'city' => 'nullable|string|max:100',
+    //         'state' => 'nullable|string|max:100',
+    //         'pin_code' => 'nullable|string|max:10',
+    //         'pan' => 'nullable|string|max:10',
+    //         'aadhar' => 'nullable|string|max:12',
+    //         'is_active' => 'boolean',
+    //         'is_demo' => 'boolean',
+    //     ]);
 
-        // Hash the password
-        $validated['password'] = bcrypt($validated['password']);
+    //     // Hash the password
+    //     $validated['password'] = bcrypt($validated['password']);
 
-        // Create the user
-        $user = TradeUser::create($validated);
+    //     // Create the user
+    //     $user = TradeUser::create($validated);
 
-        if (Session::has('admin_id')) {
-            AdminLog::create([
-                'admin_id' => Session::get('admin_id'),
-                'activity' => 'Created new user: ' . $user->name,
-                'ip_address' => request()->ip()
-            ]);
-        }
+    //     if (Session::has('admin_id')) {
+    //         AdminLog::create([
+    //             'admin_id' => Session::get('admin_id'),
+    //             'activity' => 'Created new user: ' . $user->name,
+    //             'ip_address' => request()->ip()
+    //         ]);
+    //     }
 
-        return redirect()->route('admin.users')->with('success', 'User created successfully.');
-    }
+    //     return redirect()->route('admin.users')->with('success', 'User created successfully.');
+    // }
 
     /**
      * View user details
      */
-    public function resetAccount(Request $request){
-        dd($request->all());
+    public function resetAccount(Request $request,$id)
+    {
+        DepositeMaster::where('UserId',$id)->delete();
+        Transdetail::where('UserId',$id)->delete();
+        TradeUser::where('id',$id)->update('MCXBrokerage',0);
+
+        return redirect()->back()->with('success', 'Reset successfully Account.');
     }
-        public function recalculateBrokerage(Request $request){
-        dd($request->all());
+    public function recalculateBrokerage(Request $request)
+    {
+
+        return redirect()->back()->with('success', 'Please reset Brockrage change Successfully.');
+
+
     }
     public function viewUser($id)
     {
         $user = TradeUser::findOrFail($id);
+        $funds = Transdetail::where('MemberId', $id)->paginate(2);
+
+        $trades = MarketBidMaster::where('UserId', $id)
+            ->where('Isactive', 1)->get();
+        $closedTrade = MarketBidMaster::where('UserId', $id)
+            ->where('Isactive', 3)->get();
+        $mxcPendingTrade = MarketBidMaster::where('UserId', $id)
+            ->where('Isactive', 0)
+            ->where('Symbol', 'like', 'MCX%')->get();
+
+        $equityPendingTrade = MarketBidMaster::where('UserId', $id)
+            ->where('Isactive', 0)
+            ->where('Symbol', 'like', 'MCX%')->get();
+
+        $comexPendingTrade = MarketBidMaster::where('UserId', $id)
+            ->where('Isactive', 0)
+            ->where('Symbol', 'like', 'MCX%')->get();
 
         if (Session::has('admin_id')) {
             AdminLog::create([
@@ -795,29 +1045,87 @@ class AdminController extends Controller
                 'activity' => 'Viewed user details: ' . $user->name,
                 'ip_address' => request()->ip()
             ]);
-        }else{
+        } else {
             return redirect('admin/login');
         }
       
-        return view('admin.users-view', compact('user'));
+        return view('admin.users-view', compact(
+            'user',
+            'funds',
+            'trades',
+            'closedTrade',
+            'mxcPendingTrade',
+            'equityPendingTrade',
+            'comexPendingTrade'
+        ));
     }
 
     /**
      * Show form to edit a user
      */
+    public function exportExcel(Request $request)
+    {
+        $request->validate([
+            'from_date' => 'required|date',
+            'to_date' => 'required|date|after_or_equal:from_date',
+        ]);
+
+        $from = $request->input('from_date');
+        $to = $request->input('to_date');
+
+        return Excel::download(new TradeExport($from, $to), 'trades_export_' . $from . '_to_' . $to . '.xlsx');
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $request->validate([
+            'from_date' => 'required|date',
+            'to_date' => 'required|date|after_or_equal:from_date',
+        ]);
+
+        $from = $request->input('from_date');
+        $to = $request->input('to_date');
+
+        $trades = MarketBidMaster::whereDate('created_at', '>=', $from)
+            ->whereDate('created_at', '<=', $to)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $pdf = Pdf::loadView('admin.exports.pdf.trades', compact('trades', 'from', 'to'));
+
+        return $pdf->download('trades_' . $from . '_to_' . $to . '.pdf');
+    }
+
+    public function export(Request $request)
+    {
+        $from = $request->from_date;
+        $to = $request->to_date;
+
+        // Export fund data
+    }
+
+
     public function editUser($id)
     {
-        $user = TradeUser::where('UserId',$id)->first();
-        $brokers = Broker::all();
-        if (Session::has('admin_id')) {
-            AdminLog::create([
-                'admin_id' => Session::get('admin_id'),
-                'activity' => 'Accessed edit form for user: ' . $user->name,
-                'ip_address' => request()->ip()
-            ]);
-        }
 
-        return view('admin.users-edit', compact('user','brokers'));
+        $user = TradeUser::where('id', $id)->first();
+        $brokers = Broker::all();
+
+        // Decode JSON fields if needed
+        $mcxLotMargin = json_decode($user->MCXLotMarginJSON, true) ?? [];
+        $mcxLotBrokerage = json_decode($user->MCXLotBrokerageJSON, true) ?? [];
+        $mcxBidGap = json_decode($user->MCXBidGapJSON, true) ?? [];
+
+        return view('admin.users-edit', [
+            'user' => $user,
+            'brokers' => $brokers,
+            'mcxLotMargin' => $mcxLotMargin,
+            'mcxLotBrokerage' => $mcxLotBrokerage,
+            'mcxBidGap' => $mcxBidGap
+        ]);
+
+
+        // return view('admin.users-edit', compact('user','brokers'));
     }
 
     /**
@@ -825,38 +1133,38 @@ class AdminController extends Controller
      */
     public function updateUser(Request $request, $id)
     {
-        
-        $user = TradeUser::where('UserId', $id)->first();
-       
-    // Update the user
-    $user->update([
-        'FullName' => $request->input('full_name'),
-        'Username' => $request->input('username'),
-        'Email' => $request->input('email'),
-        'Mobile' => $request->input('mobile'),
-        'City' => $request->input('city'),
-        'IsDemo' => $request->boolean('is_demo'),
-        'AllowOrdersBeyondHighLow' => $request->boolean('allow_orders_beyond_high_low'),
-        'AllowOrdersBetweenHighLow' => $request->boolean('allow_orders_between_high_low'),
-        'TradeEquityAsUnits' => $request->boolean('trade_equity_as_units'),
-        'IsActive' => $request->boolean('account_status'),
-        'auto_square_off' => $request->boolean('auto_square_off'),
-        'AutoSquareOffPercentage' => $request->input('auto_square_off_percentage', 90),
-        'NotifyPercentage' => $request->input('notify_percentage', 70),
-        'profit_book_interval' => $request->input('profit_book_interval', 0),
-        'MCXOptionsEnabled' => $request->boolean('mcx_enabled'),
-        'minimum_lots_single_comex' => $request->input('mcx_min_lot_per_trade', 0),
-        'maximum_lots_comex' => $request->input('mcx_max_lot_per_scrip', 0),
-        'max_size_all_comex' => $request->input('mcx_max_lot_all_scrips', 0),
-        'nse_futures_enabled' => $request->boolean('nse_futures_enabled'),
-        'NSEFuturesMaxLotPerScrip' => $request->input('nse_futures_max_lot_per_scrip', 0),
-        'broker_id' => $request->input('broker_id'),
-        // Update password only if provided
-        'Password' => $request->filled('password') ? bcrypt($request->input('password')) : $user->Password,
-        'TransPass' => $request->filled('transaction_password') ? bcrypt($request->input('transaction_password')) : $user->TransPass,
-    ]);
 
-    return redirect()->route('admin.users')->with('success', 'User updated successfully');
+        $user = TradeUser::where('id', $id)->first();
+
+        // Update the user
+        $user->update([
+            'FullName' => $request->input('full_name'),
+            'Username' => $request->input('username'),
+            'Email' => $request->input('email'),
+            'Mobile' => $request->input('mobile'),
+            'City' => $request->input('city'),
+            'IsDemo' => $request->boolean('is_demo'),
+            'AllowOrdersBeyondHighLow' => $request->boolean('allow_orders_beyond_high_low'),
+            'AllowOrdersBetweenHighLow' => $request->boolean('allow_orders_between_high_low'),
+            'TradeEquityAsUnits' => $request->boolean('trade_equity_as_units'),
+            'IsActive' => $request->boolean('account_status'),
+            'auto_square_off' => $request->boolean('auto_square_off'),
+            'AutoSquareOffPercentage' => $request->input('auto_square_off_percentage', 90),
+            'NotifyPercentage' => $request->input('notify_percentage', 70),
+            'profit_book_interval' => $request->input('profit_book_interval', 0),
+            'MCXOptionsEnabled' => $request->boolean('mcx_enabled'),
+            'minimum_lots_single_comex' => $request->input('mcx_min_lot_per_trade', 0),
+            'maximum_lots_comex' => $request->input('mcx_max_lot_per_scrip', 0),
+            'max_size_all_comex' => $request->input('mcx_max_lot_all_scrips', 0),
+            'nse_futures_enabled' => $request->boolean('nse_futures_enabled'),
+            'NSEFuturesMaxLotPerScrip' => $request->input('nse_futures_max_lot_per_scrip', 0),
+            'broker_id' => $request->input('broker_id'),
+            // Update password only if provided
+            'Password' => $request->filled('password') ? bcrypt($request->input('password')) : $user->Password,
+            'TransPass' => $request->filled('transaction_password') ? bcrypt($request->input('transaction_password')) : $user->TransPass,
+        ]);
+
+        return redirect()->route('admin.users')->with('success', 'User updated successfully');
     }
 
     /**
@@ -864,16 +1172,21 @@ class AdminController extends Controller
      */
     public function copyUser($id)
     {
-        $sourceUser = TradeUser::where('UserId', $id)->first();
+        $user = TradeUser::where('id', $id)->first();
+        $brokers = Broker::all();
 
-        if (Session::has('admin_id')) {
-            AdminLog::create([
-                'admin_id' => Session::get('admin_id'),
-                'activity' => 'Accessed copy user form for: ' . $sourceUser->name,
-                'ip_address' => request()->ip()
-            ]);
-        }
-        return view('admin.users-copy', compact('sourceUser'));
+        // Decode JSON fields if needed
+        $mcxLotMargin = json_decode($user->MCXLotMarginJSON, true) ?? [];
+        $mcxLotBrokerage = json_decode($user->MCXLotBrokerageJSON, true) ?? [];
+        $mcxBidGap = json_decode($user->MCXBidGapJSON, true) ?? [];
+
+        return view('admin.users-copy', [
+            'user' => $user,
+            'brokers' => $brokers,
+            'mcxLotMargin' => $mcxLotMargin,
+            'mcxLotBrokerage' => $mcxLotBrokerage,
+            'mcxBidGap' => $mcxBidGap
+        ]);
     }
 
     /**
@@ -881,11 +1194,12 @@ class AdminController extends Controller
      */
     public function toggleUserStatus($id)
     {
+
         $user = TradeUser::findOrFail($id);
-        $user->is_active = !$user->is_active;
+        $user->IsActive = !$user->IsActive;
         $user->save();
 
-        $status = $user->is_active ? 'activated' : 'deactivated';
+        $status = $user->IsActive ? 'activated' : 'deactivated';
 
         if (Session::has('admin_id')) {
             AdminLog::create([
@@ -893,6 +1207,8 @@ class AdminController extends Controller
                 'activity' => 'User ' . $status . ': ' . $user->name,
                 'ip_address' => request()->ip()
             ]);
+        } else {
+            return redirect('admin/login');
         }
 
         return redirect()->route('admin.users')->with('success', 'User ' . $status . ' successfully.');
@@ -915,6 +1231,8 @@ class AdminController extends Controller
                 'activity' => 'Deleted user: ' . $userName,
                 'ip_address' => request()->ip()
             ]);
+        } else {
+            return redirect('admin/login');
         }
 
         return redirect()->route('admin.users')->with('success', 'User deleted successfully.');
@@ -933,6 +1251,8 @@ class AdminController extends Controller
                 'activity' => 'Viewed comex margins for user: ' . $user->name,
                 'ip_address' => request()->ip()
             ]);
+        } else {
+            return redirect('admin/login');
         }
 
         return view('admin.comex-margins', compact('user'));
@@ -951,16 +1271,37 @@ class AdminController extends Controller
                 'activity' => 'Viewed wallet status for user: ' . $user->name,
                 'ip_address' => request()->ip()
             ]);
+        } else {
+            return redirect('admin/login');
         }
-    $transactions = DB::table('user_transactions')->where('user_id',$user->UserId)->get();
-        return view('admin.wf-status', compact('user','transactions'));
-        }
+        $transactions = DB::table('user_transactions')->where('user_id', $user->id)->get();
+        $totalDeposit = DepositeMaster::where('type', 1)->where('UserId', $user->id)->sum('Amount');
+        $totalWithdrawals = DepositeMaster::where('type', 0)->where('UserId', $user->id)->sum('Amount');
+        $netPA = 0;
+
+        return view('admin.wf-status', compact('user', 'transactions', 'totalDeposit', 'totalWithdrawals', 'netPA'));
+    }
 
     /**
      * Show trades page
      */
+    public function getScripData(Request $request)
+    {
+
+        $symbol = $request->symbol;
+        $fromDate = $request->from_date ?? date('Y-m-d', strtotime('-1 day'));
+        $toDate = $request->to_date ?? date('Y-m-d');
+        $resolution = 1;
+        // $minuts = $request->minuts;
+        $hours = $request->hours * 60 + $request->minuts;
+
+        $response = fetchFyersHistoricalData($symbol, $fromDate, $toDate, $resolution);
+        // Make sure it's an array or collection
+        return response()->json($response);
+    }
     public function trades(Request $request)
     {
+
         // Get trades data
         $trades = []; // Replace with actual trade data fetching logic
 
@@ -970,15 +1311,19 @@ class AdminController extends Controller
                 'activity' => 'Viewed trades list',
                 'ip_address' => request()->ip()
             ]);
+        } else {
+            return redirect('admin/login');
         }
-        $query = DB::table('sp_getmarketwatch');
+
+        // $query = DB::table('sp_getmarketwatch');
+        $query = MarketBidMaster::query(); // or new MarketBidMaster if you prefer ->newQuery()
 
         if ($request->filled('id')) {
-            $query->where('id', $request->id);
+            $query->where('Pk_id', $request->id);
         }
 
         if ($request->filled('scrip_id')) {
-            $query->where('scrip_id', 'like', '%' . $request->scrip_id . '%');
+            $query->where('Symbol', 'like', '%' . $request->scrip_id . '%');
         }
 
         if ($request->filled('segment') && $request->segment != 'All') {
@@ -986,22 +1331,23 @@ class AdminController extends Controller
         }
 
         if ($request->filled('userid')) {
-            $query->where('user_id', $request->userid);
+            $query->where('UserId', $request->userid);
         }
 
         if ($request->filled('buy_rate')) {
-            $query->where('buy_price', $request->buy_rate);
+            $query->where('BuyPrice', $request->buy_rate);
         }
 
         if ($request->filled('sell_rate')) {
-            $query->where('sell_price', $request->sell_rate);
+            $query->where('SalePrice', $request->sell_rate);
         }
 
         if ($request->filled('lots')) {
-            $query->where('lots', $request->lots);
+            $query->where('LotSize', $request->lots);
         }
 
-        $trades = $query->orderByDesc('id')->get();
+        // Now apply order and get results
+        $trades = $query->orderByDesc('Pk_id')->get();
 
         return view('admin.trades', compact('trades'));
     }
@@ -1016,9 +1362,13 @@ class AdminController extends Controller
                 'activity' => 'Viewed trades list',
                 'ip_address' => request()->ip()
             ]);
+        } else {
+            return redirect('admin/login');
         }
         $tradeUser = TradeUser::all();
-        return view('admin.create_trade', compact('trades', 'tradeUser'));
+        $forexOption = ForexOption::where('Isactive', 1)->get();
+
+        return view('admin.create_trade', compact('trades', 'tradeUser', 'forexOption'));
     }
 
     public function storeOrUpdate(Request $request)
@@ -1029,6 +1379,8 @@ class AdminController extends Controller
                 'activity' => 'Viewed trades list',
                 'ip_address' => request()->ip()
             ]);
+        } else {
+            return redirect('admin/login');
         }
 
         $validated = $request->validate([
@@ -1036,44 +1388,41 @@ class AdminController extends Controller
             'userid' => 'required|integer',
             'lots' => 'required|integer',
             'buy_price' => 'nullable|numeric',
-            'sell_price' => 'nullable|numeric',
-            'segment' => 'required',
         ]);
         $id = $request->input('id');
+
+        $adminUser = AdminLogin::where('PK_ID', Session::get('admin_id'))->first();
+
+        if (!Hash::check($request->input('transaction_password'), $adminUser->TransPass)) {
+            return redirect()->back()->with('error', 'Invalid transaction password.');
+        }
+
         if ($id) {
-            $trade = DB::table('sp_getmarketwatch')->where('id', $id)->first();
+            $trade = MarketBidMaster::where('Pk_id', $id)->first();
             if (!$trade) {
                 return back()->with('error', 'Record not found.');
             }
 
-            DB::table('sp_getmarketwatch')->where('id', $id)->update([
-                'scrip_id' => $validated['scrip_id'],
-                'user_id' => $validated['userid'],
-                'lots' => $validated['lots'],
-                'buy_price' => $validated['buy_price'],
-                'sell_price' => $validated['sell_price'],
+            MarketBidMaster::where('Pk_id', $id)->update([
+                'Symbol' => $validated['scrip_id'],
+                'UserId' => $validated['userid'],
+                'LotSize' => $validated['lots'],
+                'BuyPrice' => $validated['buy_price'],
+                'SalePrice' => $validated['sell_price'] ?? null,
                 'segment' => $validated['segment'],
-                'updated_at' => now()
             ]);
 
-            if ($request->filled('transaction_password')) {
-                $data['transaction_password'] = bcrypt($request->transaction_password);
-            }
-
-            DB::table('sp_getmarketwatch')->where('id', $id)->update($data);
             return back()->with('success', 'Trade updated successfully.');
         } else {
             // Create new record
-            DB::table('sp_getmarketwatch')->insert([
-                'scrip_id' => $validated['scrip_id'],
-                'user_id' => $validated['userid'],
-                'lots' => $validated['lots'],
-                'buy_price' => $validated['buy_price'],
-                'sell_price' => $validated['sell_price'],
+            MarketBidMaster::insert([
+                'Symbol' => $validated['scrip_id'],
+                'UserId' => $validated['userid'],
+                'LotSize' => $validated['lots'],
+                'BuyPrice' => $validated['buy_price'],
+                'SalePrice' => $validated['sell_price'] ?? null,
                 'segment' => $validated['segment'],
-                'transaction_password' => bcrypt($request->transaction_password),
-                'created_at' => now(),
-                'updated_at' => now()
+                'Mode' => ($validated['sell_price']) ? 'SELL' : 'BUY'
             ]);
             return back()->with('success', 'Trade created successfully.');
         }
@@ -1088,6 +1437,8 @@ class AdminController extends Controller
                 'activity' => 'Viewed trades list',
                 'ip_address' => request()->ip()
             ]);
+        } else {
+            return redirect('admin/login');
         }
         $trade = null;
         if ($id) {
@@ -1111,6 +1462,8 @@ class AdminController extends Controller
                 'activity' => 'Viewed trades list page',
                 'ip_address' => request()->ip()
             ]);
+        } else {
+            return redirect('admin/login');
         }
 
         return view('admin.trades-list', compact('tradesList'));
@@ -1130,6 +1483,8 @@ class AdminController extends Controller
                 'activity' => 'Viewed group trades',
                 'ip_address' => request()->ip()
             ]);
+        } else {
+            return redirect('admin/login');
         }
 
         return view('admin.group-trades', compact('groupTrades'));
@@ -1150,7 +1505,7 @@ class AdminController extends Controller
                 'ip_address' => request()->ip()
             ]);
         }
-        
+
         // Get deleted trades data
         $deletedTrades = []; // Replace with actual deleted trades data fetching logic
         $userName = $request->username ?? null;
@@ -1162,65 +1517,65 @@ class AdminController extends Controller
             ]);
         }
 
-       // MySQL version – no NOLOCK hints
-$closedTrades = DB::table('closeMarketPlaceMaster as CP')
-    ->select([
-        'CP.Pk_id',
-        'CP.Fk_Id',
-        'CP.BUYPRICE',
-        'CP.SELLPRICE',
-        'CP.TransactionId',
-        'CP.Mode',
-        'CP.ToAmount',
-        'CP.TransactionMode',
-        'CP.Bid',
-        'CP.Ask',
-        'CP.High',
-        'CP.Low',
-        'CP.TradeLast',
-        'CP.Change',
-        'CP.TradeOpen',
-        'CP.Volume',
-        'CP.LastTradeQty',
-        'CP.Atp',
-        'CP.LotSize',
-        'CP.OpenInterest',
-        'CP.BidQty',
-        'CP.AskQty',
-        'CP.PrevClose',
-        'CP.UpperCircuit',
-        'CP.LowerCircuit',
-        DB::raw('MP.Timestamp   AS BUYDATE'),
-        DB::raw('CP.Timestamp   AS SOLDDATE'),
-        'CP.Lastmodify',
-        'CP.Isactive',
-        DB::raw("CONCAT(LM.USERID, ' ', LM.FULLNAME) AS UserId"),
-        'CP.Symbol',
-        'CP.IsMin',
-        'CP.IsMega',
-        'CP.Lots',
-        'CP.Price',
-        'CP.Status_Exec',
-        'CP.Exitrate',
-    ])
-    ->join('loginmaster  as LM', 'CP.UserId', '=', 'LM.PK_ID')
-    ->join('marketplacemaster as MP', 'MP.PK_ID', '=', 'CP.FK_ID')
-    ->where('MP.Status_Exec', 'Deleted')          // <- Laravel will bind this and quote it
-    ->when($userName, function ($q) use ($userName) {
-        $q->where('LM.UserId', $userName);
-    })
-    ->orderByDesc('CP.Timestamp')
-    ->get();
+        // MySQL version – no NOLOCK hints
+        $closedTrades = DB::table('closeMarketPlaceMaster as CP')
+            ->select([
+                'CP.Pk_id',
+                'CP.Fk_Id',
+                'CP.BUYPRICE',
+                'CP.SELLPRICE',
+                'CP.TransactionId',
+                'CP.Mode',
+                'CP.ToAmount',
+                'CP.TransactionMode',
+                'CP.Bid',
+                'CP.Ask',
+                'CP.High',
+                'CP.Low',
+                'CP.TradeLast',
+                'CP.Change',
+                'CP.TradeOpen',
+                'CP.Volume',
+                'CP.LastTradeQty',
+                'CP.Atp',
+                'CP.LotSize',
+                'CP.OpenInterest',
+                'CP.BidQty',
+                'CP.AskQty',
+                'CP.PrevClose',
+                'CP.UpperCircuit',
+                'CP.LowerCircuit',
+                DB::raw('MP.Timestamp   AS BUYDATE'),
+                DB::raw('CP.Timestamp   AS SOLDDATE'),
+                'CP.Lastmodify',
+                'CP.Isactive',
+                DB::raw("CONCAT(LM.USERID, ' ', LM.FULLNAME) AS UserId"),
+                'CP.Symbol',
+                'CP.IsMin',
+                'CP.IsMega',
+                'CP.Lots',
+                'CP.Price',
+                'CP.Status_Exec',
+                'CP.Exitrate',
+            ])
+            ->join('loginmaster  as LM', 'CP.UserId', '=', 'LM.PK_ID')
+            ->join('marketplacemaster as MP', 'MP.PK_ID', '=', 'CP.FK_ID')
+            ->where('MP.Status_Exec', 'Deleted')          // <- Laravel will bind this and quote it
+            ->when($userName, function ($q) use ($userName) {
+                $q->where('LM.UserId', $userName);
+            })
+            ->orderByDesc('CP.Timestamp')
+            ->get();
 
 
         return view('admin.closed-trades', compact('closedTrades'));
     }
 
-        public function updateComexMargins(Request $request, $id)
+    public function updateComexMargins(Request $request, $id)
     {
         try {
             $user = TradeUser::findOrFail($id);
-            
+
             // Validate all form fields
             $validator = Validator::make($request->all(), [
                 // Comex Configuration
@@ -1233,7 +1588,7 @@ $closedTrades = DB::table('closeMarketPlaceMaster as CP')
                 'intraday_exposure_margin_comex' => 'required|numeric|min:0',
                 'holding_exposure_margin_comex' => 'required|numeric|min:0',
                 'orders_price_comex' => 'required|numeric|min:0',
-                
+
                 // Forex Configuration
                 'forex_brokerage_type' => 'required|string|in:Per Lot,Per Crore',
                 'forex_brokerage' => 'required|numeric|min:0',
@@ -1244,7 +1599,7 @@ $closedTrades = DB::table('closeMarketPlaceMaster as CP')
                 'intraday_exposure_margin_forex' => 'required|numeric|min:0',
                 'holding_exposure_margin_forex' => 'required|numeric|min:0',
                 'orders_price_forex' => 'required|numeric|min:0',
-                
+
                 // Crypto Configuration
                 'crypto_brokerage_type' => 'required|string|in:Per Lot,Per Crore',
                 'crypto_brokerage' => 'required|numeric|min:0',
@@ -1255,7 +1610,7 @@ $closedTrades = DB::table('closeMarketPlaceMaster as CP')
                 'intraday_exposure_margin_crypto' => 'required|numeric|min:0',
                 'holding_exposure_margin_crypto' => 'required|numeric|min:0',
                 'orders_price_crypto' => 'required|numeric|min:0',
-                
+
                 // Security
                 'transaction_password' => 'required|string',
             ]);
@@ -1289,7 +1644,7 @@ $closedTrades = DB::table('closeMarketPlaceMaster as CP')
                 'intraday_exposure_margin_comex' => $request->intraday_exposure_margin_comex,
                 'holding_exposure_margin_comex' => $request->holding_exposure_margin_comex,
                 'orders_price_comex' => $request->orders_price_comex,
-                
+
                 // Forex Configuration
                 'forex_trading_enabled' => $request->has('forex_trading_enabled') ? 1 : 0,
                 'forex_brokerage_type' => $request->forex_brokerage_type,
@@ -1301,7 +1656,7 @@ $closedTrades = DB::table('closeMarketPlaceMaster as CP')
                 'intraday_exposure_margin_forex' => $request->intraday_exposure_margin_forex,
                 'holding_exposure_margin_forex' => $request->holding_exposure_margin_forex,
                 'orders_price_forex' => $request->orders_price_forex,
-                
+
                 // Crypto Configuration
                 'crypto_trading_enabled' => $request->has('crypto_trading_enabled') ? 1 : 0,
                 'crypto_brokerage_type' => $request->crypto_brokerage_type,
@@ -1327,10 +1682,9 @@ $closedTrades = DB::table('closeMarketPlaceMaster as CP')
             }
 
             return redirect()->back()->with('success', 'Comex margins updated successfully.');
-
         } catch (\Exception $e) {
             DB::rollback();
-            
+
             // Log the error
             if (Session::has('admin_id')) {
                 AdminLog::create([
@@ -1339,13 +1693,13 @@ $closedTrades = DB::table('closeMarketPlaceMaster as CP')
                     'ip_address' => request()->ip()
                 ]);
             }
-            
+
             return redirect()->back()
                 ->with('error', 'An error occurred while updating comex margins. Please try again.')
                 ->withInput();
         }
     }
-    
+
     /**
      * Show deleted trades page
      */
@@ -1362,55 +1716,55 @@ $closedTrades = DB::table('closeMarketPlaceMaster as CP')
             ]);
         }
 
-       // MySQL version – no NOLOCK hints
-$query = DB::table('closeMarketPlaceMaster as CP')
-    ->select([
-        'CP.Pk_id',
-        'CP.Fk_Id',
-        'CP.BUYPRICE',
-        'CP.SELLPRICE',
-        'CP.TransactionId',
-        'CP.Mode',
-        'CP.ToAmount',
-        'CP.TransactionMode',
-        'CP.Bid',
-        'CP.Ask',
-        'CP.High',
-        'CP.Low',
-        'CP.TradeLast',
-        'CP.Change',
-        'CP.TradeOpen',
-        'CP.Volume',
-        'CP.LastTradeQty',
-        'CP.Atp',
-        'CP.LotSize',
-        'CP.OpenInterest',
-        'CP.BidQty',
-        'CP.AskQty',
-        'CP.PrevClose',
-        'CP.UpperCircuit',
-        'CP.LowerCircuit',
-        DB::raw('MP.Timestamp   AS BUYDATE'),
-        DB::raw('CP.Timestamp   AS SOLDDATE'),
-        'CP.Lastmodify',
-        'CP.Isactive',
-        DB::raw("CONCAT(LM.USERID, ' ', LM.FULLNAME) AS UserId"),
-        'CP.Symbol',
-        'CP.IsMin',
-        'CP.IsMega',
-        'CP.Lots',
-        'CP.Price',
-        'CP.Status_Exec',
-        'CP.Exitrate',
-    ])
-    ->join('loginmaster  as LM', 'CP.UserId', '=', 'LM.PK_ID')
-    ->join('marketplacemaster as MP', 'MP.PK_ID', '=', 'CP.FK_ID')
-    ->where('MP.Status_Exec', 'Deleted')          // <- Laravel will bind this and quote it
-    ->when($userName, function ($q) use ($userName) {
-        $q->where('LM.UserId', $userName);
-    })
-    ->orderByDesc('CP.Timestamp')
-    ->get();
+        // MySQL version – no NOLOCK hints
+        $query = DB::table('closeMarketPlaceMaster as CP')
+            ->select([
+                'CP.Pk_id',
+                'CP.Fk_Id',
+                'CP.BUYPRICE',
+                'CP.SELLPRICE',
+                'CP.TransactionId',
+                'CP.Mode',
+                'CP.ToAmount',
+                'CP.TransactionMode',
+                'CP.Bid',
+                'CP.Ask',
+                'CP.High',
+                'CP.Low',
+                'CP.TradeLast',
+                'CP.Change',
+                'CP.TradeOpen',
+                'CP.Volume',
+                'CP.LastTradeQty',
+                'CP.Atp',
+                'CP.LotSize',
+                'CP.OpenInterest',
+                'CP.BidQty',
+                'CP.AskQty',
+                'CP.PrevClose',
+                'CP.UpperCircuit',
+                'CP.LowerCircuit',
+                DB::raw('MP.Timestamp   AS BUYDATE'),
+                DB::raw('CP.Timestamp   AS SOLDDATE'),
+                'CP.Lastmodify',
+                'CP.Isactive',
+                DB::raw("CONCAT(LM.USERID, ' ', LM.FULLNAME) AS UserId"),
+                'CP.Symbol',
+                'CP.IsMin',
+                'CP.IsMega',
+                'CP.Lots',
+                'CP.Price',
+                'CP.Status_Exec',
+                'CP.Exitrate',
+            ])
+            ->join('loginmaster  as LM', 'CP.UserId', '=', 'LM.PK_ID')
+            ->join('marketplacemaster as MP', 'MP.PK_ID', '=', 'CP.FK_ID')
+            ->where('MP.Status_Exec', 'Deleted')          // <- Laravel will bind this and quote it
+            ->when($userName, function ($q) use ($userName) {
+                $q->where('LM.UserId', $userName);
+            })
+            ->orderByDesc('CP.Timestamp')
+            ->get();
 
         return view('admin.deleted-trades', compact('deletedTrades'));
     }
@@ -1429,6 +1783,8 @@ $query = DB::table('closeMarketPlaceMaster as CP')
                 'activity' => 'Viewed pending orders',
                 'ip_address' => request()->ip()
             ]);
+        } else {
+            return redirect('admin/login');
         }
 
         return view('admin.pending-orders', compact('pendingOrders'));
@@ -1448,45 +1804,29 @@ $query = DB::table('closeMarketPlaceMaster as CP')
                 'activity' => 'Viewed funds page',
                 'ip_address' => request()->ip()
             ]);
+        } else {
+            return redirect('admin/login');
         }
 
         $depositQ = DB::table('transdetail as td')
-            ->join('tradeuser as tu', 'td.MemberId', '=', 'tu.userId')
-            ->where('td.TransPage', 'Deposit approval')
+            ->join('tradeuser as tu', 'td.MemberId', '=', 'tu.id')
             ->when($request->filled('user_id'), function ($q) use ($request) {
                 $uid = $request->user_id;
                 $q->where(function ($sub) use ($uid) {
-                    $sub->where('tu.userId', $uid)
+                    $sub->where('tu.id', $uid)
                         ->orWhere('tu.UserName', 'like', "%{$uid}%");
                 });
             })
             ->when($request->filled('amount'), function ($q) use ($request) {
                 $q->where('td.AmountS', $request->amount);
             })
-            ->selectRaw("td.TransPage,tu.FullName,tu.UserName as UserName,td.PK_ID,td.AmountS,
+            ->selectRaw("td.type,td.TransPage,tu.FullName,tu.UserName as UserName,td.PK_ID,td.AmountS,
                         td.Remark,'Deposit' as Mode,td.adminstatus,td.transdate as Timestamp")
             ->orderBy('Timestamp', 'desc')
             ->get();
 
-        // Second half – withdrawals
-        $withdrawQ = DB::table('withdrawlmaster as wm')
-            ->join('tradeuser as tu', 'wm.UserId', '=', 'tu.userid')
-            ->when($request->filled('user_id'), function ($q) use ($request) {
-                $uid = $request->user_id;
-                $q->where(function ($sub) use ($uid) {
-                    $sub->where('tu.userId', $uid)
-                        ->orWhere('tu.UserName', 'like', "%{$uid}%");
-                });
-            })
-            ->when($request->filled('amount'), function ($q) use ($request) {
-                $q->where('td.AmountS', $request->amount);
-            })
-            ->selectRaw("tu.FullName,tu.UserName as UserName,wm.PK_ID,wm.Amount,wm.PaymentMethod,
-            'Withdrawal' as Mode,wm.Status as adminstatus,wm.Timestamp as Timestamp")
-            ->orderBy('Timestamp', 'desc')
-            ->get();
-
-        return view('admin.funds', compact('depositQ', 'withdrawQ'));
+        // dd($depositQ);
+        return view('admin.funds', compact('depositQ'));
     }
 
     public function fundsReport(Request $request)
@@ -1499,10 +1839,12 @@ $query = DB::table('closeMarketPlaceMaster as CP')
                 'activity' => 'Viewed funds page',
                 'ip_address' => request()->ip()
             ]);
+        } else {
+            return redirect('admin/login');
         }
 
         $depositQ = DB::table('transdetail as td')
-            ->join('tradeuser as tu', 'td.MemberId', '=', 'tu.userId')
+            ->join('tradeuser as tu', 'td.MemberId', '=', 'tu.id')
             ->where('td.TransPage', 'Deposit approval')
             ->selectRaw("td.TransPage,tu.FullName,tu.UserName as UserName,td.PK_ID,td.AmountS,
                         td.Remark,'Deposit' as Mode,td.adminstatus,td.transdate as Timestamp")
@@ -1511,7 +1853,7 @@ $query = DB::table('closeMarketPlaceMaster as CP')
 
         // Second half – withdrawals
         $withdrawQ = DB::table('withdrawlmaster as wm')
-            ->join('tradeuser as tu', 'wm.UserId', '=', 'tu.userid')
+            ->join('tradeuser as tu', 'wm.UserId', '=', 'tu.id')
             ->selectRaw("tu.FullName,tu.UserName as UserName,wm.PK_ID,wm.Amount,wm.PaymentMethod,
             'Withdrawal' as Mode,wm.Status as adminstatus,wm.Timestamp as Timestamp")
             ->orderBy('Timestamp', 'desc')
@@ -1554,9 +1896,9 @@ $query = DB::table('closeMarketPlaceMaster as CP')
      */
     public function createFunds($id)
     {
-       
+
         // Get data needed for creating funds
-        $data = []; 
+        $data = [];
 
         if (Session::has('admin_id')) {
             AdminLog::create([
@@ -1564,8 +1906,10 @@ $query = DB::table('closeMarketPlaceMaster as CP')
                 'activity' => 'Viewed create funds page',
                 'ip_address' => request()->ip()
             ]);
+        } else {
+            return redirect('admin/login');
         }
-        $data = TradeUser::where('UserId',$id)->first();
+        $data = TradeUser::where('id', $id)->first();
         return view('admin.create-funds', compact('data'));
     }
 
@@ -1583,11 +1927,62 @@ $query = DB::table('closeMarketPlaceMaster as CP')
                 'activity' => 'Viewed create funds WD page',
                 'ip_address' => request()->ip()
             ]);
+        } else {
+            return redirect('admin/login');
         }
-         $data = TradeUser::where('UserId',$id)->first();
+        $data = TradeUser::where('id', $id)->first();
         return view('admin.create-funds-wd', compact('data'));
     }
-    public function fundsStore(Request $request) {
+    public function fundsStore(Request $request)
+    {
+        if (Session::has('admin_id')) {
+            AdminLog::create([
+                'admin_id' => Session::get('admin_id'),
+                'activity' => 'Viewed create funds WD page',
+                'ip_address' => request()->ip()
+            ]);
+        } else {
+            return redirect('admin/login');
+        }
+
+        $request->validate([
+            'amount' => 'required|numeric|min:1',
+            'notes' => 'nullable|string|max:255',
+            'transaction_password' => 'required|string',
+        ]);
+
+        $user = TradeUser::where('id', $request->userid)->first();
+
+        if (!$user) {
+            return redirect()->back()->with('error', 'User not found.');
+        }
+        $adminUser = AdminLogin::where('PK_ID', Session::get('admin_id'))->first();
+
+        if (!Hash::check($request->input('transaction_password'), $adminUser->TransPass)) {
+            return redirect()->back()->with('error', 'Invalid transaction password.');
+        }
+
+        $fund = new DepositeMaster();
+        $fund->UserId = $user->id;
+        $fund->Amount = $request->amount;
+        $fund->Approve_Status = 'APPROVED';
+        $fund->notes = $request->notes;
+        $fund->LastModify = now();
+        $fund->type = 1;
+        $fund->save();
+
+        $transPage = 'Deposit approval';
+        $depType = '+';
+        $remarks = 'Deposit';
+
+        $this->approvedStatus($fund, $transPage, $depType, $remarks);
+
+        return redirect()->back()->with('success', 'Funds Deposite Successfully.');
+    }
+
+    public function fundWithdrawal(Request $request)
+    {
+
         if (Session::has('admin_id')) {
             AdminLog::create([
                 'admin_id' => Session::get('admin_id'),
@@ -1596,71 +1991,70 @@ $query = DB::table('closeMarketPlaceMaster as CP')
             ]);
         }
 
-         $request->validate([
-        'amount' => 'required|numeric|min:1',
-        'notes' => 'nullable|string|max:255',
-        'transaction_password' => 'required|string',
-    ]);
+        $request->validate([
+            'amount' => 'required|numeric|min:1',
+            'notes' => 'nullable|string|max:255',
+            'transaction_password' => 'required|string',
+        ]);
 
-    $user = TradeUser::where('UserId', $request->userid)->first();
+        $user = TradeUser::where('id', $request->userid)->first();
 
-    if (!$user) {
-        return redirect()->back()->with('error', 'User not found.');
-    }
+        if (!$user) {
+            return redirect()->back()->with('error', 'User not found.');
+        }
+        $adminUser = AdminLogin::where('PK_ID', Session::get('admin_id'))->first();
 
-    if ($user->Password !== $request->transaction_password) {
-        return redirect()->back()->with('error', 'Invalid transaction password.');
-    }
-    
-    $fund = new Fund();
-    $fund->user_id = $user->UserId;
-    $fund->balance = $request->amount;
-    $fund->created_by = Session::get('admin_id')??1;
-    $fund->save();
-
-    return redirect()->back()->with('success', 'Funds added successfully.');
-    }
-
-     public function fundWithdrawal(Request $request) {
-
-        if (Session::has('admin_id')) {
-            AdminLog::create([
-                'admin_id' => Session::get('admin_id'),
-                'activity' => 'Viewed create funds WD page',
-                'ip_address' => request()->ip()
-            ]);
+        if (!Hash::check($request->input('transaction_password'), $adminUser->TransPass)) {
+            return redirect()->back()->with('error', 'Invalid transaction password.');
         }
 
-         $request->validate([
-        'amount' => 'required|numeric|min:1',
-        'notes' => 'nullable|string|max:255',
-        'transaction_password' => 'required|string',
-    ]);
+        $fund = new DepositeMaster();
+        $fund->UserId = $user->id;
+        $fund->Amount = $request->amount;
+        $fund->Approve_Status = 'APPROVED';
+        $fund->notes = $request->notes;
+        $fund->type = 0;
+        $fund->LastModify = now();
+        $fund->save();
+        $transPage = 'withdraw  approval';
+        $depType = '-';
+        $remarks = 'withdraw';
+        
+        $this->approvedStatus($fund, $transPage, $depType, $remarks);
 
-    $user = TradeUser::where('UserId', $request->userid)->first();
-
-    if (!$user) {
-        return redirect()->back()->with('error', 'User not found.');
+        return redirect()->back()->with('success', 'Fund Withdrawal successfully.');
     }
 
-    if ($user->Password !== $request->transaction_password) {
-        return redirect()->back()->with('error', 'Invalid transaction password.');
-    }
-    
-    $fund = new Fund();
-    $fund->user_id = $user->UserId;
-    $fund->balance = $request->amount;
-    $fund->created_by = Session::get('admin_id')??1;
-    $fund->save();
+    public function approvedStatus($data, $transPage, $depType, $remarks)
+    {
 
-    return redirect()->back()->with('success', 'Funds added successfully.');
+        Transdetail::create([
+            'MemberId'   => $data->UserId,
+            'TransType'  => 'Main Wallet',
+            'TransPage'  => $transPage,
+            'Type'       => $depType,
+            'TransDate'  => now(),
+            'Amount'     => $data->Amount,
+            'AmountS'    => $data->Amount,
+            'Remark'     => $remarks,
+            'LoginId'    => $data->UserId,
+            'Pass'       => '',
+            'Expass'     => '',
+            'CounterId'  => 0,
+            'eWalletBit' => 1,
+            'AddRemark'  => 'APPROVED BY ADMIN',
+            'TransId'    => 0,
+            'RefTransId' => 0,
+            'AdminStatus'=>'APPROVED'
+        ]);
     }
-
     /**
      * Show deposit requests page
      */
     public function depositRequests()
     {
+
+
         // Get deposit requests data
         $depositRequests = [];
 
@@ -1670,9 +2064,12 @@ $query = DB::table('closeMarketPlaceMaster as CP')
                 'activity' => 'Viewed deposit requests',
                 'ip_address' => request()->ip()
             ]);
+        } else {
+            return redirect('admin/login');
         }
-        $data = DepositeMaster::with('user')->where('UserId', Session::get('admin_id'))
-            ->where('Approve_Status', 'PENDING')->get();
+        $data = DepositeMaster::with('user')
+            ->where('Approve_Status', 'Pending')
+            ->get();
 
         return view('admin.deposit-requests', compact('data'));
     }
@@ -1688,18 +2085,27 @@ $query = DB::table('closeMarketPlaceMaster as CP')
         try {
             $deposit = DepositeMaster::lockForUpdate()->findOrFail($request->ID);
             $type    = $request->input('type');
+            $transPage = 'Deposit approval';
+            $depType = '+';
+            $remarks = 'Deposit';
+
+            if ($deposit->type == 0) {
+                $transPage = 'withdraw  approval';
+                $depType = '-';
+                $remarks = 'withdraw';
+            }
 
             if ($type === 'APPROVED') {
                 // Create a wallet transaction
                 Transdetail::create([
                     'MemberId'   => $deposit->UserId,
                     'TransType'  => 'Main Wallet',
-                    'TransPage'  => 'Deposit approval',
-                    'Type'       => '+',
+                    'TransPage'  => $transPage,
+                    'Type'       => $depType,
                     'TransDate'  => now(),
                     'Amount'     => $deposit->Amount,
                     'AmountS'    => $deposit->Amount,
-                    'Remark'     => 'Wallet Deposit',
+                    'Remark'     => $remarks,
                     'LoginId'    => $deposit->UserId,
                     'Pass'       => '',
                     'Expass'     => '',
@@ -1708,6 +2114,7 @@ $query = DB::table('closeMarketPlaceMaster as CP')
                     'AddRemark'  => 'APPROVED BY ADMIN',
                     'TransId'    => 0,
                     'RefTransId' => 0,
+                    'AdminStatus'=>'APPROVED'
                 ]);
 
                 $deposit->update([
@@ -1749,6 +2156,8 @@ $query = DB::table('closeMarketPlaceMaster as CP')
                 'activity' => 'Viewed withdrawal requests',
                 'ip_address' => request()->ip()
             ]);
+        } else {
+            return redirect('admin/login');
         }
 
         return view('admin.withdrawal-requests', compact('withdrawalRequests'));
@@ -1768,6 +2177,8 @@ $query = DB::table('closeMarketPlaceMaster as CP')
                 'activity' => 'Viewed accounts page',
                 'ip_address' => request()->ip()
             ]);
+        } else {
+            return redirect('admin/login');
         }
 
         return view('admin.accounts', compact('accountsData'));
@@ -1787,6 +2198,8 @@ $query = DB::table('closeMarketPlaceMaster as CP')
                 'activity' => 'Viewed market scripts',
                 'ip_address' => request()->ip()
             ]);
+        } else {
+            return redirect('admin/login');
         }
         $scriptsData =  MarketMaster::where('CreatedBy', Session::get('admin_id'))->get();
 
@@ -1857,16 +2270,18 @@ $query = DB::table('closeMarketPlaceMaster as CP')
     public function scripData()
     {
         // Get scrip data
-        $scripData = [];
 
+        $scripdata = ForexOption::get();
         if (Session::has('admin_id')) {
             AdminLog::create([
                 'admin_id' => Session::get('admin_id'),
                 'activity' => 'Viewed scrip data',
                 'ip_address' => request()->ip()
             ]);
+        } else {
+            return redirect('admin/login');
         }
 
-        return view('admin.scrip-data', compact('scripData'));
+        return view('admin.scrip-data', compact('scripdata'));
     }
 }

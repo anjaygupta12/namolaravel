@@ -41,7 +41,7 @@
                             </div>
                         @endif
 
-                        <form method="POST" action="{{ route('admin.comex-margins.update', $user->UserId) }}" id="comexForm">
+                        <form method="POST" action="{{ route('admin.comex-margins.update', $user->id) }}" id="comexForm">
                             @csrf
                             
                             <div class="row">

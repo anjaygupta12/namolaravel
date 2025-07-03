@@ -14,11 +14,11 @@
                     <div class="card-body">
                         <div class="row mx-3">
                             <div class="col-md-3">
-                                <input type="text" id="from_date" name="from_date" class="form-control"
+                                <input type="date" id="from_date" name="from_date" class="form-control"
                                     placeholder="From Date" required="">
                             </div>
                             <div class="col-md-3">
-                                <input type="text" id="to_date" name="to_date" class="form-control"
+                                <input type="date" id="to_date" name="to_date" class="form-control"
                                     placeholder="To Date" required="">
                             </div>
                             <div class="col-md-3">
@@ -116,16 +116,17 @@
                             <table class="table">
                                 <thead class="text-primary">
                                     <tr>
-                                        <th class="action-column">
+                                        {{-- <th class="action-column">
                                             <label class="checkcontainer">
                                                 <input type="checkbox"
                                                     onclick="checkBoxes(this, 'toggle_trade_status', 'trades')"
                                                     name="selectall">
                                                 <span class="checkmark"></span>
                                             </label>
-                                        </th>
+                                        </th> --}}
                                         <th>Actions</th>
                                         <th>ID</th>
+                                        <th>Mode</th>
                                         <th>Scrip</th>
                                         <th>Segment</th>
                                         <th>User ID</th>
@@ -138,14 +139,14 @@
                                 </thead>
                                 <tbody>
                                     @foreach ($trades as $val)
-                                        <tr data-key="20094">
-                                            <td>
+                                        <tr data-key="{{$val->Pk_id}}">
+                                            {{-- <td>
                                                 <label class="checkcontainer"><input name="trades[]" type="checkbox"
                                                         value="20094"><span class="checkmark"></span></label>
-                                            </td>
+                                            </td> --}}
                                             <td class="text-nowrap">
 
-                                                <a href="{{ route('admin.trade.edit', $val->id) }}" style="color: black;"
+                                                <a href="{{ route('admin.trade.edit', $val->Pk_id) }}" style="color: black;"
                                                     title="Edit" aria="" -="" label="Update" data=""
                                                     pjax="0"><svg aria-hidden="true"
                                                         style="display: inline-block; font-size: inherit; height: 1em; overflow: visible; vertical-align: -.125em; width: 1em"
@@ -156,13 +157,14 @@
                                                     </svg>
                                                 </a>
                                             </td>
-                                            <td class="text-nowrap"> {{ $val->id }}</td>
-                                            <td class="text-nowrap"> {{ $val->scrip_id }}</td>
-                                            <td class="text-nowrap"> {{ $val->segment }}</td>
-                                            <td class="text-nowrap"> {{ $val->user_id }} </td>
-                                            <td class="text-nowrap"> {{ $val->buy_price }}</td>
-                                            <td class="text-nowrap"> {{ $val->sell_price }}</td>
-                                            <td class="text-nowrap">{{ $val->lots }}</td>
+                                            <td class="text-nowrap"> {{ $val->Pk_id }}</td>
+                                            <td class="text-nowrap"> {{ $val->Mode }}</td>
+                                            <td class="text-nowrap"> {{ $val->Symbol }}</td>
+                                            <td class="text-nowrap"> {{ $val->segent }} </td>
+                                            <td class="text-nowrap"> {{ $val->UserId }}</td>
+                                            <td class="text-nowrap"> {{ $val->SalePrice }}</td>
+                                            <td class="text-nowrap"> {{ $val->BuyPrice }}</td>
+                                            <td class="text-nowrap">{{ $val->LotSize }}</td>
                                             <td class="text-nowrap">
                                                 {{ \Carbon\Carbon::parse($val->created_at)->format('n/j/Y h:i:s A') }}</td>
                                             <td class="text-nowrap">

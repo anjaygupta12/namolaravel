@@ -40,30 +40,11 @@
                     <div class="col-md-6">
                         <div class="form-group field-trades-commodity required">
                             <label class="control-label">Scrip</label>
-                            <select name="scrip_id" class="chosen-select form-control" required>
+                            <select name="scrip_id" class="scrip_id chosen-select form-control" required>
                                 <option value="">Select Scrip</option>
-                                <option value="">BANKNIFTY PE 49100 2025-02-27</option>
-                                <option value="BANKNIFTY25FEB49200CE"
-                                    {{ old('scrip_id', $trade->scrip_id ?? '') == 'BANKNIFTY25FEB49200CE' ? 'selected' : '' }}>
-                                    BANKNIFTY CE 49200 2025-02-27</option>
-                                <option value="BANKNIFTY25FEB49200PE"
-                                    {{ old('scrip_id', $trade->scrip_id ?? '') == 'BANKNIFTY25FEB49200PE' ? 'selected' : '' }}>
-                                    BANKNIFTY PE 49200 2025-02-27</option>
-                                <option value="BANKNIFTY25FEB49300CE"
-                                    {{ old('scrip_id', $trade->scrip_id ?? '') == 'BANKNIFTY25FEB49300CE' ? 'selected' : '' }}>
-                                    BANKNIFTY CE 49300 2025-02-27</option>
-                                <option value="BANKNIFTY25FEB49300PE"
-                                    {{ old('scrip_id', $trade->scrip_id ?? '') == 'BANKNIFTY25FEB49300PE' ? 'selected' : '' }}>
-                                    BANKNIFTY PE 49300 2025-02-27</option>
-                                <option value="BANKNIFTY25FEB49400CE"
-                                    {{ old('scrip_id', $trade->scrip_id ?? '') == 'BANKNIFTY25FEB49400CE' ? 'selected' : '' }}>
-                                    BANKNIFTY CE 49400 2025-02-27</option>
-                                <option value="BANKNIFTY25FEB49400PE"
-                                    {{ old('scrip_id', $trade->scrip_id ?? '') == 'BANKNIFTY25FEB49400PE' ? 'selected' : '' }}>
-                                    BANKNIFTY PE 49400 2025-02-27</option>
-                                <option value="BANKNIFTY25FEB49500CE"
-                                    {{ old('scrip_id', $trade->scrip_id ?? '') == 'BANKNIFTY25FEB49500CE' ? 'selected' : '' }}>
-                                    BANKNIFTY CE 49500 2025-02-27</option>
+                                @foreach($forexOption as $val)
+                                    <option value="{{ $val->Symbol }}">{{ $val->Symbol }}</option>
+                                @endforeach
                             </select>
                         </div>
                     </div>
@@ -74,9 +55,9 @@
                             <select name="userid" class="chosen-select form-control" required>
                                 <option value="">Select User</option>
                                 @foreach ($tradeUser as $item)
-                                    <option value="{{ $item->UserId }}"
-                                        {{ old('userid', $trade->user_id ?? '') == $item->UserId ? 'selected' : '' }}>
-                                        {{ $item->AccountHolderName }} ({{ $item->FullName }}) : {{ $item->UserId }}
+                                    <option value="{{ $item->id }}"
+                                        {{ old('userid', $trade->userid ?? '') == $item->id ? 'selected' : '' }}>
+                                        {{ $item->AccountHolderName }} ({{ $item->FullName }}) : {{ $item->id }}
                                     </option>
                                 @endforeach
                             </select>

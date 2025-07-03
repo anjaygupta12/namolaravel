@@ -13,7 +13,7 @@ class DepositeMaster extends Model
     
     protected $fillable = [
         'UserId', 'Amount', 'ScreenShot', 'Approve_Status', 'Approve_date',
-        'Timestamp', 'LastModify', 'Isactive'
+        'Timestamp', 'LastModify', 'Isactive','type','notes'
     ];
     
     protected $casts = [
@@ -27,7 +27,7 @@ class DepositeMaster extends Model
     // Relationship with TradeUser
     public function user()
     {
-        return $this->belongsTo(TradeUser::class, 'UserId', 'UserId');
+        return $this->belongsTo(TradeUser::class, 'UserId', 'id');
     }
     
     /**

@@ -9,15 +9,8 @@ class RedirectIfAuthenticatedCustom
 {
     public function handle($request, Closure $next)
     {
-        $isLoggedIn = Auth::check();
-        $path = $request->path();
-        dd($isLoggedIn);
-        if ($isLoggedIn && ($path == '/' || $path == 'login')) {
-            return redirect('/dashboard');
-        }
-
-        if (!$isLoggedIn && $path !== 'login') {
-            return redirect('/login');
+        if (!Auth::guard('tradeuser')->check()) {
+            return redirect()->route('login')->with('error', 'Please login first.');
         }
 
         return $next($request);

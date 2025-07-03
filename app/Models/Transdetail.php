@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Transdetail extends Model
 {
-    protected $table = 'Transdetail';
+    protected $table = 'transdetail';
     protected $primaryKey = 'Pk_id';
     public $timestamps = false;
     

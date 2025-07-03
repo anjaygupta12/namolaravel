@@ -5,9 +5,11 @@
 @section('head')
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <meta name="csrf-token" content="{{ csrf_token() }}">
+
 @endsection
 
 @section('content')
+
 <div id="appCapsule">
     <div class="section wallet-card-section pt-1">
         <div class="wallet-card">
@@ -79,47 +81,38 @@
     </div>
 
     <!-- Close Bulk Trades Modal -->
-    <div class="modal fade action-sheet" id="CloseBulkSheet" tabindex="-1" role="dialog">
-        <div class="modal-dialog" role="document" style="padding:350px">
-            <div class="modal-content" style="background-color: #311b7f;">
-                <div class="modal-header">
-                    <h5 class="modal-title text-white fw-bold">
-                        Please enter your password to close all active trades in <label id="lblBulkCloseName"></label>
-                    </h5>
-                </div>
-                <div class="modal-body">
-                    <div class="card" style="background-color: #311b7f;">
-                        <div class="card-body pt-0">
-                            <div class="tab-content mt-2">
-                                <div class="tab-pane fade show active">
-                                    <form id="bulkCloseForm">
-                                        <div class="form-group basic">
-                                            <div class="input-wrapper">
-                                                <label class="label" for="password">Password</label>
-                                                <input type="password" class="form-control" id="password" name="password" placeholder="Enter Password" required>
-                                            </div>
-                                        </div>
 
-                                        <div class="form-group basic">
-                                            <div class="input-wrapper text-center">
-                                                <button type="submit" class="btn btn-success" style="border-radius:0">Submit</button>
-                                            </div>
-                                        </div>
-
-                                        <div class="form-group basic">
-                                            <div class="input-wrapper text-center">
-                                                <button type="button" class="btn btn-danger" data-bs-dismiss="modal" style="border-radius:0">Don't Close My Trades</button>
-                                            </div>
-                                        </div>
-                                    </form>
+<div class="modal fade custom-centered" id="CloseBulkSheet" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title text-white fw-bold">
+                    Are you sure to close all Active Trades in 
+                    <label id="lblBulkCloseName" class="fw-bold text-warning"></label> ?
+                </h5>
+            </div>
+            <div class="modal-body">
+                <div class="card bg-transparent border-0">
+                    <div class="card-body pt-0">
+                        <form id="bulkCloseForm">
+                            <div class="form-group basic">
+                                <div class="d-flex justify-content-center gap-2">
+                                    <button type="submit" class="btn btn-success" style="border-radius: 0; min-width: 130px;">
+                                        Confirm
+                                    </button>
+                                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal" style="border-radius: 0; min-width: 130px;">
+                                        Don't Close
+                                    </button>
                                 </div>
                             </div>
-                        </div>
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
+
 
     <!-- Success Dialog -->
     <div class="modal fade dialogbox" id="DialogIconedSuccess" data-bs-backdrop="static" tabindex="-1" aria-hidden="true" style="display: none;">
@@ -187,7 +180,7 @@
                                 </td>
                                 <td></td>
                                 <td class="text-end text-primary">
-                                    <p class="date mb-1">${trade.Timestamp}</p>
+                                    <p class="date mb-1">${formatDateTime(trade.Timestamp)}</p>
                                     <p class="text-white fw-bold mb-0">8.3</p>
                                     <button class="btn btn-danger mb-1" onclick="OpenCloseModal(${trade.Pk_id});" style="border-radius:0">Close Trade</button>
                                     <p class="text-white fw-bold">Holding margin Req: ${trade.holding_margin_req || '3735'}</p>
@@ -214,26 +207,34 @@
                 if (response.success) {
                     $('#tblactive').html('');
                     var html = '';
-                    
+                  
                     response.data.forEach(function(trade) {
+                          console.log(trade);
                         html += `
-                            <tr>
-                                <td scope="row">
-                                    <h4 class="comodity mb-1">${trade.Symbol}</h4>
-                                    <p class="date">Sold by Trader <span class="badge badge-danger">6.2</span></p>
-                                    <p class="detail">${trade.Timestamp}</p>
-                                </td>
-                                <td></td>
-                                <td class="text-end text-primary">
-                                    <p class="text-white fw-bold mb-1">
-                                        <span class="badge badge-danger">-1890 / -40</span> 
-                                        <span class="badge badge-danger">QTY:${trade.quantity || '900'}</span>
-                                    </p>
-                                    <p class="date">Bought by Trader <span class="badge badge-success">6.2</span></p>
-                                    <p class="detail">${trade.Timestamp}</p>
-                                </td>
-                            </tr>
-                        `;
+                        <tr>
+                            <td scope="row">
+                                <h4 class="comodity mb-1">${trade.Symbol || '-'}</h4>
+                                <p class="date">Sold by Trader 
+                                    <span class="badge badge-danger">${trade.seller_rating || '6.2'}</span>
+                                </p>
+                                <p class="detail">${formatDateTime(trade.Timestamp) || '-'}</p>
+                            </td>
+                            <td class="text-center align-middle">
+                                <span class="text-warning">${trade.Mode || 'N/A'}</span>
+                            </td>
+                            <td class="text-end text-primary">
+                                <p class="date">Bought by Admin </span>
+                                </p>
+                                 <p class="date">
+                                    <span class="badge badge-success">${trade.BuyPrice || '0.00'}</span>
+                                </p>
+                                <button class="badge badge-danger" onclick="CloseStockmodal('${trade.Symbol}')"> Close Trade</button>
+                               
+                                <p class="detail">${formatDateTime(trade.Timestamp) || '-'}</p>
+                            </td>
+                        </tr>
+                    `;
+
                     }); 
                     
                     $('#tblactive').html(html);
@@ -244,6 +245,19 @@
             }
         });
     }
+    function formatDateTime(input) {
+    const date = new Date(input);
+
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Months start from 0
+    const year = date.getFullYear();
+
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+
+    return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
+}
 
     function LoadClosedTrades() {
         $.ajax({
@@ -261,7 +275,7 @@
                                 <td scope="row">
                                     <h4 class="comodity mb-1">${trade.Symbol}</h4>
                                     <p class="date">Sold by Trader <span class="badge badge-danger">6.2</span></p>
-                                    <p class="detail">${trade.Timestamp}</p>
+                                    <p class="detail">${formatDateTime(trade.Timestamp)}</p>
                                 </td>
                                 <td></td>
                                 <td class="text-end text-primary">
@@ -270,8 +284,9 @@
                                         <span class="badge badge-danger">QTY:${trade.quantity || '900'}</span>
                                     </p>
                                     <p class="date">Bought by Trader <span class="badge badge-success">6.2</span></p>
-                                    <p class="detail">${trade.Timestamp}</p>
+                                    <p class="detail">${formatDateTime(trade.Timestamp)}</p>
                                 </td>
+                                
                             </tr>
                         `;
                     });
@@ -378,19 +393,13 @@
     // Handle bulk close form submission
     $('#bulkCloseForm').on('submit', function(e) {
         e.preventDefault();
-        
-        var password = $('#password').val();
-        if (!password) {
-            alert('Please enter your password');
-            return;
-        }
 
         $.ajax({
             type: "POST",
             url: "{{ route('bulk-close') }}",
             data: {
                 exchange_type: Close,
-                password: password
+                _token: "{{ csrf_token() }}"
             },
             dataType: "json",
             success: function(response) {

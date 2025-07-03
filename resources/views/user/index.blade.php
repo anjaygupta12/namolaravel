@@ -2,6 +2,63 @@
 
 @section('styles')
 <meta name="csrf-token" content="{{ csrf_token() }}">
+<style>
+    .modal-dialog {
+        max-width: 100%;
+        margin: 0 auto;
+    }
+
+    .modal-content {
+        max-height: 90vh;
+        overflow: hidden;
+        border-radius: 1rem;
+    }
+
+    .modal-body {
+        overflow-y: auto;
+        max-height: 70vh;
+        padding-bottom: 0;
+    }
+
+    .nav-tabs.lined .nav-link {
+        border: none;
+        border-bottom: 2px solid transparent;
+        color: #fff;
+    }
+
+    .nav-tabs.lined .nav-link.active {
+        border-bottom: 2px solid #0dcaf0;
+        font-weight: bold;
+    }
+
+    /* Make form elements fully responsive */
+    .form-group input {
+        font-size: 16px;
+    }
+
+    @media (max-width: 576px) {
+        .modal-content {
+            height: 95vh;
+        }
+
+        .modal-body {
+            max-height: calc(95vh - 120px);
+        }
+
+        .modal-header, .modal-footer {
+            padding: 10px 15px;
+        }
+
+        .nav-tabs {
+            flex-direction: row;
+            overflow-x: auto;
+        }
+
+        .nav-item {
+            min-width: 50%;
+        }
+    }
+</style>
 
     <style>
         .card-block {
@@ -328,330 +385,283 @@
                 </div>
             </div>
         </div>
-        <div class="modal fade action-sheet" style="width: 50%!important;" id="withdrawActionSheetForex_Crypto"
-            tabindex="-1" role="dialog">
-            <div class="modal-dialog" role="document">
+<div class="modal fade action-sheet" id="withdrawActionSheetForex_Crypto" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content" style="background-color: #311b7f;">
+            <div class="modal-header">
+                <h5 class="modal-title text-white fw-bold"><span id="lblsymbol"></span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
 
-                <div class="modal-content" style="background-color: #311b7f;">
-                    <div class="modal-header">
-                        <h5 class="modal-title text-white fw-bold"><span id="lblsymbol"></span></h5>
-                    </div>
+            <div class="modal-body p-0">
+                <div class="card" style="background-color: #311b7f;">
+                    <div class="card-body pt-0 px-2">
+                        <ul class="nav nav-tabs lined flex-nowrap" role="tablist" style="background: #142e46">
+                            <li class="nav-item flex-grow-1 text-center">
+                                <a class="nav-link active py-2" data-bs-toggle="tab" href="#overview2" role="tab">Market</a>
+                            </li>
+                            <li class="nav-item flex-grow-1 text-center">
+                                <a class="nav-link py-2" data-bs-toggle="tab" href="#cards2" role="tab">Order</a>
+                            </li>
+                        </ul>
 
-                    <div class="modal-body">
-                        <div class="card" style="background-color: #311b7f;">
-                            <div class="card-body pt-0">
-                                <ul class="nav nav-tabs lined" role="tablist" style="background: #142e46">
-                                    <li class="nav-item">
-                                        <a class="nav-link active" data-bs-toggle="tab" href="#overview2"
-                                            role="tab">Market </a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link" data-bs-toggle="tab" href="#cards2" role="tab">Order
-                                        </a>
-                                    </li>
-                                </ul>
-
-                                <div class="tab-content mt-2">
-                                    <div class="tab-pane fade show active" id="overview2" role="tabpanel">
-
-
-                                        <div class="input-wrapper">
-
-                                            <input type="radio" id="chkminMarket" name="Mode" checked="checked" />
-                                            Min
-                                            <input type="radio" id="chkmegaMarket" name="Mode" /> Mega
-                                            <i class="clear-input">
-                                                <ion-icon name="close-circle"></ion-icon>
-                                            </i>
-                                        </div>
-                                        <div class="form-group basic">
-                                            <div class="input-wrapper">
-                                                <label class="label" for="text11d">Lots</label>
-                                                <input type="email" class="form-control" id="textfclot"
-                                                    placeholder="Enter IBAN" value="1">
-                                                <i class="clear-input">
-                                                    <ion-icon name="close-circle"></ion-icon>
-                                                </i>
-                                            </div>
-                                        </div>
-
-                                        <ul class="nav nav-tabs lined">
-                                            <li class="nav-item" style="background: #b24153;">
-                                                <a class="nav-link"
-                                                    style="color: #fff; font-size: 15px; display: block; height: 50px">Sell
-                                                    <br />
-                                                    <h2 onclick="sellfc();">
-                                                        <lable id="tblfcsellprice">0</lable>
-                                                    </h2>
-                                                </a>
-
-                                            </li>
-                                            <li class="nav-item" style="background: #208549!important;">
-                                                <a class="nav-link"
-                                                    style="color: #fff; font-size: 15px; display: block; height: 50px">Buy
-                                                    <br />
-                                                    <h2 onclick="buyfc();">
-                                                        <lable id="tblfcbuyprice"></lable>
-                                                    </h2>
-                                                </a>
-
-                                            </li>
-                                        </ul>
-
-                                        <div class="table-responsive">
-                                            <table class="table">
-                                                <tbody>
-                                                    <tr data-bs-toggle="modal" data-bs-target="#withdrawActionSheet">
-                                                        <td scope="row">
-                                                            <p class="date">Bid</p>
-                                                            <h4 class="comodity"> <label id="lblBid">0</label> </h4>
-                                                        </td>
-                                                        <td>
-                                                            <p class="date">Ask</p>
-                                                            <h4 class="comodity"><label id="lblAsk">0</label> </h4>
-                                                        </td>
-                                                        <td class="text-end text-primary" id="tdlast">
-                                                            <p class="date">Last</p>
-                                                            <h4 class="comodity"><label id="lblLast">0</label> </h4>
-                                                        </td>
-                                                    </tr>
-                                                    <tr data-bs-toggle="modal" data-bs-target="#withdrawActionSheet">
-                                                        <td scope="row">
-                                                            <p class="date">High</p>
-                                                            <h4 class="comodity"><label id="lblHigh">0</label></h4>
-                                                        </td>
-                                                        <td>
-                                                            <p class="date">Low</p>
-                                                            <h4 class="comodity"><label id="lblLow">0</label> </h4>
-                                                        </td>
-                                                        <td class="text-end text-primary">
-                                                            <p class="date">Change</p>
-                                                            <h4 class="comodity"><label id="lblChange">0</label> </h4>
-                                                        </td>
-                                                    </tr>
-                                                    <tr data-bs-toggle="modal" data-bs-target="#withdrawActionSheet">
-                                                        <td scope="row">
-                                                            <p class="date">Open</p>
-                                                            <h4 class="comodity"><label id="lblOpen">0</label> </h4>
-                                                        </td>
-                                                        <td>
-                                                            <p class="date">Volume</p>
-                                                            <h4 class="comodity"><label id="lblVolume">0</label> </h4>
-                                                        </td>
-                                                        <td class="text-end text-primary">
-                                                            <p class="date">Last Traded Qty</p>
-                                                            <h4 class="comodity"><label id="lblLastTradedQty">0</label>
-                                                            </h4>
-                                                        </td>
-                                                    </tr>
-                                                    <tr data-bs-toggle="modal" data-bs-target="#withdrawActionSheet">
-                                                        <td scope="row">
-                                                            <p class="date">Atp</p>
-                                                            <h4 class="comodity"><label id="lblAtp">0</label> </h4>
-                                                        </td>
-                                                        <td>
-                                                            <p class="date">Lot Size</p>
-                                                            <h4 class="comodity"><label id="lblLotSize">0</label> </h4>
-                                                        </td>
-                                                        <td class="text-end text-primary">
-                                                            <p class="date">Open Interest</p>
-                                                            <h4 class="comodity"><label id="lblOpenInterest">0</label>
-                                                            </h4>
-                                                        </td>
-                                                    </tr>
-                                                    <tr data-bs-toggle="modal" data-bs-target="#withdrawActionSheet">
-                                                        <td scope="row">
-                                                            <p class="date">Bid Qty</p>
-                                                            <h4 class="comodity"><label id="lblBidQty">0</label> </h4>
-                                                        </td>
-                                                        <td>
-                                                            <p class="date">Ask Qty</p>
-                                                            <h4 class="comodity"><label id="lblAskQty">0</label> </h4>
-                                                        </td>
-                                                        <td class="text-end text-primary">
-                                                            <p class="date">Prev. Close</p>
-                                                            <h4 class="comodity"><label id="lblPrevClose">0</label>
-                                                            </h4>
-                                                        </td>
-                                                    </tr>
-                                                    <tr data-bs-toggle="modal" data-bs-target="#withdrawActionSheet">
-                                                        <td scope="row">
-                                                            <p class="date">Upper Circuit</p>
-                                                            <h4 class="comodity"><label id="lblUpperCircuit">0</label>
-                                                            </h4>
-                                                        </td>
-                                                        <td>
-                                                            <p class="date">Lower Circuit</p>
-                                                            <h4 class="comodity"><label id="lblLowerCircuit">0</label>
-                                                            </h4>
-                                                        </td>
-                                                    </tr>
-
-                                                </tbody>
-                                            </table>
-                                        </div>
-
+                        <div class="tab-content mt-2">
+                            <!-- Market Tab -->
+                            <div class="tab-pane fade show active" id="overview2" role="tabpanel">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" id="chkminMarket" name="Mode" checked>
+                                        <label class="form-check-label text-white" for="chkminMarket">Min</label>
                                     </div>
-                                    <div class="tab-pane fade" id="cards2" role="tabpanel">
-
-
-                                        <div class="form-group basic">
-
-
-                                            <div class="input-wrapper">
-
-                                                <input type="radio" id="chkminOrder" name="type"
-                                                    checked="checked" />
-                                                Min
-                                                <input type="radio" id="chkmegaOrder" name="type" /> Mega
-                                                <i class="clear-input">
-                                                    <ion-icon name="close-circle"></ion-icon>
-                                                </i>
-                                            </div>
-                                            <div class="input-wrapper">
-                                                <label class="label" for="text11d">Lots</label>
-                                                <input type="number" class="form-control" id="txtLots"
-                                                    placeholder="Enter Lots" value="1">
-                                                <i class="clear-input">
-                                                    <ion-icon name="close-circle"></ion-icon>
-                                                </i>
-                                            </div>
-                                            <div class="input-wrapper">
-                                                <label class="label" for="text11d">Price</label>
-                                                <input type="number" class="form-control" id="txtPriceOrder"
-                                                    placeholder="" value="">
-                                                <i class="clear-input">
-                                                    <ion-icon name="close-circle"></ion-icon>
-                                                </i>
-                                            </div>
-                                        </div>
-                                        <ul class="nav nav-tabs lined">
-                                            <li class="nav-item" style="background: #b24153;">
-                                                <a class="nav-link" style="color: #fff; font-size: 15px;"
-                                                    onclick="sellplacedorder();">Place Sell Order
-                                                </a>
-                                            </li>
-                                            <li class="nav-item" style="background: #208549!important;">
-                                                <a class="nav-link" style="color: #fff; font-size: 15px;"
-                                                    onclick="buyplacedorder();">Place Buy Order
-                                                </a>
-
-                                            </li>
-                                        </ul>
-                                        <div class="table-responsive">
-                                            <table class="table">
-                                                <tbody>
-                                                    <tr data-bs-toggle="modal" data-bs-target="#withdrawActionSheet">
-                                                        <td scope="row">
-                                                            <p class="date">Bid</p>
-                                                            <h4 class="comodity"><label id="lblbid">0</label></h4>
-                                                        </td>
-                                                        <td>
-                                                            <p class="date">Ask</p>
-                                                            <h4 class="comodity"><label id="lblASK">0</label></h4>
-                                                        </td>
-                                                        <td class="text-end text-primary">
-                                                            <p class="date"><label id="lblLast1">0</label></p>
-                                                            <h4 class="comodity">8365</h4>
-                                                        </td>
-                                                    </tr>
-                                                    <tr data-bs-toggle="modal" data-bs-target="#withdrawActionSheet">
-                                                        <td scope="row">
-                                                            <p class="date">High</p>
-                                                            <h4 class="comodity">
-                                                                <lable id="lblHigh1">0</lable>
-                                                            </h4>
-                                                        </td>
-                                                        <td>
-                                                            <p class="date">Low</p>
-                                                            <h4 class="comodity">
-                                                                <lable id="lblLow1">0</lable>
-                                                            </h4>
-                                                        </td>
-                                                        <td class="text-end text-primary">
-                                                            <p class="date">Change</p>
-                                                            <h4 class="comodity">
-                                                                <lable id="lblChange1">0</lable>
-                                                            </h4>
-                                                        </td>
-                                                    </tr>
-                                                    <tr data-bs-toggle="modal" data-bs-target="#withdrawActionSheet">
-                                                        <td scope="row">
-                                                            <p class="date">Open</p>
-                                                            <h4 class="comodity">
-                                                                <lable id="lblOpen1">0</lable>
-                                                            </h4>
-                                                        </td>
-                                                        <td>
-                                                            <p class="date">Volume</p>
-                                                            <h4 class="comodity">
-                                                                <lable id="lblVolume1">0</lable>
-                                                            </h4>
-                                                        </td>
-                                                        <td class="text-end text-primary">
-                                                            <p class="date">Last Traded Qty</p>
-                                                            <h4 class="comodity"><label id="lblLastTradedQty1">0</label>
-                                                            </h4>
-                                                        </td>
-                                                    </tr>
-                                                    <tr data-bs-toggle="modal" data-bs-target="#withdrawActionSheet">
-                                                        <td scope="row">
-                                                            <p class="date">Atp</p>
-                                                            <h4 class="comodity"><label id="lblAtp2"></label></h4>
-                                                        </td>
-                                                        <td>
-                                                            <p class="date">Lot Size</p>
-                                                            <h4 class="comodity"><label id="lblOpenInterest2"></h4>
-                                                        </td>
-                                                        <td class="text-end text-primary">
-                                                            <p class="date">Open Interest</p>
-                                                            <h4 class="comodity"><label id="lblOpenInterest2"></label>
-                                                            </h4>
-                                                        </td>
-                                                    </tr>
-                                                    <tr data-bs-toggle="modal" data-bs-target="#withdrawActionSheet">
-                                                        <td scope="row">
-                                                            <p class="date">Bid Qty</p>
-                                                            <h4 class="comodity"><label id="lblBidQty2"></label></h4>
-                                                        </td>
-                                                        <td>
-                                                            <p class="date">Ask Qty</p>
-                                                            <h4 class="comodity"><label id="lblAskQty2"></label></h4>
-                                                        </td>
-                                                        <td class="text-end text-primary">
-                                                            <p class="date">Prev. Close</p>
-                                                            <h4 class="comodity"><label id="lblprev_close_price1"></label>
-                                                            </h4>
-                                                        </td>
-                                                    </tr>
-                                                    <tr data-bs-toggle="modal" data-bs-target="#withdrawActionSheet">
-                                                        <td scope="row">
-                                                            <p class="date">Upper Circuit</p>
-                                                            <h4 class="comodity"><label id="lblUpperCircuit1">0</label>
-                                                            </h4>
-                                                        </td>
-                                                        <td>
-                                                            <p class="date">Lower Circuit</p>
-                                                            <h4 class="comodity"><label id="lblLowerCircuit1"></label>
-                                                            </h4>
-                                                        </td>
-                                                    </tr>
-
-                                                </tbody>
-                                            </table>
-                                        </div>
-
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" id="chkmegaMarket" name="Mode">
+                                        <label class="form-check-label text-white" for="chkmegaMarket">Mega</label>
                                     </div>
+                                </div>
+                                
+                                <div class="form-group basic mb-3">
+                                    <label class="label text-white" for="textfclot">Lots</label>
+                                    <input type="number" class="form-control" id="textfclot" placeholder="Enter Lots" value="1">
+                                </div>
+
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <button class="btn btn-danger w-100 py-3" onclick="sellfc();" style="background: #b24153;">
+                                            <div class="d-block">Sell</div>
+                                            <div class="fw-bold fs-4" id="tblfcsellprice">0</div>
+                                        </button>
+                                    </div>
+                                    <div class="col-6">
+                                        <button class="btn btn-success w-100 py-3" onclick="buyfc();" style="background: #208549;">
+                                            <div class="d-block">Buy</div>
+                                            <div class="fw-bold fs-4" id="tblfcbuyprice">0</div>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-borderless">
+                                        <tbody>
+                                            <tr>
+                                                <td>
+                                                    <small class="text-white-50">Bid</small>
+                                                    <div class="text-white" id="lblBid">0</div>
+                                                </td>
+                                                <td>
+                                                    <small class="text-white-50">Ask</small>
+                                                    <div class="text-white" id="lblAsk">0</div>
+                                                </td>
+                                                <td class="text-end">
+                                                    <small class="text-white-50">Last</small>
+                                                    <div class="text-white" id="lblLast">0</div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <small class="text-white-50">High</small>
+                                                    <div class="text-white" id="lblHigh">0</div>
+                                                </td>
+                                                <td>
+                                                    <small class="text-white-50">Low</small>
+                                                    <div class="text-white" id="lblLow">0</div>
+                                                </td>
+                                                <td class="text-end">
+                                                    <small class="text-white-50">Change</small>
+                                                    <div class="text-white" id="lblChange">0</div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <small class="text-white-50">Open</small>
+                                                    <div class="text-white" id="lblOpen">0</div>
+                                                </td>
+                                                <td>
+                                                    <small class="text-white-50">Volume</small>
+                                                    <div class="text-white" id="lblVolume">0</div>
+                                                </td>
+                                                <td class="text-end">
+                                                    <small class="text-white-50">Last Traded Qty</small>
+                                                    <div class="text-white" id="lblLastTradedQty">0</div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <small class="text-white-50">Atp</small>
+                                                    <div class="text-white" id="lblAtp">0</div>
+                                                </td>
+                                                <td>
+                                                    <small class="text-white-50">Lot Size</small>
+                                                    <div class="text-white" id="lblLotSize">0</div>
+                                                </td>
+                                                <td class="text-end">
+                                                    <small class="text-white-50">Open Interest</small>
+                                                    <div class="text-white" id="lblOpenInterest">0</div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <small class="text-white-50">Bid Qty</small>
+                                                    <div class="text-white" id="lblBidQty">0</div>
+                                                </td>
+                                                <td>
+                                                    <small class="text-white-50">Ask Qty</small>
+                                                    <div class="text-white" id="lblAskQty">0</div>
+                                                </td>
+                                                <td class="text-end">
+                                                    <small class="text-white-50">Prev. Close</small>
+                                                    <div class="text-white" id="lblPrevClose">0</div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <small class="text-white-50">Upper Circuit</small>
+                                                    <div class="text-white" id="lblUpperCircuit">0</div>
+                                                </td>
+                                                <td>
+                                                    <small class="text-white-50">Lower Circuit</small>
+                                                    <div class="text-white" id="lblLowerCircuit">0</div>
+                                                </td>
+                                                <td></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Order Tab -->
+                            <div class="tab-pane fade" id="cards2" role="tabpanel">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" id="chkminOrder" name="type" checked>
+                                        <label class="form-check-label text-white" for="chkminOrder">Min</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" id="chkmegaOrder" name="type">
+                                        <label class="form-check-label text-white" for="chkmegaOrder">Mega</label>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group basic mb-2">
+                                    <label class="label text-white" for="txtLots">Lots</label>
+                                    <input type="number" class="form-control" id="txtLots" placeholder="Enter Lots" value="1">
+                                </div>
+                                
+                                <div class="form-group basic mb-3">
+                                    <label class="label text-white" for="txtPriceOrder">Price</label>
+                                    <input type="number" class="form-control" id="txtPriceOrder" placeholder="Enter Price" value="">
+                                </div>
+
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <button class="btn btn-danger w-100 py-2" onclick="sellplacedorder();" style="background: #b24153;">
+                                            Place Sell Order
+                                        </button>
+                                    </div>
+                                    <div class="col-6">
+                                        <button class="btn btn-success w-100 py-2" onclick="buyplacedorder();" style="background: #208549;">
+                                            Place Buy Order
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-borderless">
+                                        <tbody>
+                                            <tr>
+                                                <td>
+                                                    <small class="text-white-50">Bid</small>
+                                                    <div class="text-white" id="lblbid">0</div>
+                                                </td>
+                                                <td>
+                                                    <small class="text-white-50">Ask</small>
+                                                    <div class="text-white" id="lblASK">0</div>
+                                                </td>
+                                                <td class="text-end">
+                                                    <small class="text-white-50">Last</small>
+                                                    <div class="text-white" id="lblLast1">0</div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <small class="text-white-50">High</small>
+                                                    <div class="text-white" id="lblHigh1">0</div>
+                                                </td>
+                                                <td>
+                                                    <small class="text-white-50">Low</small>
+                                                    <div class="text-white" id="lblLow1">0</div>
+                                                </td>
+                                                <td class="text-end">
+                                                    <small class="text-white-50">Change</small>
+                                                    <div class="text-white" id="lblChange1">0</div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <small class="text-white-50">Open</small>
+                                                    <div class="text-white" id="lblOpen1">0</div>
+                                                </td>
+                                                <td>
+                                                    <small class="text-white-50">Volume</small>
+                                                    <div class="text-white" id="lblVolume1">0</div>
+                                                </td>
+                                                <td class="text-end">
+                                                    <small class="text-white-50">Last Traded Qty</small>
+                                                    <div class="text-white" id="lblLastTradedQty1">0</div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <small class="text-white-50">Atp</small>
+                                                    <div class="text-white" id="lblAtp2">0</div>
+                                                </td>
+                                                <td>
+                                                    <small class="text-white-50">Lot Size</small>
+                                                    <div class="text-white" id="lblLotSize2">0</div>
+                                                </td>
+                                                <td class="text-end">
+                                                    <small class="text-white-50">Open Interest</small>
+                                                    <div class="text-white" id="lblOpenInterest2">0</div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <small class="text-white-50">Bid Qty</small>
+                                                    <div class="text-white" id="lblBidQty2">0</div>
+                                                </td>
+                                                <td>
+                                                    <small class="text-white-50">Ask Qty</small>
+                                                    <div class="text-white" id="lblAskQty2">0</div>
+                                                </td>
+                                                <td class="text-end">
+                                                    <small class="text-white-50">Prev. Close</small>
+                                                    <div class="text-white" id="lblprev_close_price1">0</div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <small class="text-white-50">Upper Circuit</small>
+                                                    <div class="text-white" id="lblUpperCircuit1">0</div>
+                                                </td>
+                                                <td>
+                                                    <small class="text-white-50">Lower Circuit</small>
+                                                    <div class="text-white" id="lblLowerCircuit1">0</div>
+                                                </td>
+                                                <td></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                       </div>
                 </div>
             </div>
+            <div class="modal-footer py-2">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
         </div>
+    </div>
+</div>
 
     </div>
 @endsection
@@ -668,8 +678,8 @@
             // Connect to WebSocket
             function connect() {
                 try {
-                   const userId = "{{ Auth::user()->id }}";
-                    const wsUrl = 'ws://namonode.marthub.in:5005/ws?userId='+userId;
+                   const userId = "{{ Auth::guard('tradeuser')->user()->id }}";
+                     const wsUrl = 'ws://namotraders.in:5005/ws?userId=4';
                     //   const wsUrl = 'ws://127.0.0.1:5005';
                     console.log('Connecting to WebSocket at:', wsUrl);
 
@@ -1052,10 +1062,11 @@
             //}
         }
 
-        function OpenWatchListModal(Option, textbox) {
+    function OpenWatchListModal(Option, textbox) {
     // Set global search option
     OptionSearch = Option;
-    ClientId = 1;
+    ClientId = "{{ Auth::guard('tradeuser')->user()->id }}";
+
     
     // Only proceed if we have a valid option
     if (Option != '') {
@@ -1282,10 +1293,14 @@ function buyfc() {
             url: "{{ url('/save-transaction') }}",
             data: _data,
             success: function (response) {
-                alert(response.message); // or response.error
+                alert(response.message); 
             },
-            error: function (xhr) {
-                alert('Something went wrong: ' + xhr.responseText);
+                error: function (xhr) {
+                let errorMessage = 'Something went wrong.';
+            if (xhr.responseJSON && xhr.responseJSON.error) {
+                errorMessage = xhr.responseJSON.error;
+            }
+        alert(errorMessage);
             }
         });
 
@@ -1352,7 +1367,19 @@ function sellfc() {
             $("#lblTransactionMode").html(lblTransactionMode);
         }
 
-</script>
 
+    document.addEventListener('DOMContentLoaded', function () {
+        const modalBody = document.querySelector('#withdrawActionSheetForex_Crypto .modal-body');
+
+        // On tab shown
+        document.querySelectorAll('#withdrawActionSheetForex_Crypto a[data-bs-toggle="tab"]').forEach(tab => {
+            tab.addEventListener('shown.bs.tab', function () {
+                if (modalBody) {
+                    modalBody.scrollTop = 0; // Scroll to top
+                }
+            });
+        });
+    });
+</script>
 
 @endsection

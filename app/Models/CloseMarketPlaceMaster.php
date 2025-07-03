@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class CloseMarketPlaceMaster extends Model
 {
-    protected $table = 'CloseMarketPlaceMaster';
+    protected $table = 'closemarketplacemaster';
     protected $primaryKey = 'Pk_id';
     public $timestamps = false;
     

@@ -66,6 +66,6 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'admin.auth' => \App\Http\Middleware\AdminAuth::class,
         'admin.transaction.auth' => \App\Http\Middleware\AdminTransactionAuth::class,
-        'redirect.auth.custom' => \App\Http\Middleware\RedirectIfAuthenticatedCustom::class,
+        'tradeauth' => \App\Http\Middleware\RedirectIfAuthenticatedCustom::class,
     ];
 }

@@ -7,7 +7,7 @@
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div class="card-header card-header-primary">
+                <div class="card-header">
                     <h4 class="card-title">Withdrawal Requests</h4>
                     <p class="card-category">Manage client withdrawal requests</p>
                 </div>

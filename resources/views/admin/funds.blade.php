@@ -53,7 +53,6 @@
                                 </form>
                             </div>
 
-
                         </div>
                         <div class="table-responsive">
                             <table class="table">
@@ -77,21 +76,8 @@
                                             <td>{{ $item->UserName }}</td>
                                             <td>{{ $item->FullName }}</td>
                                             <td>{{ $item->AmountS }}</td>
-                                            <td>{{ $item->Mode }}</td>
-                                            <td>{{ $item->Mode }}</td>
-                                            <td>{{ $item->Mode }}
-                                            </td>
-                                            <td>{{ $item->Timestamp }}</td>
-                                        </tr>
-                                    @endforeach
-                                    @foreach ($withdrawQ as $item)
-                                        <tr>
-                                            <td>{{ $loop->iteration }}</td>
-                                            <td>{{ $item->UserName }}</td>
-                                            <td>{{ $item->FullName }}</td>
-                                            <td>{{ $item->AmountS }}</td>
-                                            <td>{{ $item->Mode }}</td>
-                                            <td>{{ $item->Mode }}</td>
+                                            <td>{{ ($item->type=='+')?'Deposit':'withdraw' }}</td>
+                                            <td>{{ $item->Remark ?? '' }}</td>
                                             <td>{{ $item->Mode }}
                                             </td>
                                             <td>{{ $item->Timestamp }}</td>

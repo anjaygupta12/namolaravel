@@ -38,10 +38,12 @@
             </div>
         @endif
 
-
+            <div class="card-header">
+            <h3>Deposit Fund</h3>
+            </div>
         <div class="card-body">
 
-            <form id="addFundsForm" method="POST" action="{{ route('admin.funds.store', $data->UserId) }}">
+            <form id="addFundsForm" method="POST" action="{{ route('admin.funds.store', $data->id) }}">
                 @csrf 
 
                 <div class="row">
@@ -51,9 +53,9 @@
                         <div class="form-group">
                             <label>User</label>
                             <p class="form-control-plaintext mb-0">
-                                {{ $data->FullName }} ({{ $data->UserId }})
+                                {{ $data->FullName }} ({{ $data->id }})
                             </p>
-                            <input type="hidden" name="userid" value="{{ $data->UserId }}">
+                            <input type="hidden" name="userid" value="{{ $data->id }}">
                         </div>
                     </div>
 

@@ -37,18 +37,20 @@
                 </button>
             </div>
         @endif
-
+        <div class="card-header">
+            <h3>Withdraw Request</h3>
+        </div>
         <div class="card-body">
             <form method="POST" action="{{ route('admin.funds.withdraw') }}" id="withdrawFundsForm">
                 @csrf
 
-                <input type="hidden" name="userid" value="{{ $data->UserId }}">
+                <input type="hidden" name="userid" value="{{ $data->id }}">
 
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
                             <label for="userid">User Name</label>
-                            <input type="text" class="form-control" value="{{ $data->FullName }} ({{ $data->UserId }})"
+                            <input type="text" class="form-control" value="{{ $data->FullName }} ({{ $data->id }})"
                                 readonly>
                         </div>
                     </div>

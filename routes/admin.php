@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Middleware\AdminAuth;
 
+
 /*
 |--------------------------------------------------------------------------
 | Admin Routes
@@ -33,6 +34,14 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
     Route::group(['middleware' => 'web'], function () {
         // Dashboard
         Route::get('/', function () {
+    //                     $symbols = [
+    //                 'NSE:SBIN-EQ',
+    //                 'MCX:CRUDEOILM25JULFUT',
+    //                 'MCX:SILVERM25AUGFUT'
+    //             ];
+
+    // $quotes = fetchFyersQuotes($symbols); 
+    // dd($quotes);
             return Redirect::route('admin.dashboard');
         });
         Route::get('dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
@@ -48,14 +57,18 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
         Route::post('profile/update-transaction-password', [AdminController::class, 'updateTransactionPassword'])
             ->name('update-transaction-password');
             
-        // User Management
+        // User Managementf
         Route::get('users', [AdminController::class, 'users'])->name('users');
         Route::get('users/create', [AdminController::class, 'createUser'])->name('users-create');
         Route::post('users/store', [AdminController::class, 'storeUser'])->name('users-store');
         Route::get('users/view/{id}', [AdminController::class, 'viewUser'])->name('users-view');
         Route::get('users/edit/{id}', [AdminController::class, 'editUser'])->name('users-edit');
         Route::get('users/reset/{id}', [AdminController::class, 'resetAccount'])->name('users-reset');
-          Route::get('recalculate-brokerage/{id}', [AdminController::class, 'recalculateBrokerage'])->name('recalculate-brokerage');
+        Route::get('recalculate-brokerage/{id}', [AdminController::class, 'recalculateBrokerage'])->name('recalculate-brokerage');
+
+        Route::post('/trades/export', [AdminController::class, 'exportExcel'])->name('trades.export');
+        Route::post('/trades/pdf', [AdminController::class, 'exportPdf'])->name('trades.pdf');
+        Route::post('/funds/export', [AdminController::class, 'export'])->name('funds.export');
 
         Route::put('users/update/{id}', [AdminController::class, 'updateUser'])->name('users-update');
         Route::get('users/copy/{id}', [AdminController::class, 'copyUser'])->name('users-copy');
@@ -145,7 +158,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
         Route::get('deleted-trades', [AdminController::class, 'deletedTrades'])->name('deleted-trades');
         Route::get('pending-orders', [AdminController::class, 'pendingOrders'])->name('pending-orders');
         
-        // Funds
+        // Fundsf
         Route::get('funds', [AdminController::class, 'funds'])->name('funds-wds');
         Route::get('funds-report', [AdminController::class, 'fundsReport'])->name('funds-report');
         Route::post('funds-report-store', [AdminController::class, 'fundsStore'])->name('funds.store');
@@ -158,6 +171,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
         // Users
         Route::get('users', [AdminController::class, 'users'])->name('users');
         Route::get('create-user', [AdminController::class, 'createUsers'])->name('user-create');
+        Route::post('store-trade-user', [AdminController::class, 'storeTradeUser'])->name('store.trade.user');
         // Route::get('users/view/{id}', [UserController::class, 'viewUser'])->name('users-view');
         Route::get('mcxusers-views/{id}', [UserController::class, 'mcxUsersViews'])->name('mcxusers-views');
         
@@ -174,7 +188,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
         Route::get('action-ledger', [AdminController::class, 'actionLedger'])->name('action-ledger');
         
         // Deposit and Withdrawal Requests
-        Route::get('deposit-requests', [AdminController::class, 'depositRequests'])->name('deposit-requests');
+        // Route::get('deposit-requests', [AdminController::class, 'depositRequests'])->name('deposit-requests');
         Route::get('withdrawal-requests', [AdminController::class, 'withdrawalRequests'])->name('withdrawal-requests');
         
         // Accounts Management
@@ -187,6 +201,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
         Route::get('script-edit/{id}', [AdminController::class, 'editScript'])->name('script.edit');
         Route::get('script-delete/{id}', [AdminController::class, 'deleteScript'])->name('script.delete');
         Route::post('script-update', [AdminController::class, 'updateScript'])->name('script.update');
+        Route::post('scrip-data/getdata', [AdminController::class, 'getScripData'])->name('get.scrip.data');
 
 
 // Reports

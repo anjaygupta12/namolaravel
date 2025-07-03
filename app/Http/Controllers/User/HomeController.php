@@ -14,15 +14,21 @@ use App\Models\DepositeMaster;
 use App\Models\MarketBidMaster;
 use App\Models\ClientSubscription;
 use App\Models\ForexOption;
+use App\Models\TradeUser;
+use App\Models\Transdetail;
+use Illuminate\Support\Facades\Http;
 use DB;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use App\Models\AdminLogin;
 
 class HomeController extends Controller
 {
+
+
     public function index()
     {
-        if (!Auth::check()) {
+        if (!Auth::guard('tradeuser')->check()) {
             return redirect('/login');
         }
 
@@ -31,6 +37,9 @@ class HomeController extends Controller
 
     public function trades()
     {
+        if (!Auth::guard('tradeuser')->check()) {
+            return redirect('/login');
+        }
         return View::make('user.trades');
     }
 
@@ -47,11 +56,19 @@ class HomeController extends Controller
 
     public function myAccount()
     {
+        if (!Auth::guard('tradeuser')->check()) {
+            return redirect('/login');
+        }
+
         return View::make('user.my_account');
     }
 
     public function depositWithdraw()
     {
+        if (!Auth::guard('tradeuser')->check()) {
+            return redirect('/login');
+        }
+
         return View::make('user.deposit_withdraw');
     }
     public function getData(Request $request)
@@ -60,18 +77,17 @@ class HomeController extends Controller
         $type = $request->input('type');
         $clientId = $request->input('clientid');
 
-        $dataQuery = ForexOption::leftjoin('clientsubscription','forexoptions.Symbol','=','clientsubscription.Symbol')
-        ->select('forexoptions.*','clientsubscription.Isactive as ckecked')
-        ->where('forexoptions.Isactive', 1);
-        
+        $dataQuery = ForexOption::leftjoin('clientsubscription', 'forexoptions.Symbol', '=', 'clientsubscription.Symbol')
+            ->select('forexoptions.*', 'clientsubscription.Isactive as ckecked')
+            ->where('forexoptions.Isactive', 1);
+
         if ($type == 'MCX') {
             $dataQuery->where('instrument', 'FUT')
-            ->where('forexoptions.Symbol', 'like', 'MCX%');
-        }else if($type == 'NSE'){
-             $dataQuery->where('instrument', 'FUT')
-            ->where('forexoptions.Symbol', 'like', 'NSE%');
-        }
-        else if ($type == 'OPTIONS') {
+                ->where('forexoptions.Symbol', 'like', 'MCX%');
+        } else if ($type == 'NSE') {
+            $dataQuery->where('instrument', 'FUT')
+                ->where('forexoptions.Symbol', 'like', 'NSE%');
+        } else if ($type == 'OPTIONS') {
             $dataQuery->where(function ($q) {
                 $q->where('forexoptions.instrument', 'PE')
                     ->orWhere('forexoptions.instrument', 'CE');
@@ -104,28 +120,55 @@ class HomeController extends Controller
 
     public function UpdateWatchList(Request $request)
     {
-        if($request->action=='add'){
-            ClientSubscription::insert([ 
-           'Symbol'=>$request->symbol,
-           'UserId'=>Auth::user()->id,
-           'Isactive'=>1
-       ]);
 
-        }else{
-            ClientSubscription::where('Symbol',$request->symbol)
-            ->where('UserId',Auth::user()->id,)->delete();
+        if ($request->action == 'add') {
+            ClientSubscription::insert([
+                'Symbol' => $request->symbol,
+                'UserId' => Auth::guard('tradeuser')->user()->id,
+                'Isactive' => 1
+            ]);
+        } else {
+            ClientSubscription::where('Symbol', $request->symbol)
+                ->where('UserId', Auth::guard('tradeuser')->user()->id,)->delete();
         }
 
-            return response()->json(['success' => true, 'message' => ucfirst($request->action) . 'ed successfully']);
-
+        return response()->json(['success' => true, 'message' => ucfirst($request->action) . 'ed successfully']);
     }
 
 
     public function saveTransaction(Request $request)
     {
+        if (!Auth::guard('tradeuser')->check()) {
+            return response()->json(['error' => 'Session has been expaired...'], 500);
+            return redirect('/login');
+        }
+
+
+        $user = Auth::guard('tradeuser')->user();
+        $exchange = explode(':', $request->input('Symbol'))[0];
+
+
+
+        $mcx_maxLot_size = $user->MCXMaxLotPerScrip;
+        $mcx_minLot_size = $user->MCXMaxLotPerTrade;
+
+        $authOff = $user->AutoSquareOff;
+
+        if ($user->IsActive != 1) {
+            return response()->json(['error' => 'You Account is Blocked'], 500);
+        }
+
+        //     if($exchange=='MCX'){
+        //     if($mcx_maxLot_size <  $request->input('lblLotSize')){
+        //          return response()->json(['error' => 'You can not take Lot Size gratter then '], 500);
+        //     }
+        //     if($mcx_minLot_size >  $request->input('lblLotSize')){
+        //          return response()->json(['error' => 'You can not take Lot Size Less then '], 500);
+        //     }
+        // }
 
         try {
-            $userId = session('LoginId') ?? 1;
+            $user = Auth::guard('tradeuser')->user();
 
             $ip = $request->header('X_FORWARDED_FOR');
             if ($ip) {
@@ -133,12 +176,11 @@ class HomeController extends Controller
             } else {
                 $ip = $request->ip();
             }
-
+            // $buyPrice = $request->input('tblfcbuyprice', 0) * $request->input('lblBidQty', 1);
             $data = [
                 'Mode' => $request->input('Mode'),
                 'ToAmount' => $request->input('textfclot', 0),
                 'TransactionMode' => $request->input('TransactionMode'),
-                'SalePrice' => $request->input('tblfcsellprice', 0),
                 'BuyPrice' => $request->input('tblfcbuyprice', 0),
                 'Bid' => $request->input('lblBid', 0),
                 'Ask' => $request->input('lblAsk', 0),
@@ -158,7 +200,7 @@ class HomeController extends Controller
                 'UpperCircuit' => $request->input('lblUpperCircuit', 0),
                 'LowerCircuit' => $request->input('lblLowerCircuit', 0),
                 'OPTION' => 'I',
-                'UserId' => $userId,
+                'UserId' => $user->id,
                 'Symbol' => $request->input('Symbol'),
                 'Min' => $request->input('Min') == 'True' ? 'Y' : 'N',
                 'Mega' => $request->input('Mega') == 'True' ? 'Y' : 'N',
@@ -171,6 +213,20 @@ class HomeController extends Controller
 
             MarketBidMaster::insert($data);
 
+            Transdetail::create([
+                'MemberId'   => $user->id,
+                'TransType'  => $request->input('Mode'),
+                'TransPage'  => 'withdraw  approval',
+                'Type'       => ($request->input('Mode') == 'SELL') ? '-' : '+',
+                'TransDate'  => now(),
+                'Amount'     => $request->input('tblfcbuyprice', 0),
+                'AmountS'    => $request->input('tblfcbuyprice', 0),
+                'Remark'     => ($request->input('Mode') == 'SELL') ? 'deposit' : 'withdraw',
+                'LoginId'    => $user->id,
+                'AddRemark'  => 'APPROVED BY ADMIN',
+                'AdminStatus' => 'APPROVED'
+            ]);
+
             return response()->json(['message' => 'Transaction saved successfully']);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to save transaction: ' . $e->getMessage()], 500);
@@ -179,10 +235,18 @@ class HomeController extends Controller
 
     public function depositRequestForm()
     {
+        if (!Auth::guard('tradeuser')->check()) {
+            return redirect('/login');
+        }
+
         return View::make('user.deposit_request_form');
     }
     public function depositRequestSubmit(Request $request)
     {
+        if (!Auth::guard('tradeuser')->check()) {
+            return redirect('/login');
+        }
+
         $request->validate([
             'amount'     => 'required|numeric|min:1',
             'screenshot' => 'required|image|mimes:jpeg,jpg,png|max:1024',
@@ -206,6 +270,9 @@ class HomeController extends Controller
 
     public function withdrawalRequestsForm()
     {
+        if (!Auth::guard('tradeuser')->check()) {
+            return redirect('/login');
+        }
         return View::make('user.withdrawal_requests_form');
     }
     public function withdrawalRequests(Request $request)
@@ -256,7 +323,8 @@ class HomeController extends Controller
 
     public function login()
     {
-        if (Auth::check()) {
+
+        if (Auth::guard('tradeuser')->check()) {
             return redirect('/dashboard');
         }
         return View::make('user.login');
@@ -278,16 +346,16 @@ class HomeController extends Controller
 
         return redirect()->back()->with('success', 'User registered successfully');
     }
-    public function userLogin(Request $request)
+    public function __userLogin(Request $request)
     {
 
         $request->validate([
-            'email' => 'required|email',
+            'login' => 'required',
             'password' => 'required|string',
         ]);
 
         $credentials = [
-            'email' => $request->email,
+            'email' => $request->login,
             'password' => $request->password
         ];
         // dd($credentials,Auth::attempt($credentials));
@@ -299,19 +367,57 @@ class HomeController extends Controller
         return redirect()->back()->with('error', 'Invalid credentials');
     }
 
+    public function userLogin(Request $request)
+    {
+        try {
+            $request->validate([
+                'login' => 'required',
+                'password' => 'required|string',
+            ]);
+
+            $user = TradeUser::where('Username', $request->login)
+                ->orWhere('Mobile', $request->login)
+                ->first();
+
+            if ($user && Hash::check($request->password, $user->Password)) {
+                if ($user->IsActive == 0) {
+                    return back()->with('error', 'You are blocked....');
+                }
+                Auth::guard('tradeuser')->login($user);
+                $request->session()->regenerate();
+
+                return redirect()->intended('/dashboard');
+            }
+
+            return back()->with('error', 'Invalid login credentials');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error: ' . $e->getMessage());
+        }
+
+        // $request->validate([
+        //     'email' => 'required|email',
+        //     'password' => 'required|string',
+        // ]);
+
+        // $credentials = [
+        //     'email' => $request->email,
+        //     'password' => $request->password
+        // ];
+        // // dd($credentials,Auth::attempt($credentials));
+        // if (Auth::attempt($credentials)) {
+        //     $request->session()->regenerate();
+        //     dd(Auth::user());
+        //     return redirect()->intended('/dashboard');
+        // }
+        // return redirect()->back()->with('error', 'Invalid credentials');
+    }
+
 
 
     public function getPendingTrades()
     {
         try {
-            $pendingTrades = MarketBidMaster::where('Status_Exec', 'Pending')
-                ->select([
-                    'Pk_id as Pk_id',
-                    'symbol as Symbol',
-                    'mode as Mode',
-                    'status_exec as Status_Exec',
-                    'timestamp as Timestamp',
-                ])
+            $pendingTrades = MarketBidMaster::where('Isactive', 0)
                 ->orderBy('timestamp', 'desc')
                 ->get();
 
@@ -333,13 +439,8 @@ class HomeController extends Controller
     public function getActiveTrades()
     {
         try {
-            $activeTrades = MarketBidMaster::where('Isactive', '1')
-                ->select([
-                    'Pk_id as Pk_id',
-                    'symbol as Symbol',
-                    'timestamp as Timestamp',
-                    'LastTradeQty',
-                ])
+            $activeTrades = MarketBidMaster::where('Isactive', 1)
+                ->where('UserId', Auth::guard('tradeuser')->user()->id)
                 ->orderBy('timestamp', 'desc')
                 ->get()
                 ->map(function ($item) {
@@ -366,13 +467,8 @@ class HomeController extends Controller
     public function getClosedTrades()
     {
         try {
-            $closedTrades = MarketBidMaster::where('Isactive', '3')
-                ->select([
-                    'Pk_id as Pk_id',
-                    'symbol as Symbol',
-                    'timestamp as Timestamp',
-                    'LastTradeQty',
-                ])
+            $closedTrades = MarketBidMaster::where('Isactive', 2)
+                ->where('UserId', Auth::guard('tradeuser')->user()->id)
                 ->orderBy('timestamp', 'desc')
                 ->get();
 
@@ -470,34 +566,45 @@ class HomeController extends Controller
     /**
      * Close bulk trades by exchange type
      */
-    public function closeBulkTrades(Request $request)
+    public function __closeBulkTrades(Request $request)
     {
+        // dd($request->all());
         try {
             $request->validate([
                 'exchange_type' => 'required|string|in:MCX,NSE,COMEX',
-                'password' => 'required|string'
             ]);
 
             $exchangeType = $request->input('exchange_type');
             $password = $request->input('password');
 
             // Verify password (implement your own password verification logic)
-            if (!$this->verifyUserPassword($password)) {
+            $user = Auth::guard('tradeuser')->user();
+
+            if (!Hash::check($password, $user->Passowrd)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Invalid password'
                 ], 401);
             }
 
+
             // Close all active trades for the specified exchange
-            $closedCount = MarketPlaceMaster::where('status', 'ACTIVE')
-                ->where('exchange_type', $exchangeType)
-                ->update([
-                    'status' => 'CLOSED',
-                    'close_timestamp' => now(),
-                    'closed_by' => auth()->id() ?? 'system',
-                    'close_reason' => 'Bulk close by user'
-                ]);
+            $closedCount = MarketBidMaster::where('Isactive', 1)
+                ->where('UserId', Auth::guard('tradeuser')->user()->id)
+                ->where('Symbol', 'like', $exchangeType . '%')->get();
+            $sybmols = [];
+
+            foreach ($closedCount as $val) {
+                $sybmols[] = $val->Symbol;
+            }
+            dd($this->fetchCurrentData($sybmols));
+            dd($sybmols, $request->all(), $closedCount);
+            // ->update([
+            //     'status' => 'CLOSED',
+            //     'close_timestamp' => now(),
+            //     'closed_by' => auth()->id() ?? 'system',
+            //     'close_reason' => 'Bulk close by user'
+            // ]);
 
             return response()->json([
                 'success' => true,
@@ -509,6 +616,107 @@ class HomeController extends Controller
                 'success' => false,
                 'message' => 'Error closing bulk trades'
             ], 500);
+        }
+    }
+
+    public function closeBulkTrades(Request $request)
+    {
+        try {
+            $request->validate([
+                'exchange_type' => 'required|string',
+            ]);
+
+            $exchangeType = $request->input('exchange_type');
+
+            $allowedTypes = ['MCX', 'NSE', 'COMEX'];
+            $sybmols = [];
+
+            if (Auth::guard('tradeuser')->user()->IsActive == 0) {
+                return response()->json(['error' => 'You Account is Blocked'], 500);
+            }
+
+
+            if (!in_array($exchangeType, $allowedTypes)) {
+                $sybmols[] = $exchangeType;
+            } else {
+
+                $closedCount = MarketBidMaster::where('Isactive', 1)
+                    ->where('UserId', Auth::guard('tradeuser')->user()->id)
+                    ->where('Symbol', 'like', $exchangeType . '%')->get();
+
+                foreach ($closedCount as $val) {
+                    $sybmols[$val->Mode] = $val->Symbol;
+                }
+            }
+
+            $correntData = $this->fetchCorrentData($sybmols)['d'];
+
+            foreach ($correntData as $data) {
+                $symbol = $data['n'];
+
+                $trade = MarketBidMaster::where('Isactive', 1)
+                    ->where('Symbol', $data['n'])
+                    ->where('UserId', Auth::guard('tradeuser')->user()->id)
+                    ->first();
+
+                if ($trade->Mode == 'BUY') {
+
+                    $sellPrice =  $data['v']['ask'];
+                } else {
+                    $sellPrice =  $data['v']['bid'];
+                }
+                if ($trade) {
+
+                    MarketBidMaster::where('Pk_id', $trade->Pk_id)
+                        ->update([
+                            'Isactive' => 2,
+                            'SalePrice' => $sellPrice
+                        ]);
+                }
+            }
+            return response()->json([
+                'success' => true,
+                'message' => "Successfully closed {$closedCount} trades",
+                'closed_count' => $closedCount
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function fetchCorrentData(array $symbols)
+    {
+        $url = "https://api-t1.fyers.in/data/quotes";
+        $data = \DB::table('fyers')->first();
+
+        $queryParams = [
+            'symbols' => implode(',', $symbols),
+        ];
+
+        $token = $data->FYERS_CLIENT_ID . ':' . $data->FYERS_ACCESS_TOKEN;
+        // dd($token);
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => $token
+            ])->get($url, $queryParams);
+
+            if ($response->successful()) {
+                return $response->json();
+            } else {
+                return [
+                    'error' => true,
+                    'status' => $response->status(),
+                    'message' => $response->body()
+                ];
+            }
+        } catch (\Exception $e) {
+            return [
+                'error' => true,
+                'message' => $e->getMessage()
+            ];
         }
     }
 

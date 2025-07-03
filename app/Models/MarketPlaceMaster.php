@@ -17,7 +17,7 @@ class MarketPlaceMaster extends Model
         'BidQty', 'AskQty', 'PrevClose', 'UpperCircuit', 'LowerCircuit',
         'Timestamp', 'Lastmodify', 'Isactive', 'UserId', 'Symbol',
         'IsMin', 'IsMega', 'Lots', 'Price', 'Status_Exec', 'Exitrate',
-        'BUYPRICE', 'SELLPRICE', 'IpAddress'
+        'BUYPRICE', 'SELLPRICE', 'IpAddress','segment'
     ];
     
     protected $casts = [

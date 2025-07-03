@@ -8,7 +8,7 @@ class Fund extends Model
 {
     protected $table = 'funds';
     protected $fillable = [
-        'user_id', 'balance', 'equity', 'margin', 'free_margin', 'margin_level'
+        'user_id', 'created_by','balance', 'equity', 'margin', 'free_margin', 'margin_level','notes'
     ];
     
     public $timestamps = false;

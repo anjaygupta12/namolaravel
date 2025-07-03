@@ -5,10 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 
-class TradeUser extends Model
+class TradeUser extends Authenticatable
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, Notifiable;
     
     /**
      * Boot the model.
@@ -24,10 +26,13 @@ class TradeUser extends Model
     }
     
     protected $table = 'tradeuser';
-    protected $primaryKey = 'UserId';
+    protected $primaryKey = 'id';
     
-   protected $fillable = [
-    'UserId',
+  // In your User model
+protected $fillable = [
+    'id',
+    'user_id',
+    'broker_id',
     'FullName',
     'Username',
     'Password',
@@ -51,29 +56,96 @@ class TradeUser extends Model
     'AutoSquareOff',
     'AutoSquareOffPercentage',
     'NotifyPercentage',
+    'ProfitBookInterval',
+    'MCXEnabled',
+    'MCXMinLotPerTrade',
+    'MCXMaxLotPerTrade',
+    'MCXMaxLotPerScrip',
+    'MaxCommodityLots',
+    'MCXBrokerage',
+    'MCXBrokerageType',
+    'MCXExposureType',
+    'MCXIntradayMargin',
+    'MCXHoldingMargin',
     'MCXLotMarginJSON',
     'MCXLotBrokerageJSON',
     'MCXBidGapJSON',
     'NSEFuturesEnabled',
-    'NSEOptionsEnabled',
-    'MCXOptionsEnabled',
-    'NSEFuturesMaxLotPerScrip',
-    'NSEOptionsMaxLotPerScrip',
-    'MCXOptionsMaxLotPerScrip',
     'NSEFuturesBrokerage',
-    'NSEOptionsBrokerage',
-    'MCXOptionsBrokerage',
+    'NSEFuturesMinLotPerTrade',
+    'NSEFuturesMaxLotPerTrade',
+    'NSEIndexMinLotPerTrade',
+    'NSEIndexMaxLotPerTrade',
+    'NSEFuturesMaxLotPerScrip',
+    'NSEIndexMaxLotPerScrip',
+    'MaxNSEFuturesLots',
+    'MaxNSEIndexLots',
+    'NSEFuturesIntradayMargin',
     'NSEFuturesHoldingMargin',
-    'NSEOptionsHoldingMargin',
-    'MCXOptionsHoldingMargin',
-    'NSEFuturesShortSellingAllowed',
-    'NSEOptionsShortSellingAllowed',
-    'MCXOptionsShortSellingAllowed',
+    'NSEBidGapPercentage',
+    'NSEOptionsEnabled',
+    'EquityOptionsEnabled',
+    'MCXOptionsEnabled',
+    'OptionsBrokerageType',
+    'OptionsBrokerage',
+    'OptionsEquityBrokerageType',
+    'OptionsEquityBrokerage',
+    'OptionsMCXBrokerageType',
+    'OptionsMCXBrokerage',
+    'OptionsMinimumBid',
+    'OptionsShortSellingAllowed',
+    'OptionsEquityShortSellingAllowed',
+    'OptionsMCXShortSellingAllowed',
+    'OptionsEquityMinLotPerTrade',
+    'OptionsEquityMaxLotPerTrade',
+    'OptionsIndexMinLotPerTrade',
+    'OptionsIndexMaxLotPerTrade',
+    'OptionsMCXMinLotPerTrade',
+    'OptionsMCXMaxLotPerTrade',
+    'OptionsEquityMaxLotPerScrip',
+    'OptionsIndexMaxLotPerScrip',
+    'OptionsMCXMaxLotPerScrip',
+    'MaxOptionsEquityLots',
+    'MaxOptionsIndexLots',
+    'MaxOptionsMCXLots',
+    'OptionsIntradayMargin',
+    'OptionsHoldingMargin',
+    'OptionsEquityIntradayMargin',
+    'OptionsEquityHoldingMargin',
+    'OptionsMCXIntradayMargin',
+    'OptionsMCXHoldingMargin',
+    'OptionsBidGapPercentage',
+    'OptionsSSBrokerageType',
+    'OptionsSSBrokerage',
+    'OptionsSSEquityBrokerageType',
+    'OptionsSSEquityBrokerage',
+    'OptionsSSMCXBrokerageType',
+    'OptionsSSMCXBrokerage',
+    'OptionsSSEquityMinLotPerTrade',
+    'OptionsSSEquityMaxLotPerTrade',
+    'OptionsSSMCXMinLotPerTrade',
+    'OptionsSSMCXMaxLotPerTrade',
+    'OptionsSSIndexMinLotPerTrade',
+    'OptionsSSIndexMaxLotPerTrade',
+    'OptionsSSEquityMaxLotPerScrip',
+    'OptionsSSIndexMaxLotPerScrip',
+    'OptionsSSMCXMaxLotPerScrip',
+    'MaxOptionsSSEquityLots',
+    'MaxOptionsSSIndexLots',
+    'MaxOptionsSSMCXLots',
+    'OptionsSSIntradayMargin',
+    'OptionsSSHoldingMargin',
+    'OptionsSSEquityIntradayMargin',
+    'OptionsSSEquityHoldingMargin',
+    'OptionsSSMCXIntradayMargin',
+    'OptionsSSMCXHoldingMargin',
+    'Notes',
+    'BrokerId',
+    'TransPass',
     'CreatedBy',
     'CreatedDate',
     'ModifiedBy',
     'ModifiedDate',
-    'TransPass',
     'RefferalCode',
     'ComexTradingEnabled',
     'ForexTradingEnabled',
@@ -164,11 +236,13 @@ class TradeUser extends Model
         'mcx_lot_margin_json' => 'array',
         'mcx_lot_brokerage_json' => 'array',
         'mcx_bid_gap_json' => 'array',
-        
+        'NSEFuturesMinLotPerTrade',
+        'NSEFuturesMaxLotPerTrade',
+        'NSEFuturesIntradayMargin',
+        'profit_book_interval',
+        'funds',
+        'Notes'
         // Date fields
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
-        'deleted_at' => 'datetime'
     ];
     
     protected $hidden = [
@@ -178,22 +252,15 @@ class TradeUser extends Model
     /**
      * Get the user's full balance (including all transactions)
      */
-    public function getBalanceAttribute()
-    {
-        $deposits = $this->transactions()->where('type', 'deposit')->where('status', 'completed')->sum('amount');
-        $withdrawals = $this->transactions()->where('type', 'withdrawal')->where('status', 'completed')->sum('amount');
-        $bonuses = $this->transactions()->where('type', 'bonus')->where('status', 'completed')->sum('amount');
-        
-        return $deposits + $bonuses - $withdrawals;
-    }
     
     /**
      * Relationship with user transactions
      */
     public function transactions()
     {
-        return $this->hasMany(UserTransaction::class, 'user_id');
+        return $this->hasMany(Transdetail::class, 'MemberId','id');
     }
+
     
     /**
      * Relationship with user notifications
@@ -217,6 +284,10 @@ class TradeUser extends Model
     public function deposits()
     {
         return $this->hasMany(DepositeMaster::class, 'UserId', 'id');
+    }
+        public function bidamount()
+    {
+        return $this->hasMany(MarketBidMaster::class, 'UserId', 'id');
     }
     
     /**

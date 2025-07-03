@@ -16,24 +16,29 @@ use App\Http\Controllers\User\AuthController;
 
 // User Routes
 // Route::get('/login', [AuthController::class, 'index'])->name('login');
-
 Route::post('/logout', function () {
-    Auth::logout();
-    return redirect('/login');
-});
+    Auth::guard('tradeuser')->logout();
+    request()->session()->invalidate();
+    request()->session()->regenerateToken();
+
+    return redirect('/login')->with('success', 'You have been logged out.');
+})->name('logout');
+
 Route::get('/', function () {
-    if (Auth::check()) {
-        return redirect('/dashboard');
+     
+    if (Auth::guard('tradeuser')->check()) {
+        return redirect()->route('home'); 
     }
     return redirect('/login');
 });
 
 Route::get('/dashboard', [HomeController::class, 'index'])->name('home');
 
-Route::middleware(['redirect.auth.custom'])->group(function () {
-    Route::get('/trades', [HomeController::class, 'trades'])->name('trades');
-
-});
+// Route::middleware(['tradeauth'])->group(function () {
+//     Route::get('/dashboard', [HomeController::class, 'index'])->name('home');
+//     // add more protected routes here
+// });
+Route::get('/trades', [HomeController::class, 'trades'])->name('trades');
 
 // Route::get('/trades', [HomeController::class, 'trades'])->name('trades');
 Route::get('/portfolio', [HomeController::class, 'portfolio'])->name('portfolio');

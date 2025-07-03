@@ -6,13 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class WithdrawlMaster extends Model
 {
-    protected $table = 'WithdrawlMaster';
+    protected $table = 'withdrawlmaster';
     protected $primaryKey = 'PK_Id';
     public $timestamps = false;
     
     protected $fillable = [
         'UserId', 'PaymentMethod', 'Amount', 'Mobile', 'AccountHolder',
-        'AccountNo', 'IFSC', 'Status', 'Timestamp', 'LastModify', 'Isactive'
+        'AccountNo', 'IFSC', 'Status', 'Timestamp', 'LastModify', 'Isactive','notes'
     ];
     
     protected $casts = [
