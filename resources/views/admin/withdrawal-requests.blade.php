@@ -44,7 +44,7 @@
                                     <th>ID</th>
                                     <th>Client</th>
                                     <th>Amount</th>
-                                    <th>Bank</th>
+                                    <th>Payment Method</th>
                                     <th>Account No.</th>
                                     <th>IFSC</th>
                                     <th>Request Date</th>
@@ -53,61 +53,26 @@
                                 </tr>
                             </thead>
                             <tbody>
+                                @foreach($withdrawalRequests as $val)
                                 <tr>
-                                    <td>WR001</td>
-                                    <td>John Doe</td>
-                                    <td>₹5,000</td>
-                                    <td>HDFC Bank</td>
-                                    <td>XXXX1234</td>
-                                    <td>HDFC0001234</td>
-                                    <td>2023-05-15 10:30:25</td>
+                                    <td>{{$val->user->user_id}}</td>
+                                    <td>{{$val->user->FullName}}</td>
+                                    <td>₹{{$val->Amount}}</td>
+                                    <td>{{$val->PaymentMethod}}</td>
+                                   <td>{{ 'XXXX' . substr($val->AccountNo, -4) }}</td>
+                                    <td>{{$val->IFSC}}</td>
+                                    <td>{{ $val->created_at ? \Carbon\Carbon::parse($val->created_at)->format('d-M-Y h:i:s A') : '' }} </td>
                                     <td><span class="badge badge-warning">Pending</span></td>
                                     <td>
-                                        <button class="btn btn-info btn-sm">View</button>
-                                        <button class="btn btn-success btn-sm">Approve</button>
-                                        <button class="btn btn-danger btn-sm">Reject</button>
+                                       <div class="d-flex">
+                                                    <button onclick="approove({{ $val->PK_Id }})"
+                                                        class="btn btn-success btn-sm me-1">Verify</button>
+                                                    <button onclick="Reject({{ $val->PK_Id }})"
+                                                        class="btn btn-danger btn-sm">Reject</button>
+                                                </div>
                                     </td>
                                 </tr>
-                                <tr>
-                                    <td>WR002</td>
-                                    <td>Jane Smith</td>
-                                    <td>₹10,000</td>
-                                    <td>ICICI Bank</td>
-                                    <td>XXXX5678</td>
-                                    <td>ICIC0001234</td>
-                                    <td>2023-05-14 15:45:20</td>
-                                    <td><span class="badge badge-success">Approved</span></td>
-                                    <td>
-                                        <button class="btn btn-info btn-sm">View</button>
-                                        <button class="btn btn-primary btn-sm">Mark Processed</button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>WR003</td>
-                                    <td>Robert Johnson</td>
-                                    <td>₹7,500</td>
-                                    <td>SBI</td>
-                                    <td>XXXX9012</td>
-                                    <td>SBIN0001234</td>
-                                    <td>2023-05-13 11:20:15</td>
-                                    <td><span class="badge badge-danger">Rejected</span></td>
-                                    <td>
-                                        <button class="btn btn-info btn-sm">View</button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>WR004</td>
-                                    <td>Emily Davis</td>
-                                    <td>₹15,000</td>
-                                    <td>Axis Bank</td>
-                                    <td>XXXX3456</td>
-                                    <td>UTIB0001234</td>
-                                    <td>2023-05-12 09:15:30</td>
-                                    <td><span class="badge badge-info">Processed</span></td>
-                                    <td>
-                                        <button class="btn btn-info btn-sm">View</button>
-                                    </td>
-                                </tr>
+                                @endforeach
                             </tbody>
                         </table>
                     </div>
@@ -210,5 +175,54 @@
             $('#withdrawalDetailsModal').modal('show');
         });
     });
+
+            function approove(Id) {
+           
+            if (!confirm(`want to Approve this withdrawal?`)) return;
+            $.ajax({
+                type: "POST",
+                url: "{{ route('admin.deposit-status') }}",
+                data: {
+                    ID: Id,
+                    type: 'APPROVED',
+                    _token: '{{ csrf_token() }}'
+                },
+                dataType: "json",
+                success: function(data) {
+                    location.reload();
+                     toastr.success(data.message);
+                },
+                error: function(xhr) {
+                        location.reload();
+                     toastr.error('Error: ' + xhr.responseText);
+                 
+                }
+            });
+
+        }
+
+        function Reject(Id) {
+            if (!confirm(`want to Reject this withdrawal?`)) return;
+
+               $.ajax({
+                type: "POST",
+                url: "{{ route('admin.deposit-status') }}",
+                data: {
+                    ID: Id,
+                    type: 'REJECTED',
+                    _token: '{{ csrf_token() }}'
+                },
+                dataType: "json",
+                success: function(data) {
+                   location.reload();
+                     toastr.success(data.message);
+                },
+                error: function(xhr) {
+                    location.reload();
+                     toastr.error('Error: ' + xhr.responseText);
+                 
+                }
+            });
+        }
 </script>
 @endsection

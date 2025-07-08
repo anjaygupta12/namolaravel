@@ -24,45 +24,45 @@
                     </div>
 
                     <div class="card-body">
-                        <form action="{{route('admin.users')}}">
-                        <div class="row mb-4">
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label>ID </label>
-                                    <input name="user_id" type="text" id="user_id" class="form-control"
-                                        placeholder="Search by ID">
+                        <form action="{{ route('admin.users') }}">
+                            <div class="row mb-4">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>ID </label>
+                                        <input name="user_id" type="text" id="user_id" class="form-control"
+                                            placeholder="Search by ID">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Username</label>
+                                        <input name="username" type="text" id="username" class="form-control"
+                                            placeholder="Search by username">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Account Status</label>
+                                        <select name="status" id="status" class="form-control">
+                                            <option selected="selected" value="">All</option>
+                                            <option value="1">Active</option>
+                                            <option value="0">Inactive</option>
+
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label>Username</label>
-                                    <input name="username" type="text" id="username" class="form-control"
-                                        placeholder="Search by username">
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <input type="submit" value="Search" class="btn btn-primary">
+                                    <a href="{{ route('admin.users') }}" class="btn btn-secondary"> Reset </a>
+
+                                    <a href="{{ route('admin.user-create') }}" class="btn btn-success float-right">add new
+                                        User</a>
                                 </div>
                             </div>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label>Account Status</label>
-                                    <select name="status" id="status" class="form-control">
-                                        <option selected="selected" value="">All</option>
-                                        <option value="1">Active</option>
-                                        <option value="0">Inactive</option>
 
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row mb-4">
-                            <div class="col-12">
-                                <input type="submit" value="Search" class="btn btn-primary">
-                                <a href="{{ route('admin.users') }}" class="btn btn-secondary"> Reset </a>
-
-                                <a href="{{ route('admin.user-create') }}" class="btn btn-success float-right">add new
-                                    User</a>
-                            </div>
-                        </div>
-
-                    </form>
+                        </form>
 
                         <div class="table-responsive">
                             <table class="table">
@@ -78,7 +78,6 @@
                                         <th>Net P/L</th>
                                         <th scope="col">Admin</th>
                                         <th scope="col">Demo Account?</th>
-                                        <th scope="col">Account Status</th>
                                         <th scope="col">Status</th>
                                         <th scope="col">Actions</th>
                                     </tr>
@@ -131,13 +130,12 @@
                                             <td>{{ $user->user_id }}</td>
                                             <td>{{ $user->FullName }}</td>
                                             <td>{{ $user->Username }}</td>
-                                            <td>{{ $user->funds }}</td>
-                                            <td>0.00</td>
-                                            <td>0.00</td>
-                                            <td>0.00</td>
-                                            <td>{{ $user->Admin ? 'Yes' : 'No' }}</td>
+                                            <td>{{ $user->balance }}</td>
+                                            <td>{{ $user->net_p_l }}</td>
+                                            <td>{{ $user->MCXBrokerage }}</td>
+                                            <td>{{ $user->net_p_l }}</td>
+                                            <td>{{ $user->broker_id == 0 ? 'Yes' : 'No' }}</td>
                                             <td>{{ $user->IsDemo ? 'Yes' : 'No' }}</td>
-                                            <td>{{ $user->IsActive ? 'Active' : 'Inactive' }}</td>
                                             <td>
                                                 <form action="{{ route('admin.users-toggle-status', $user->id) }}"
                                                     method="POST" style="display: inline;">

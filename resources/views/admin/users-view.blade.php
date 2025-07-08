@@ -8,6 +8,7 @@
             color: #000000;
             position: relative;
         }
+        
     </style>
     <div class="container-fluid">
         <div class="row">
@@ -19,6 +20,8 @@
                             @csrf
                             <div class="row mb-3">
                                 <div class="col-md-4">
+                                   <input type="hidden" name="user_id" value="{{ request()->id }}">
+
                                     <input type="date" id="from_date" name="from_date" class="form-control" required>
                                 </div>
                                 <div class="col-md-4">
@@ -326,11 +329,11 @@
                                                 </tr>
                                                 <tr>
                                                     <th>Account Created At</th>
-                                                    <td>2024-12-07 14:01:06</td>
+                                                    <td>{{ \Carbon\Carbon::parse($user->created_at)->format('d-M-Y h:i:s A') }}</td>
                                                 </tr>
                                                 <tr>
                                                     <th>Notes</th>
-                                                    <td></td>
+                                                    <td>{{$user->notes}}</td>
                                                 </tr>
                                                 <tr>
                                                     <th>Total Profit / Loss</th>
@@ -373,12 +376,12 @@
                                             <tbody>
                                                 @foreach ($funds as $val)
                                                     <tr>
-                                                        <td>{{ $val->Amount }}</td>
-                                                        <td>{!! $val->type == 1
-                                                            ? '<span class="badge badge-danger">Deposit</span>'
-                                                            : '<span class="badge badge-success">Withdraw</span>' !!}</td>
+                                                        <td>{{ $val->AmountS }}</td>
+                                                        <td>{!! ($val->Type == '+')
+                                                            ? '<span class="badge badge-success">Deposit</span>'
+                                                            : '<span class="badge badge-danger">Withdraw</span>' !!}</td>
 
-                                                        <td>{{ \Carbon\Carbon::parse($val->LastModify)->format('d-M-Y h:i:s A') }}
+                                                        <td>{{ \Carbon\Carbon::parse($val->TransDate)->format('d-M-Y h:i:s A') }}
                                                         </td>
                                                         <td>{{ $val->notes }}</td>
                                                     </tr>
@@ -411,7 +414,7 @@
                                                         <th>Scrip</th>
                                                         <th>Buy Rate</th>
                                                         <th>Sell Rate</th>
-                                                        <th>Lots / Units</th>
+                                                        <th class="w-110" >Lots / Units</th>
                                                         <th>Buy Turnover</th>
                                                         <th>Sell Turnover</th>
                                                         <th>CMP</th>
@@ -430,11 +433,12 @@
                                                             <td>{{ $trade->Pk_id }}</td>
                                                             <td>{{ $trade->Symbol }}</td>
                                                             <td>{{ $trade->BuyPrice }}</td>
-                                                            <td>{{ ($trade->Isactive != 1 ) ? $trade->SalePrice : '' }}</td>
+                                                            <td>{{ $trade->Isactive != 1 ? $trade->SalePrice : '' }}
+                                                            </td>
                                                             <td>{{ $trade->Lots }}</td>
                                                             <td>{{ number_format($trade->BuyPrice * $trade->Lots, 2) }}
                                                             </td>
-                                                            <td>{{ ($trade->Isactive != 1 ) ? number_format($trade->SalePrice * $trade->Lots, 2) :'' }}
+                                                            <td>{{ $trade->Isactive != 1 ? number_format($trade->SalePrice * $trade->Lots, 2) : '' }}
                                                             </td>
                                                             <td>{{ $trade->TradeLast }}</td>
                                                             <td>
@@ -445,12 +449,13 @@
                                                                 @endphp
                                                                 {{ number_format($pl, 2) }}
                                                             </td>
-                                                            <td>{{ ($trade->Isactive != 1 ) ? number_format($trade->BuyPrice * $trade->Lots * 0.2, 2): '' }}
+                                                            <td>{{ $trade->Isactive != 1 ? number_format($trade->BuyPrice * $trade->Lots * 0.2, 2) : '' }}
                                                             </td> <!-- example: 20% margin -->
                                                             <td>{{ $trade->created_at }}</td>
-                                                            <td>{{ ($trade->Isactive != 1 ) ? $trade->updated_at: '' }}</td>
+                                                            <td>{{ $trade->Isactive != 1 ? $trade->updated_at : '' }}
+                                                            </td>
                                                             <td>{{ $trade->IpAddress }}</td>
-                                                            <td>{{ ($trade->Isactive != 1 ) ? $trade->IpAddress: '' }}</td>
+                                                            <td>{{ $trade->Isactive != 1 ? $trade->IpAddress : '' }}</td>
                                                             <!-- If you have a separate SellIp, replace this -->
                                                         </tr>
                                                     @endforeach
@@ -469,7 +474,22 @@
                                 <div class="table-responsive">
                                     <h3>Closed Trades</h3>
                                     <div id="w5" class="grid-view">
-                                        <table class="table table-striped">
+                                        <table class="table" style="table-layout: fixed; width: 100%;">
+                                            <colgroup>
+                                                <col style="width: 50px"> <!-- ID -->
+                                                <col style="width: 80px"> <!-- Scrip -->
+                                                <col style="width: 90px"> <!-- Buy Rate -->
+                                                <col style="width: 90px"> <!-- Sell Rate -->
+                                                <col style="width: 100px"> <!-- Lots -->
+                                                <col style="width: 110px"> <!-- Buy Turnover -->
+                                                <col style="width: 110px"> <!-- Sell Turnover -->
+                                                <col style="width: 120px"> <!-- P/L -->
+                                                <col style="width: 100px"> <!-- Brokerage -->
+                                                <col style="width: 150px"> <!-- Bought at -->
+                                                <col style="width: 180px"> <!-- Sold at -->
+                                                <col style="width: 120px"> <!-- Buy IP -->
+                                                <col style="width: 120px"> <!-- Sell IP -->
+                                            </colgroup>
                                             <thead>
                                                 <tr>
                                                     <th>ID</th>
@@ -645,50 +665,105 @@
                         <div class="card">
                             <div class="card-body">
                                 <div class="table-responsive">
-                                    <h3>COMEX Pending Orders</h3>
-                                    <div id="w7" class="grid-view">
-
-                                        <table class="table table-striped">
-                                            <thead>
+                                    <h3>Closed Trades</h3>
+                                    <table class="table fixed-columns">
+                                        <thead>
+                                            <tr>
+                                                <th class="w-50">ID</th>
+                                                <th class="w-200">Scrip</th>
+                                                <th class="w-90">Buy Rate</th>
+                                                <th class="w-90">Sell Rate</th>
+                                                <th class="w-100">Lots</th>
+                                                <th class="w-110">Buy TO</th>
+                                                <th class="w-110">Sell TO</th>
+                                                <th class="w-120">P/L</th>
+                                                <th class="w-100">Brokerage</th>
+                                                <th class="w-150">Bought at</th>
+                                                <th class="w-180">Sold at</th>
+                                                <th class="w-120">Buy IP</th>
+                                                <th class="w-120">Sell IP</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @forelse($closedTrade as $trade)
+                                                @php
+                                                    $buyRate = (float) $trade->BuyPrice;
+                                                    $sellRate = (float) $trade->SalePrice;
+                                                    $lots = (float) $trade->Lots;
+                                                    $buyTurnover = $buyRate * $lots;
+                                                    $sellTurnover = $sellRate * $lots;
+                                                    $profitLoss = $sellTurnover - $buyTurnover;
+                                                    $brokerage = ($buyTurnover + $sellTurnover) * 0.0005;
+                                                @endphp
                                                 <tr>
-                                                    <th>ID</th>
-                                                    <th>Trade</th>
-                                                    <th>Lots</th>
-                                                    <th>Scrip</th>
-                                                    <th>Condition</th>
-                                                    <th>Rate</th>
-                                                    <th>Date</th>
-                                                    <th>Ip Address</th>
+                                                    <td>{{ $trade->Pk_id }}</td>
+                                                    <td>{{ $trade->Symbol }}</td>
+                                                    <td>{{ number_format($buyRate, 2) }}</td>
+                                                    <td>{{ number_format($sellRate, 2) }}</td>
+                                                    <td>{{ $lots }}</td>
+                                                    <td>{{ number_format($buyTurnover, 2) }}</td>
+                                                    <td>{{ number_format($sellTurnover, 2) }}</td>
+                                                    <td class="{{ $profitLoss >= 0 ? 'text-success' : 'text-danger' }}">
+                                                        {{ number_format($profitLoss, 2) }}
+                                                    </td>
+                                                    <td>{{ number_format($brokerage, 2) }}</td>
+                                                    <td>{{ $trade->created_at }}</td>
+                                                    <td>{{ $trade->updated_at }} {!! \Carbon\Carbon::parse($trade->created_at)->isSameDay($trade->updated_at) ? '✔️' : '❌' !!}</td>
+                                                    <td>{{ $trade->IpAddress }}</td>
+                                                    <td>{{ $trade->IpAddress }}</td>
                                                 </tr>
-                                            </thead>
-                                            <tbody>
-                                                @forelse($comexPendingTrade as $trade)
-                                                    <tr>
-                                                        <td>{{ $trade->Pk_id }}</td>
-                                                        <td>{{ $trade->Mode }}</td>
-                                                        <td>{{ $trade->Lots }}</td>
-                                                        <td>{{ $trade->Symbol }}</td>
-                                                        <td>{{ $trade->OPTION ?? '-' }}</td>
-                                                        <td>
-                                                            @if ($trade->Mode == 'BUY')
-                                                                {{ number_format((float) $trade->BuyPrice, 2) }}
-                                                            @else
-                                                                {{ number_format((float) $trade->SalePrice, 2) }}
-                                                            @endif
-                                                        </td>
-                                                        <td>{{ $trade->created_at }}</td>
-                                                        <td>{{ $trade->IpAddress }}</td>
-                                                    </tr>
-                                                @empty
-                                                    <tr>
-                                                        <td colspan="8" class="text-center">No records found</td>
-                                                    </tr>
-                                                @endforelse
-                                            </tbody>
-                                        </table>
-
-                                    </div>
+                                            @empty
+                                                <tr>
+                                                    <td colspan="13" class="text-center">No records found</td>
+                                                </tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
                                 </div>
+
+                                <style>
+                                    .fixed-columns {
+                                        table-layout: fixed;
+                                        width: 100%;
+                                    }
+
+                                    .fixed-columns th {
+                                        overflow: hidden;
+                                        text-overflow: ellipsis;
+                                    }
+
+                                    .w-50 {
+                                        width: 50px;
+                                    }
+
+                                    .w-80 {
+                                        width: 200px;
+                                    }
+
+                                    .w-90 {
+                                        width: 90px;
+                                    }
+
+                                    .w-100 {
+                                        width: 100px;
+                                    }
+
+                                    .w-110 {
+                                        width: 110px;
+                                    }
+
+                                    .w-120 {
+                                        width: 120px;
+                                    }
+
+                                    .w-150 {
+                                        width: 150px;
+                                    }
+
+                                    .w-180 {
+                                        width: 180px;
+                                    }
+                                </style>
                             </div>
                         </div>
                     </div>

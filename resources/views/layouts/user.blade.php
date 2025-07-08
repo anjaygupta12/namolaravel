@@ -1,22 +1,25 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, viewport-fit=cover" />
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, viewport-fit=cover" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#000000">
     <title>Namotrader</title>
     <meta name="description" content="Namotrader Trading Platform">
-    <meta name="keywords" content="bootstrap, wallet, banking, fintech mobile template, cordova, phonegap, mobile, html, responsive" />
+    <meta name="keywords"
+        content="bootstrap, wallet, banking, fintech mobile template, cordova, phonegap, mobile, html, responsive" />
     <link rel="icon" type="image/png" href="{{ asset('assets/img/favicon.png') }}" sizes="32x32">
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('assets/img/icon/192x192.png') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
     <script src="https://kit.fontawesome.com/9701dbec97.js"></script>
-      <title>Transaction Page</title>
+    <title>Transaction Page</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    
+
     <style>
         .badge {
             font-size: 15px;
@@ -34,20 +37,21 @@
         }
 
 
-    /* Force modal width and center it */
-    .modal.custom-centered .modal-dialog {
-        width: 380px;
-        max-width: 100%;
-        margin: auto;
-    }
+        /* Force modal width and center it */
+        .modal.custom-centered .modal-dialog {
+            width: 380px;
+            max-width: 100%;
+            margin: auto;
+        }
 
-    .modal.custom-centered .modal-content {
-        text-align: center;
-        background-color: #311b7f;
-    }
+        .modal.custom-centered .modal-content {
+            text-align: center;
+            background-color: #311b7f;
+        }
     </style>
     @yield('styles')
 </head>
+
 <body>
     <div class="appHeader bg-primary text-light">
         <div class="left">
@@ -63,7 +67,7 @@
                 <i class="fas fa-home"></i>
                 <span>Deposit</span>
             </a>
-              <a href="{{route('withdrawal.requests.form') }}" class="headerButton icon">
+            <a href="{{ route('withdrawal.requests.form') }}" class="headerButton icon">
                 <i class="fas fa-hand-holding-usd" aria-hidden="true"></i>
                 <span>Withdraw</span>
             </a>
@@ -71,15 +75,15 @@
                 <i class="fas fa-share-alt" aria-hidden="true"></i>
                 <span>Share</span>
             </a>
-        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-            @csrf
-        </form>
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                @csrf
+            </form>
 
-        <a type="button" class="headerButton icon" data-bs-toggle="modal" data-bs-target="#logoutConfirmation">
-     <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
-            <span>Logout</span> </a>
+            <a type="button" class="headerButton icon" data-bs-toggle="modal" data-bs-target="#logoutConfirmation">
+                <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+                <span>Logout</span> </a>
 
-        {{-- <a href="#" class="headerButton icon" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+            {{-- <a href="#" class="headerButton icon" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
             <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
             <span>Logout</span>
         </a> --}}
@@ -102,7 +106,8 @@
                 <strong>Trades</strong>
             </div>
         </a>
-        <a href="{{ route('deposit.withdraw') }}" class="item {{ request()->routeIs('deposit.withdraw') ? 'active' : '' }}">
+        <a href="{{ route('deposit.withdraw') }}"
+            class="item {{ request()->routeIs('deposit.withdraw') ? 'active' : '' }}">
             <div class="col">
                 <i class="fas fa-hand-holding-usd text-white font-20"></i>
                 <strong>Deposit/Withdraw</strong>
@@ -130,7 +135,8 @@
                     <!-- profile box -->
                     <div class="profileBox pt-2 pb-2">
                         <div class="image-wrapper">
-                            <img src="{{ asset('assets/img/sample/avatar/avatar1.jpg') }}" alt="image" class="imaged w36">
+                            <img src="{{ asset('assets/img/sample/avatar/avatar1.jpg') }}" alt="image"
+                                class="imaged w36">
                         </div>
                         <div class="in">
                             <strong>Sebastian Doe</strong>
@@ -203,25 +209,29 @@
     <!-- * App Sidebar -->
 
     <!-- Logout Confirmation Modal -->
-<div class="modal fade custom-centered" id="logoutConfirmation" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <div class="modal-header border-0 bg-danger">
-                <h5 class="modal-title text-white fw-bold">
-                    Are you sure you want to logout?
-                </h5>
-            </div>
-            <div class="modal-body">
-                <div class="card bg-transparent border-0">
-                    <div class="card-body pt-0">
-                        <div class="form-group basic">
-                            <div class="d-flex justify-content-center gap-2">
-                                <button type="button" class="btn btn-success" onclick="document.getElementById('logout-form').submit();" style="border-radius: 0; min-width: 130px;">
-                                    Confirm
-                                </button>
-                                <button type="button" class="btn btn-danger" data-bs-dismiss="modal" style="border-radius: 0; min-width: 130px;">
-                                    Cancel
-                                </button>
+    <div class="modal fade custom-centered" id="logoutConfirmation" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header border-0 bg-danger">
+                    <h5 class="modal-title text-white fw-bold">
+                        Are you sure you want to logout?
+                    </h5>
+                </div>
+                <div class="modal-body">
+                    <div class="card bg-transparent border-0">
+                        <div class="card-body pt-0">
+                            <div class="form-group basic">
+                                <div class="d-flex justify-content-center gap-2">
+                                    <button type="button" class="btn btn-success"
+                                        onclick="document.getElementById('logout-form').submit();"
+                                        style="border-radius: 0; min-width: 130px;">
+                                        Confirm
+                                    </button>
+                                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal"
+                                        style="border-radius: 0; min-width: 130px;">
+                                        Cancel
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -229,7 +239,6 @@
             </div>
         </div>
     </div>
-</div>
 
 
     <!-- Scripts -->
@@ -237,6 +246,8 @@
     <script src="{{ asset('assets/js/lib/bootstrap.bundle.min.js') }}"></script>
     <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     @yield('scripts')
 </body>
+
 </html>

@@ -30,7 +30,7 @@
                                             <div class="card bg-light">
                                                 <div class="card-body">
                                                     <h5 class="card-title">Current Balance</h5>
-                                                    <h3 class="text-primary">₹ {{ number_format($user->funds+$totalDeposit-$totalWithdrawals, 2) }}</h3>
+                                                    <h3 class="text-primary">₹ {{ $user->balance }}</h3>
                                                 </div>
                                             </div>
                                         </div>
@@ -39,7 +39,7 @@
                                             <div class="card bg-light">
                                                 <div class="card-body">
                                                     <h5 class="card-title">Total Deposits</h5>
-                                                    <h3 class="text-success">₹ {{ number_format($totalDeposit ?? 0, 2) }}</h3>
+                                                    <h3 class="text-success">₹ {{ $user->deposits }}</h3>
                                                 </div>
                                             </div>
                                         </div>
@@ -48,7 +48,7 @@
                                             <div class="card bg-light">
                                                 <div class="card-body">
                                                     <h5 class="card-title">Total Withdrawals</h5>
-                                                    <h3 class="text-danger">₹ {{ number_format($totalWithdrawals ?? 0, 2) }}</h3>
+                                                    <h3 class="text-danger">₹ {{ $user->withdrawals }}</h3>
                                                 </div>
                                             </div>
                                         </div>
@@ -57,8 +57,8 @@
                                             <div class="card bg-light">
                                                 <div class="card-body">
                                                     <h5 class="card-title">Net P/L</h5>
-                                                    <h3 class="{{ ($netPA ?? 0) >= 0 ? 'text-success' : 'text-danger' }}">
-                                                        ₹ {{ number_format($netPA ?? 0, 2) }}
+                                                    <h3 class="{{ ($user->net_p_l ?? 0) >= 0 ? 'text-success' : 'text-danger' }}">
+                                                        ₹ {{ $user->net_p_l }}
                                                     </h3>
                                                 </div>
                                             </div>

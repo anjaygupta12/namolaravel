@@ -3,6 +3,7 @@
         <tr>
             <th>#</th>
             <th>ID</th>
+            <th>Status</th>
             <th>Scrip</th>
             <th>Buy Rate</th>
             <th>Sell Rate</th>
@@ -29,6 +30,17 @@
             <tr>
                 <td>{{ $loop->iteration }}</td>
                 <td>{{ $trade->Pk_id }}</td>
+               <td>
+                    @if($trade->Isactive == 1)
+                        Active
+                    @elseif($trade->Isactive == 0)
+                        Pending
+                    @elseif($trade->Isactive == 2)
+                        Closed
+                    @else
+                        Unknown
+                    @endif
+                </td>
                 <td>{{ $trade->Symbol }}</td>
                 <td>{{ $trade->BuyPrice }}</td>
                 <td>{{ $trade->SalePrice }}</td>

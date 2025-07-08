@@ -42,26 +42,32 @@
 
                     rows.forEach(function(row) {
                         html += `
-<tr>
-    <td>
-        <p class="date">
-            <span class="badge badge-success">${row.PK_Id}</span>
-        </p>
-        <h4 class="comodity mt-1">Amount: ${row.Amount}</h4>
-        <p class="date mt-1">A/c Holder: ${row.AccountHolder}</p>
-        <p class="detail mt-1">IFSC: ${row.IFSC}</p>
-        <p class="detail mt-1">Mobile: ${row.Mobile}</p>
-        <p class="detail mt-1 mb-1">${row.Status}</p>
-    </td>
-    <td></td>
-    <td class="text-end text-primary">
-        <p class="date mb-1">${row.FormattedTimestamp}</p>
-        <p class="text-white fw-bold mb-1">${row.Status}</p>
-        <p class="text-white fw-bold mb-1">A/c No.: ${row.AccountNo}</p>
-        <p class="text-white fw-bold mb-1">Payment mode: ${row.PaymentMethod}</p>
-        <p class="text-white fw-bold mb-1">UPI ID: ${row.Mobile}</p>
-    </td>
-</tr>`;
+                            <tr>
+                                <td>
+                                    <p class="date">
+                                        <span class="badge badge-success">ID: ${row.user.user_id}</span>
+                                    </p>
+                                    <h4 class="comodity mt-1">Amount: ${row.Amount}</h4>
+                                    <p class="date mt-1">A/c Holder: ${row.AccountHolder}</p>
+                                    <p class="detail mt-1">IFSC: ${row.IFSC}</p>
+                                    <p class="detail mt-1">Mobile: ${row.Mobile}</p>
+                                  <p class="detail mt-1 mb-1">
+                                        <span class="badge ${row.Approve_Status === 'APPROVED' ? 'badge-info' : 'badge-danger'}">
+                                            ${row.Approve_Status}
+                                        </span>
+                                        
+                                    </p>
+
+                                </td>
+                                <td></td>
+                                <td class="text-end text-primary">
+                                    <p class="date mb-1">${row.FormattedTimestamp}</p>
+                                    <p class="text-white fw-bold mb-1">${row.Status}</p>
+                                    <p class="text-white fw-bold mb-1">A/c No.: ${row.AccountNo}</p>
+                                    <p class="text-white fw-bold mb-1">Payment mode: ${row.PaymentMethod}</p>
+                                    <p class="text-white fw-bold mb-1">UPI ID: ${row.Mobile}</p>
+                                </td>
+                            </tr>`;
                     });
 
                     $('#tblbody').html(html);

@@ -21,6 +21,7 @@ use DB;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use App\Models\AdminLogin;
+use App\Models\Notification;
 
 class HomeController extends Controller
 {
@@ -45,8 +46,12 @@ class HomeController extends Controller
 
     public function portfolio()
     {
-        $trades = [];
-        return View::make('user.portfolio', compact('trades'));
+      
+        $usedMargin = MarketBidMaster::where('UserId',Auth::guard('tradeuser')->user()->id)
+        ->where('Isactive',1)->sum('BuyPrice');
+         $marginAvilabe= Auth::guard('tradeuser')->user()->balance-$usedMargin;
+       
+        return View::make('user.portfolio', compact('usedMargin','marginAvilabe'));
     }
 
     public function watchlist()
@@ -59,9 +64,37 @@ class HomeController extends Controller
         if (!Auth::guard('tradeuser')->check()) {
             return redirect('/login');
         }
+         $data = DepositeMaster::with('user')
+            ->orderBy('created_at','desc')
+            // ->where('type',0)
+            ->get();
+        $notifaction = Notification::where('is_read',0)->get();
+        $invest = MarketBidMaster::where('UserId',Auth::guard('tradeuser')->user()->id)
+        ->where('Isactive',1)->sum('BuyPrice');
 
-        return View::make('user.my_account');
+        return View::make('user.my_account',compact('data','invest','notifaction'));
     }
+
+    public function updatePassword(Request $request)
+{
+    $request->validate([
+        'current_password' => 'required',
+        'new_password' => 'required|min:8|confirmed', 
+    ]);
+
+    $user = Auth::guard('tradeuser')->user();
+
+    if (!Hash::check($request->current_password, $user->password)) {
+        return back()->withErrors(['current_password' => 'Current password is incorrect']);
+    }
+
+    $user->password = Hash::make($request->new_password);
+    $user->save();
+
+    return back()->with('success', 'Password updated successfully.');
+
+    return back()->with('success', 'Password updated successfully');
+}
 
     public function depositWithdraw()
     {
@@ -167,6 +200,14 @@ class HomeController extends Controller
         //     }
         // }
 
+
+        if ($user->balance < $request->tblfcbuyprice * $request->Lots) {
+            return response()->json(['error' => 'Your available balance is insufficient. Trade amount: ' . $user->balance], 500);
+        }
+
+        $tradeUser = TradeUser::find($user->id);
+        $tradeUser->decrement('balance', $request->tblfcbuyprice * $request->Lots);
+
         try {
             $user = Auth::guard('tradeuser')->user();
 
@@ -177,6 +218,9 @@ class HomeController extends Controller
                 $ip = $request->ip();
             }
             // $buyPrice = $request->input('tblfcbuyprice', 0) * $request->input('lblBidQty', 1);
+
+            $holdingmargin = $request->input('tblfcbuyprice', 0) - $request->input('lblBid', 0);
+
             $data = [
                 'Mode' => $request->input('Mode'),
                 'ToAmount' => $request->input('textfclot', 0),
@@ -192,7 +236,7 @@ class HomeController extends Controller
                 'Volume' => $request->input('lblVolume', 0),
                 'LastTradeQty' => $request->input('lblLastTradedQty', 0),
                 'Atp' => $request->input('lblAtp', 0),
-                'LotSize' => $request->input('lblLotSize', 0),
+                'LotSize' => $request->input('Lots', 1),
                 'OpenInterest' => $request->input('lblOpenInterest', 0),
                 'BidQty' => $request->input('lblBidQty', 0),
                 'AskQty' => $request->input('lblAskQty', 0),
@@ -204,13 +248,16 @@ class HomeController extends Controller
                 'Symbol' => $request->input('Symbol'),
                 'Min' => $request->input('Min') == 'True' ? 'Y' : 'N',
                 'Mega' => $request->input('Mega') == 'True' ? 'Y' : 'N',
+                'IsMinMega' => $request->input('Mega') == 'True' ? 'Y' : 'N',
                 'Lots' => $request->input('Lots', 0),
                 'Price' => $request->input('Price', 0),
                 'IpAddress' => $ip,
+                'Isactive' => $request->has('isOrder') ? 0 : 1,
+                'IsOrder' => $request->has('isOrder') ? true : false,
+                'holding_margin_req' => $holdingmargin,
                 'created_at' => now(),
                 'updated_at' => now()
             ];
-
             MarketBidMaster::insert($data);
 
             Transdetail::create([
@@ -255,14 +302,15 @@ class HomeController extends Controller
         $path = $request->file('screenshot')->store('deposits', 'public');
 
         DepositeMaster::create([
-            'UserId'        => 1,
+            'UserId'        => Auth::guard('tradeuser')->user()->id,
             'Amount'        => $request->amount,
             'ScreenShot'    => $path,
             'Approve_Status' => 'Pending',
             'Approve_date'  => null,
             'Timestamp'     => Carbon::now(),
             'LastModify'    => Carbon::now(),
-            'Isactive'      => true
+            'Isactive'      => true,
+            'type'          =>1
         ]);
 
         return redirect()->back()->with('success', 'Deposit request submitted successfully.');
@@ -279,14 +327,11 @@ class HomeController extends Controller
     {
 
         if ($request->ajax()) {
-            $data = WithdrawlMaster::where('UserId', 1)
-                ->orderByDesc('Timestamp')
-                ->get()
-                ->map(function ($item) {
-                    $item->FormattedTimestamp = \Carbon\Carbon::parse($item->Timestamp)->format('n/j/Y g:i:s A');
-                    return $item;
-                });
 
+            $data = DepositeMaster::with('user')
+            ->orderBy('created_at','desc')
+            ->where('type',0)
+            ->get();
             return response()->json($data);
         }
 
@@ -294,7 +339,7 @@ class HomeController extends Controller
     }
     public function withdrawalRequestsSubmit(Request $request)
     {
-
+       
         $request->validate([
             'payment_method' => 'required|string|max:50',
             'amount'         => 'required|numeric|min:1',
@@ -304,19 +349,22 @@ class HomeController extends Controller
             'ifsc'           => 'required|string|max:20',
         ]);
 
-        WithdrawlMaster::create([
-            'UserId'        => 1,
+        DepositeMaster::create([
+            'UserId'        => Auth::guard('tradeuser')->user()->id,
             'PaymentMethod' => $request->payment_method,
             'Amount'        => $request->amount,
             'Mobile'        => $request->mobile,
             'AccountHolder' => $request->holder_name,
             'AccountNo'     => $request->account_number,
             'IFSC'          => $request->ifsc,
-            'Status'        => 'Pending',
+            'Approve_Status'        => 'Pending',
+            'Approve_date'  => null,
             'Timestamp'     => Carbon::now(),
             'LastModify'    => Carbon::now(),
-            'Isactive'      => true
+            'Isactive'      => true,
+            'type'          =>0
         ]);
+
 
         return redirect()->back()->with('success', 'Withdrawal request submitted successfully!');
     }
@@ -566,61 +614,11 @@ class HomeController extends Controller
     /**
      * Close bulk trades by exchange type
      */
-    public function __closeBulkTrades(Request $request)
-    {
-        // dd($request->all());
-        try {
-            $request->validate([
-                'exchange_type' => 'required|string|in:MCX,NSE,COMEX',
-            ]);
 
-            $exchangeType = $request->input('exchange_type');
-            $password = $request->input('password');
-
-            // Verify password (implement your own password verification logic)
-            $user = Auth::guard('tradeuser')->user();
-
-            if (!Hash::check($password, $user->Passowrd)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Invalid password'
-                ], 401);
-            }
-
-
-            // Close all active trades for the specified exchange
-            $closedCount = MarketBidMaster::where('Isactive', 1)
-                ->where('UserId', Auth::guard('tradeuser')->user()->id)
-                ->where('Symbol', 'like', $exchangeType . '%')->get();
-            $sybmols = [];
-
-            foreach ($closedCount as $val) {
-                $sybmols[] = $val->Symbol;
-            }
-            dd($this->fetchCurrentData($sybmols));
-            dd($sybmols, $request->all(), $closedCount);
-            // ->update([
-            //     'status' => 'CLOSED',
-            //     'close_timestamp' => now(),
-            //     'closed_by' => auth()->id() ?? 'system',
-            //     'close_reason' => 'Bulk close by user'
-            // ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => "Successfully closed {$closedCount} trades",
-                'closed_count' => $closedCount
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error closing bulk trades'
-            ], 500);
-        }
-    }
 
     public function closeBulkTrades(Request $request)
     {
+
         try {
             $request->validate([
                 'exchange_type' => 'required|string',
@@ -630,22 +628,24 @@ class HomeController extends Controller
 
             $allowedTypes = ['MCX', 'NSE', 'COMEX'];
             $sybmols = [];
+            $user = Auth::guard('tradeuser')->user();
 
-            if (Auth::guard('tradeuser')->user()->IsActive == 0) {
+            if ($user->IsActive == 0) {
                 return response()->json(['error' => 'You Account is Blocked'], 500);
             }
 
 
-            if (!in_array($exchangeType, $allowedTypes)) {
-                $sybmols[] = $exchangeType;
+            if (is_numeric($exchangeType)) {
+                $sybmols[] = MarketBidMaster::where('Pk_id', $exchangeType)->value('Symbol');
             } else {
 
                 $closedCount = MarketBidMaster::where('Isactive', 1)
+                    ->orWhere('Isactive', 0)
                     ->where('UserId', Auth::guard('tradeuser')->user()->id)
                     ->where('Symbol', 'like', $exchangeType . '%')->get();
 
                 foreach ($closedCount as $val) {
-                    $sybmols[$val->Mode] = $val->Symbol;
+                    $sybmols[] = $val->Symbol;
                 }
             }
 
@@ -655,12 +655,21 @@ class HomeController extends Controller
                 $symbol = $data['n'];
 
                 $trade = MarketBidMaster::where('Isactive', 1)
+                    ->orWhere('Isactive', 0)
                     ->where('Symbol', $data['n'])
                     ->where('UserId', Auth::guard('tradeuser')->user()->id)
                     ->first();
 
-                if ($trade->Mode == 'BUY') {
+                $createdDate = Carbon::parse($trade->created_at);
+                $interval = (int) $user->ProfitBookInterval;
+                $targetTime = $createdDate->copy()->addMinutes($interval);
 
+                if (!Carbon::now()->greaterThanOrEqualTo($targetTime)) {
+                    $errors[] = "Can't Close: $symbol before {$user->ProfitBookInterval} minutes";
+                    continue;
+                }
+
+                if ($trade->Mode == 'BUY') {
                     $sellPrice =  $data['v']['ask'];
                 } else {
                     $sellPrice =  $data['v']['bid'];
@@ -672,19 +681,89 @@ class HomeController extends Controller
                             'Isactive' => 2,
                             'SalePrice' => $sellPrice
                         ]);
+
+
+                    // options config
+                    if (substr($symbol, -2) === "CE" || substr($symbol, -2) === "PE") {
+                        $this->optionConfig($symbol, $user);
+                    }
+                    // trading time
+                    $this->tradingTime($symbol, $user);
+                    $TradeUser = TradeUser::find($user->id);
+
+                    $salePrice = $sellPrice * $trade->Lots;
+                    $buyPrice = $trade->BuyPrice * $trade->Lots;
+
+                    $TradeUser->increment('balance', $salePrice);
+                    $TradeUser->increment('net_p_l', $buyPrice - $salePrice);
+
+                    $this->trnsectionDeatil($user->id, 'Deposit', 'Sale Price', $salePrice, 1);
                 }
             }
-            return response()->json([
-                'success' => true,
-                'message' => "Successfully closed {$closedCount} trades",
-                'closed_count' => $closedCount
-            ]);
+            if (!empty($errors)) {
+                return response()->json(['success' => false, 'message' => $errors], 500);
+            } else {
+                return response()->json([
+                    'success' => true,
+                    'message' => "Successfully closed trades",
+                    'closed_count' => ''
+                ]);
+            }
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
             ], 500);
         }
+    }
+
+    public function tradingTime($symbol, $user){
+        
+    }
+
+    public function optionConfig($symbol, $user)
+    {
+
+        $exchange = explode(":", $symbol)[0];
+        // preg_match('/NSE:(NIFTY|BANKNIFTY)/', $symbol, $matches);
+
+        //     $indexName = $matches[1];
+        //     dd($indexName);
+
+        if (preg_match('/NSE:(NIFTY|BANKNIFTY)/', $symbol, $matches) && $user->OptionsSSBrokerageType == 'per_lot') {
+            $brokrageChangeOneTime = $user->options_brokerage;
+        }
+        if ($exchange=='MCX' && $user->options_mcx_brokerage_type == 'per_lot') {
+            $brokrageChangeOneTime = $user->options_mcx_brokerage;
+        }
+        if ($user->options_equity_brokerage_type == 'per_lot') {
+            $brokrageChangeOneTime = $user->options_equity_brokerage;
+        }
+
+        $TradeUser = TradeUser::find($user->id);
+
+        $this->trnsectionDeatil($user->id, 'brokerage', 'BUY brokerage charge', $$brokrageChangeOneTime, 0);
+        $TradeUser->decrement('balance', $brokrageChangeOneTime * 2);
+        $this->trnsectionDeatil($user->id, 'brokerage', 'SELL brokerage charge', $brokrageChangeOneTime, 0);
+    }
+
+    public function trnsectionDeatil($user_id, $remark, $transpage, $amount, $type)
+    {
+
+        Transdetail::create([
+            'MemberId'   => $user_id,
+            'TransType'  => $remark,
+            'TransPage'  => $transpage,
+            // 'withdraw  approval',
+            'Type'       => ($type == 0) ? '-' : '+',
+            'TransDate'  => now(),
+            'Amount'     => $amount,
+            'AmountS'    => $amount,
+            'Remark'     => $remark,
+            'LoginId'    => $user_id,
+            'AddRemark'  => 'APPROVED BY ADMIN',
+            'AdminStatus' => 'APPROVED'
+        ]);
     }
 
     public function fetchCorrentData(array $symbols)

@@ -15,8 +15,8 @@ class MarketBidMaster extends Model
         'Bid', 'Ask', 'High', 'Low', 'TradeLast', 'Change', 'TradeOpen',
         'Volume', 'LastTradeQty', 'Atp', 'LotSize', 'OpenInterest',
         'BidQty', 'AskQty', 'PrevClose', 'UpperCircuit', 'LowerCircuit',
-        'Timestamp', 'Lastmodify', 'Isactive', 'UserId', 'Symbol',
-        'IsMin', 'IsMega', 'Lots', 'Price', 'IpAddress','OPTION','Min','Mega'
+        'Timestamp', 'Lastmodify', 'Isactive', 'UserId', 'Symbol','IsOrder',
+        'IsMin', 'IsMinMega', 'Lots', 'Price', 'IpAddress','OPTION','Min','Mega','holding_margin_req'
     ];
     
     protected $casts = [
@@ -46,4 +46,9 @@ class MarketBidMaster extends Model
         'Lastmodify' => 'datetime',
         'Isactive' => 'boolean'
     ];
+
+        public function user()
+    {
+        return $this->belongsTo(TradeUser::class, 'UserId', 'id');
+    }
 }

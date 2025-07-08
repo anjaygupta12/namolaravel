@@ -13,20 +13,22 @@ class TradeExport implements FromView
 {
     protected $from;
     protected $to;
-
-    public function __construct($from, $to)
+    protected  $userID;
+    public function __construct($from, $to, $userID)
     {
         $this->from = $from;
         $this->to = $to;
+        $this->userID = $userID;
     }
 
     public function view(): View
     {
-        $trades = marketbidmaster::whereDate('created_at', '>=', $this->from)
+        $trades = marketbidmaster::where('UserId',$this->userID)
+        ->whereDate('created_at', '>=', $this->from)
                     ->whereDate('created_at', '<=', $this->to)
                     ->orderBy('created_at', 'desc')
                     ->get();
-        
+
         return view('admin.exports.trades-full', compact('trades'));
     }
 }

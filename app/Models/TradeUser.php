@@ -177,7 +177,12 @@ protected $fillable = [
     'IntradayExposureMarginCrypto',
     'HoldingExposureMarginCrypto',
     'OrderspriceCrypto',
-    'is_active'
+    'is_active',
+    'mcx_brokerage_type',
+    'balance',
+    'deposits',
+    'withdrawals',
+    'net_p_l'
 ];
     
     protected $casts = [

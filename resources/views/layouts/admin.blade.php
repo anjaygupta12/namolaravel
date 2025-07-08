@@ -268,12 +268,12 @@
                             <p>Bank Details</p>
                         </a>
                     </li>
-                    <li class="nav-item {{ request()->routeIs('admin.negative-balance') ? 'active' : '' }}">
+                    {{-- <li class="nav-item {{ request()->routeIs('admin.negative-balance') ? 'active' : '' }}">
                         <a href="{{ route('admin.negative-balance') }}" class="nav-link">
                             <i class="fa fa-arrow-trend-up"></i>
                             <p>Negative Balance Transactions</p>
                         </a>
-                    </li>
+                    </li> --}}
                     <li class="nav-item {{ request()->routeIs('admin.market-watch') ? 'active' : '' }}">
                         <a href="{{ route('admin.market-watch') }}" class="nav-link">
                             <i class="fa fa-arrow-trend-up"></i>
@@ -286,12 +286,7 @@
                             <p>Notifications</p>
                         </a>
                     </li>
-                    <li class="nav-item {{ request()->routeIs('admin.action-ledger') ? 'active' : '' }}">
-                        <a href="{{ route('admin.action-ledger') }}" class="nav-link">
-                            <i class="fa fa-podcast"></i>
-                            <p>Action Ledger</p>
-                        </a>
-                    </li>
+                   
                     <li class="nav-item {{ request()->routeIs('admin.active-positions') ? 'active' : '' }}">
                         <a href="{{ route('admin.active-positions') }}" class="nav-link">
                             <i class="fa fa-certificate"></i>
@@ -382,6 +377,13 @@
                             <p>Social Links</p>
                         </a>
                     </li>
+                     <li class="nav-item {{ request()->routeIs('admin.action-ledger') ? 'active' : '' }}">
+                        <a href="{{ route('admin.action-ledger') }}" class="nav-link">
+                            <i class="fa fa-podcast"></i>
+                            <p>Action Ledger</p>
+                        </a>
+                    </li>
+                    
                     <li class="nav-item {{ request()->routeIs('admin.change-password') ? 'active' : '' }}">
                         <a href="{{ route('admin.change-password') }}" class="nav-link">
                             <i class="fa fa-user"></i>

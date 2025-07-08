@@ -290,10 +290,10 @@
                                         onchange="toggle_brokerage_type();">
                                         <option value="">Select Brokerage Calculation type</option>
                                         <option value="per_crore"
-                                            {{ old('mcx_brokerage_type', $user->MCXBrokerageType) == 'per_crore' ? 'selected' : '' }}>
+                                            {{ old('mcx_brokerage_type', $user->mcx_brokerage_type) == 'per_crore' ? 'selected' : '' }}>
                                             Per Crore Basis</option>
                                         <option value="per_lot"
-                                            {{ old('mcx_brokerage_type', $user->MCXBrokerageType) == 'per_lot' ? 'selected' : '' }}>
+                                            {{ old('mcx_brokerage_type', $user->mcx_brokerage_type) == 'per_lot' ? 'selected' : '' }}>
                                             Per Lot Basis</option>
                                     </select>
                                 </div>
@@ -567,7 +567,7 @@
                                 <input type="hidden" name="options_enabled" value="0">
                                 <label><input type="checkbox" id="mcxusers-equity" class="form-check-input"
                                         name="options_enabled" value="1"
-                                        {{ old('options_enabled', $user->OptionsEnabled) ? 'checked' : '' }}> Index Options
+                                        {{ old('options_enabled', $user->NSEOptionsEnabled) ? 'checked' : '' }}> Index Options
                                     Trading
                                     <span class="form-check-sign"><span class="check"></span></span></label>
                                 <div class="help-block"></div>
@@ -602,9 +602,7 @@
                                 <div class="dropdown">
                                     <select name="options_brokerage_type">
                                         <option value="">Select Brokerage Calculation type</option>
-                                        <option value="per_crore"
-                                            {{ old('options_brokerage_type', $user->OptionsBrokerageType) == 'per_crore' ? 'selected' : '' }}>
-                                            Per Crore Basis</option>
+                                     
                                         <option value="per_lot"
                                             {{ old('options_brokerage_type', $user->OptionsBrokerageType) == 'per_lot' ? 'selected' : '' }}>
                                             Per Lot Basis</option>
@@ -630,9 +628,7 @@
                                 <div class="dropdown">
                                     <select name="options_equity_brokerage_type">
                                         <option value="">Select Brokerage Calculation type</option>
-                                        <option value="per_crore"
-                                            {{ old('options_equity_brokerage_type', $user->OptionsEquityBrokerageType) == 'per_crore' ? 'selected' : '' }}>
-                                            Per Crore Basis</option>
+                                        
                                         <option value="per_lot"
                                             {{ old('options_equity_brokerage_type', $user->OptionsEquityBrokerageType) == 'per_lot' ? 'selected' : '' }}>
                                             Per Lot Basis</option>
@@ -658,9 +654,7 @@
                                 <div class="dropdown">
                                     <select name="options_mcx_brokerage_type">
                                         <option value="">Select Brokerage Calculation type</option>
-                                        <option value="per_crore"
-                                            {{ old('options_mcx_brokerage_type', $user->OptionsMCXBrokerageType) == 'per_crore' ? 'selected' : '' }}>
-                                            Per Crore Basis</option>
+                                        
                                         <option value="per_lot"
                                             {{ old('options_mcx_brokerage_type', $user->OptionsMCXBrokerageType) == 'per_lot' ? 'selected' : '' }}>
                                             Per Lot Basis</option>

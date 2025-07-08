@@ -3,6 +3,9 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\User\HomeController;
 use App\Http\Controllers\User\AuthController;
+use App\Models\MarketBidMaster;
+use Illuminate\Support\Facades\Auth;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -14,8 +17,18 @@ use App\Http\Controllers\User\AuthController;
 |
 */
 
+Route::get('/check', function() {
+
+    $activeTrades = MarketBidMaster::where('Isactive', 1)
+                ->orwhere('Isactive', 0)
+                ->where('UserId', Auth::guard('tradeuser')->user()->id)
+                ->orderBy('timestamp', 'desc')
+                ->get();
+
+
+}); 
 // User Routes
-// Route::get('/login', [AuthController::class, 'index'])->name('login');
+
 Route::post('/logout', function () {
     Auth::guard('tradeuser')->logout();
     request()->session()->invalidate();
@@ -48,6 +61,7 @@ Route::get('/deposit-withdraw', [HomeController::class, 'depositWithdraw'])->nam
 Route::get('/deposit-request-form', [HomeController::class, 'depositRequestForm'])->name('deposit.request.form');
 Route::post('/deposit-request-submit', [HomeController::class, 'depositRequestSubmit'])->name('deposit.submit');
 Route::get('/withdrawal_requests', [HomeController::class, 'withdrawalRequests'])->name('withdrawal.requests');
+Route::post('/user-update-password', [HomeController::class, 'updatePassword'])->name('password.update');
 
 Route::get('/withdrawal-requests-form', [HomeController::class, 'withdrawalRequestsForm'])->name('withdrawal.requests.form');
 Route::post('/withdrawal-request-submit', [HomeController::class, 'withdrawalRequestsSubmit'])->name('withdrawal.submit');

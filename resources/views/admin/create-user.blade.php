@@ -1114,7 +1114,7 @@
                                 <div class="dropdown">
                                     <select name="options_brokerage_type">
                                         <option value="">Select Brokerage Calculation type</option>
-                                        <option value="per_crore">Per Crore Basis</option>
+                                       
                                         <option value="per_lot" selected="">Per Lot Basis</option>
                                     </select>
                                 </div>
@@ -1137,7 +1137,7 @@
                                 <div class="dropdown">
                                     <select name="options_equity_brokerage_type">
                                         <option value="">Select Brokerage Calculation type</option>
-                                        <option value="per_crore">Per Crore Basis</option>
+                                     
                                         <option value="per_lot" selected="">Per Lot Basis</option>
                                     </select>
                                 </div>
@@ -1160,7 +1160,7 @@
                                 <div class="dropdown">
                                     <select name="options_mcx_brokerage_type">
                                         <option value="">Select Brokerage Calculation type</option>
-                                        <option value="per_crore">Per Crore Basis</option>
+                                       
                                         <option value="per_lot" selected="">Per Lot Basis</option>
                                     </select>
                                 </div>

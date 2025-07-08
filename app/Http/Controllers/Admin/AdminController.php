@@ -187,15 +187,14 @@ class AdminController extends Controller
             //     return back()->withErrors(['current_password' => 'Current transaction password is incorrect.']);
             // }
             $user->Password = Hash::make($request->new_password);
-        } 
-        else {
+        } else {
             // if (!Hash::check($request->current_password, $user->TransPass)) {
             //     return back()->withErrors(['current_password' => 'Current transaction password is incorrect.']);
             // }
             $user->TransPass = Hash::make($request->new_password);
         }
         $user->save();
-        
+
         return back()->with('success', 'Transaction password updated successfully.');
 
         $validator = Validator::make($request->all(), [
@@ -578,13 +577,10 @@ class AdminController extends Controller
         // Paginate the filtered results
         $currentPage = request()->get('page', 1);
         $perPage = 20;
-        $users = new \Illuminate\Pagination\LengthAwarePaginator(
-            $negativeBalanceUsers->forPage($currentPage, $perPage),
-            $negativeBalanceUsers->count(),
-            $perPage,
-            $currentPage,
-            ['path' => request()->url()]
-        );
+        $activeTrades = MarketBidMaster::where('Isactive', 1)
+            ->where('UserId', Auth::guard('tradeuser')->user()->id)
+            ->orderBy('timestamp', 'desc')
+            ->get();
 
         if (Session::has('admin_id')) {
             AdminLog::create([
@@ -639,34 +635,17 @@ class AdminController extends Controller
             ]);
         }
 
-        $marketStats = DB::table('marketbidmaster')
-            ->selectRaw('
-        Symbol,
-        COUNT(*)            AS TotalUser,
-        SUM(ToAmount)       AS ToAmount,
-        SUM(SalePrice)      AS SalePrice,
-        SUM(BuyPrice)       AS BuyPrice,
-        SUM(Bid)            AS Bid,
-        SUM(Ask)            AS Ask,
-        SUM(High)           AS Hig,
-        SUM(Low)            AS Low,
-        SUM(TradeLast)      AS TradeLast,
-        SUM(`Change`)       AS `Change`,
-        SUM(TradeOpen)      AS TradeOpen,
-        SUM(Volume)         AS Volume,
-        SUM(LastTradeQty)   AS LastTradeQty,
-        SUM(Atp)            AS Atp,
-        SUM(LotSize)        AS LotSize,
-        SUM(OpenInterest)   AS OpenInterest,
-        SUM(BidQty)         AS BidQty,
-        SUM(AskQty)         AS AskQty,
-        SUM(PrevClose)      AS PrevClose,
-        SUM(UpperCircuit)   AS UpperCircuit,
-        SUM(LowerCircuit)   AS LowerCircuit
-    ')
+        $positions = MarketBidMaster::selectRaw('SUM(SalePrice) as SalePrice, SUM(BuyPrice) as BuyPrice,
+count(Isactive) active,
+IFNULL(AVG(BuyPrice), 0) AS avgBuy,
+IFNULL(AVG(SalePrice), 0) AS SELLPRICE,
+count(UserId) as users,MAX(timestamp) as timestamp, Symbol, MAX(Pk_id) as Pk_id')
+            ->where('Isactive', 1)
             ->groupBy('Symbol')
+            ->orderBy('timestamp', 'desc')
             ->get();
 
+        // dd($positions);
         return view('admin.active-positions', compact('positions'));
     }
 
@@ -675,7 +654,7 @@ class AdminController extends Controller
      */
     public function closedPositions()
     {
-        // Get closed positions data - typically historical/completed trades
+
         $positions = []; // Replace with actual data fetching logic
 
         if (Session::has('admin_id')) {
@@ -686,17 +665,19 @@ class AdminController extends Controller
             ]);
         }
 
-
-        $positions = DB::table('marketplacemaster')
-            ->selectRaw('
-        Symbol,
+        $positions = MarketBidMaster::selectRaw('
         IFNULL(AVG(LotSize), 0) AS Lots,
-        IFNULL(AVG(BUYPRICE), 0) AS BUYPRICE,
-        IFNULL(AVG(SELLPRICE), 0) AS SELLPRICE
+        IFNULL(AVG(BuyPrice), 0) AS BUYPRICE,
+        COUNT(Isactive) AS active,
+        IFNULL(AVG(SalePrice), 0) AS SELLPRICE,
+        (SUM(BuyPrice) - SUM(SalePrice)) AS netpl,
+        Symbol,
+        MAX(Pk_id) AS Pk_id,
+        MAX(timestamp) AS latest_time
     ')
-            ->where('Status_Exec', 'Close')
+            ->where('Isactive', 2)
             ->groupBy('Symbol')
-            ->orderByDesc('Symbol')
+            ->orderByDesc('latest_time')
             ->get();
 
         return view('admin.closed-positions', compact('positions'));
@@ -709,7 +690,7 @@ class AdminController extends Controller
     {
         // Start with a base query
         $query = TradeUser::query()->with('transactions')
-            ->select(['id', 'user_id','FullName', 'Username', 'IsActive', 'IsDemo', 'created_at', 'funds']);
+            ->select(['id', 'user_id', 'FullName', 'Username', 'IsActive', 'IsDemo', 'created_at', 'funds', 'balance', 'deposits', 'withdrawals', 'net_p_l', 'broker_id', 'MCXBrokerage']);
 
         // Apply filters if provided
         if ($request->filled('username') && $request->username != '') {
@@ -734,13 +715,12 @@ class AdminController extends Controller
             $withdraw = $q->transactions->where('Type', '-')->where('AdminStatus', 'APPROVED')->sum('Amount');
             $q->deposit = $deposit;
             $q->withdraw = $withdraw;
-           
+
             $q->funds = $q->funds + $deposit - $withdraw;
 
             return $q;
         });
 
-       
         if (Session::has('admin_id')) {
             AdminLog::create([
                 'admin_id' => Session::get('admin_id'),
@@ -782,14 +762,11 @@ class AdminController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'fullname' => 'required|string|max:255',
-            'username' => 'required|string|max:255',
-            'mobile' => 'nullable|string|max:20',
-            'city' => 'nullable|string|max:255',
+            'fullname' => 'required',
+            'username' => 'required',
+            'mobile' => 'nullable',
+            'city' => 'nullable',
             'transaction_password' => 'nullable|string|min:6',
-            'auto_square_off_percentage' => 'nullable|numeric',
-            'notify_percentage' => 'nullable|numeric',
-            'profit_book_interval' => 'nullable|numeric',
         ]);
 
         if ($validator->fails()) {
@@ -801,6 +778,10 @@ class AdminController extends Controller
             return redirect()->back()->with('error', 'Invalid transaction password.');
         }
 
+        if ($request->input('Username') == $adminUser->TransPass) {
+            return redirect()->back()->with('error', 'Your are Enter Duplicate User Name.');
+        }
+
         try {
             DB::beginTransaction();
 
@@ -808,14 +789,15 @@ class AdminController extends Controller
             $user = $request->id ? TradeUser::findOrFail($request->id) : new TradeUser();
             // dd($request->status,$request->has('status'),$request->has('Mcxusers.demo'));
             // Basic information
-            if(!$request->id){
-                $user->user_id= rand(10000, 99999);
+            if (!$request->id) {
+                $user->user_id = rand(10000, 99999);
                 $user->Password = bcrypt($request->input('password'));
-                 $user->funds = $request->funds;
+                $user->funds = $request->funds;
+                $user->balance =  $request->funds;
             }
             $user->FullName = $request->input('fullname');
             $user->Username = $request->input('username');
-          
+
             $user->Mobile = $request->input('mobile');
             $user->City = $request->input('city');
             $user->TransPass = bcrypt($request->input('transaction_password'));
@@ -841,7 +823,7 @@ class AdminController extends Controller
             $user->MCXMaxLotPerTrade = $request->input('mcx_max_lot_per_trade', 20);
             $user->MCXMaxLotPerScrip = $request->input('mcx_max_lot_per_scrip', 50);
             $user->MaxCommodityLots = $request->input('max_commodity_lots', 100);
-            $user->ComexbrokerageType = $request->input('mcx_brokerage_type', 'per_crore');
+            $user->mcx_brokerage_type = $request->mcx_brokerage_type;
             $user->MCXBrokerage = $request->input('mcx_brokerage', 800);
             $user->MCXExposureType = $request->input('mcx_exposure_type', 'per_turnover');
             $user->MCXIntradayMargin = $request->input('mcx_intraday_margin', 500);
@@ -851,7 +833,7 @@ class AdminController extends Controller
             $user->MCXBidGapJSON = json_encode($request->input('mcx_bid_gap', []));
 
             // NSE Futures
-            $user->NSEFuturesEnabled = $request->has('nse_enabled') ? 1 : 0;
+            $user->NSEFuturesEnabled = $request->nse_enabled;
             $user->NSEFuturesBrokerage = $request->input('nse_brokerage', 800);
             $user->NSEFuturesMinLotPerTrade = $request->input('nse_equity_min_lot_per_trade', 0);
             $user->NSEFuturesMaxLotPerTrade = $request->input('nse_equity_max_lot_per_trade', 50);
@@ -866,8 +848,8 @@ class AdminController extends Controller
             $user->NSEBidGapPercentage = $request->input('nse_bid_gap_percentage', 0);
 
             // NSE Options
-            $user->NSEOptionsEnabled = $request->has('options_enabled') ? 1 : 0;
-            $user->EquityOptionsEnabled = $request->has('equity_options_enabled') ? 1 : 0;
+            $user->NSEOptionsEnabled = $request->options_enabled;
+            $user->EquityOptionsEnabled = $request->input('equity_options_enabled');
             $user->OptionsBrokerageType = $request->input('options_brokerage_type', 'per_lot');
             $user->OptionsBrokerage = $request->input('options_brokerage', 25);
             $user->OptionsEquityBrokerageType = $request->input('options_equity_brokerage_type', 'per_lot');
@@ -890,7 +872,7 @@ class AdminController extends Controller
             $user->OptionsBidGapPercentage = $request->input('options_bid_gap_percentage', 0);
 
             // MCX Options
-            $user->MCXOptionsEnabled = $request->has('mcx_options_enabled') ? 1 : 0;
+            $user->MCXOptionsEnabled = $request->mcx_options_enabled;
             $user->OptionsMCXBrokerageType = $request->input('options_mcx_brokerage_type', 'per_lot');
             $user->OptionsMCXBrokerage = $request->input('options_mcx_brokerage', 50);
             $user->OptionsMCXShortSellingAllowed = $request->input('options_mcx_short_selling_allowed', 0);
@@ -902,7 +884,7 @@ class AdminController extends Controller
             $user->OptionsMCXHoldingMargin = $request->input('options_mcx_holding_margin', 3);
 
             // Options Shortselling Config
-            $user->OptionsSSBrokerageType = $request->input('options_ss_brokerage_type', 'per_lot');
+            $user->OptionsSSBrokerageType = $request->options_ss_brokerage_type;
             $user->OptionsSSBrokerage = $request->input('options_ss_brokerage', 50);
             $user->OptionsSSEquityBrokerageType = $request->input('options_ss_equity_brokerage_type', 'per_lot');
             $user->OptionsSSEquityBrokerage = $request->input('options_ss_equity_brokerage', 20);
@@ -927,7 +909,7 @@ class AdminController extends Controller
             $user->OptionsSSMCXIntradayMargin = $request->input('options_ss_mcx_intraday_margin', 5);
             $user->OptionsSSMCXHoldingMargin = $request->input('options_ss_mcx_holding_margin', 3);
 
-           
+
             // Set created/modified info
             if ($request->id) {
                 $user->ModifiedBy = Session::get('admin_id');
@@ -1003,11 +985,11 @@ class AdminController extends Controller
     /**
      * View user details
      */
-    public function resetAccount(Request $request,$id)
+    public function resetAccount(Request $request, $id)
     {
-        DepositeMaster::where('UserId',$id)->delete();
-        Transdetail::where('UserId',$id)->delete();
-        TradeUser::where('id',$id)->update('MCXBrokerage',0);
+        DepositeMaster::where('UserId', $id)->delete();
+        Transdetail::where('UserId', $id)->delete();
+        TradeUser::where('id', $id)->update('MCXBrokerage', 0);
 
         return redirect()->back()->with('success', 'Reset successfully Account.');
     }
@@ -1015,29 +997,32 @@ class AdminController extends Controller
     {
 
         return redirect()->back()->with('success', 'Please reset Brockrage change Successfully.');
-
-
     }
     public function viewUser($id)
     {
         $user = TradeUser::findOrFail($id);
-        $funds = Transdetail::where('MemberId', $id)->paginate(2);
+        // $funds = Transdetail::where('MemberId', $id)->paginate(2);
+        $startOfWeek = Carbon::now()->startOfWeek(); // Monday
+        $endOfWeek = Carbon::now()->endOfWeek();     // Sunday
+        $funds = Transdetail::where('MemberId', $id)
+            ->whereBetween('TransDate', [$startOfWeek, $endOfWeek])
+            ->orderByDesc('TransDate')->paginate(3);
 
         $trades = MarketBidMaster::where('UserId', $id)
             ->where('Isactive', 1)->get();
         $closedTrade = MarketBidMaster::where('UserId', $id)
-            ->where('Isactive', 3)->get();
+            ->where('Isactive', 2)->get();
         $mxcPendingTrade = MarketBidMaster::where('UserId', $id)
             ->where('Isactive', 0)
             ->where('Symbol', 'like', 'MCX%')->get();
 
         $equityPendingTrade = MarketBidMaster::where('UserId', $id)
             ->where('Isactive', 0)
-            ->where('Symbol', 'like', 'MCX%')->get();
+            ->where('Symbol', 'like', 'Equity%')->get();
 
         $comexPendingTrade = MarketBidMaster::where('UserId', $id)
             ->where('Isactive', 0)
-            ->where('Symbol', 'like', 'MCX%')->get();
+            ->where('Symbol', 'like', 'COMEX%')->get();
 
         if (Session::has('admin_id')) {
             AdminLog::create([
@@ -1048,7 +1033,7 @@ class AdminController extends Controller
         } else {
             return redirect('admin/login');
         }
-      
+
         return view('admin.users-view', compact(
             'user',
             'funds',
@@ -1066,14 +1051,15 @@ class AdminController extends Controller
     public function exportExcel(Request $request)
     {
         $request->validate([
+            'user_id' => 'required',
             'from_date' => 'required|date',
             'to_date' => 'required|date|after_or_equal:from_date',
         ]);
 
         $from = $request->input('from_date');
         $to = $request->input('to_date');
-
-        return Excel::download(new TradeExport($from, $to), 'trades_export_' . $from . '_to_' . $to . '.xlsx');
+        $userID = $request->input('user_id');
+        return Excel::download(new TradeExport($from, $to, $userID), 'trades_export_' . $from . '_to_' . $to . '.xlsx');
     }
 
     public function exportPdf(Request $request)
@@ -1774,8 +1760,10 @@ class AdminController extends Controller
      */
     public function pendingOrders()
     {
-        // Get pending orders data
-        $pendingOrders = []; // Replace with actual pending orders data fetching logic
+
+        $pendingOrders = MarketBidMaster::with('user')->where('Isactive', 0)
+            ->orderBy('timestamp', 'desc')
+            ->get();
 
         if (Session::has('admin_id')) {
             AdminLog::create([
@@ -1961,6 +1949,9 @@ class AdminController extends Controller
         if (!Hash::check($request->input('transaction_password'), $adminUser->TransPass)) {
             return redirect()->back()->with('error', 'Invalid transaction password.');
         }
+        $user->increment('deposits', $request->amount);
+        $user->increment('balance', $request->amount);
+        $user->save();
 
         $fund = new DepositeMaster();
         $fund->UserId = $user->id;
@@ -2008,6 +1999,10 @@ class AdminController extends Controller
             return redirect()->back()->with('error', 'Invalid transaction password.');
         }
 
+        $user->increment('withdrawals', $request->amount);
+        $user->decrement('balance', $request->amount);
+        $user->save();
+
         $fund = new DepositeMaster();
         $fund->UserId = $user->id;
         $fund->Amount = $request->amount;
@@ -2019,7 +2014,7 @@ class AdminController extends Controller
         $transPage = 'withdraw  approval';
         $depType = '-';
         $remarks = 'withdraw';
-        
+
         $this->approvedStatus($fund, $transPage, $depType, $remarks);
 
         return redirect()->back()->with('success', 'Fund Withdrawal successfully.');
@@ -2045,7 +2040,7 @@ class AdminController extends Controller
             'AddRemark'  => 'APPROVED BY ADMIN',
             'TransId'    => 0,
             'RefTransId' => 0,
-            'AdminStatus'=>'APPROVED'
+            'AdminStatus' => 'APPROVED'
         ]);
     }
     /**
@@ -2069,6 +2064,7 @@ class AdminController extends Controller
         }
         $data = DepositeMaster::with('user')
             ->where('Approve_Status', 'Pending')
+            ->where('type', 1)
             ->get();
 
         return view('admin.deposit-requests', compact('data'));
@@ -2084,15 +2080,22 @@ class AdminController extends Controller
         DB::beginTransaction();
         try {
             $deposit = DepositeMaster::lockForUpdate()->findOrFail($request->ID);
+            $TradeUser = TradeUser::find($deposit->UserId);
+
             $type    = $request->input('type');
             $transPage = 'Deposit approval';
             $depType = '+';
             $remarks = 'Deposit';
 
             if ($deposit->type == 0) {
-                $transPage = 'withdraw  approval';
+                $transPage = 'withdraw approval';
                 $depType = '-';
                 $remarks = 'withdraw';
+                $TradeUser->decrement('balance', $deposit->Amount);
+                $TradeUser->increment('withdrawals', $deposit->Amount);
+            } else {
+                $TradeUser->increment('balance', $deposit->Amount);
+                $TradeUser->increment('deposits', $deposit->Amount);
             }
 
             if ($type === 'APPROVED') {
@@ -2114,14 +2117,14 @@ class AdminController extends Controller
                     'AddRemark'  => 'APPROVED BY ADMIN',
                     'TransId'    => 0,
                     'RefTransId' => 0,
-                    'AdminStatus'=>'APPROVED'
+                    'AdminStatus' => 'APPROVED'
                 ]);
 
                 $deposit->update([
                     'Approve_Status' => 'APPROVED',
                     'Approve_Date'   => now(),
                 ]);
-
+                $TradeUser->save();
                 $message = 'Deposit approved successfully';
             } else {
                 $deposit->update([
@@ -2148,7 +2151,10 @@ class AdminController extends Controller
     public function withdrawalRequests()
     {
         // Get withdrawal requests data
-        $withdrawalRequests = []; // Replace with actual withdrawal requests data fetching logic
+        $withdrawalRequests = DepositeMaster::with('user')
+            ->where('Approve_Status', 'Pending')
+            ->where('type', 0)
+            ->get();
 
         if (Session::has('admin_id')) {
             AdminLog::create([
@@ -2261,8 +2267,6 @@ class AdminController extends Controller
             return back()->with('success', 'Script Create successfully.');
         }
     }
-
-
 
     /**
      * Show scrip data page

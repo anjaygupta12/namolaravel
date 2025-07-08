@@ -8,8 +8,8 @@
             <img src="{{ asset('assets/img/sample/avatar/avatar1.jpg') }}" alt="Profile" class="profile-image">
         </div>
         <div class="profile-details">
-            <h2 class="profile-name">John Doe</h2>
-            <p class="profile-id">ID: NM123456</p>
+            <h2 class="profile-name">{{Auth::guard('tradeuser')->user()->FullName }}</h2>
+            <p class="profile-id">ID: {{Auth::guard('tradeuser')->user()->user_id }}</p>
         </div>
     </div>
 
@@ -42,7 +42,9 @@
                 <i class="fas fa-chevron-right"></i>
             </a>
             
-            <a href="#" class="menu-item" data-bs-toggle="modal" data-bs-target="#depositModal">
+            <a href="{{route('deposit.request.form') }}" class="menu-item" >
+            {{-- <a href="{{route('deposit.request.form') }}" class="menu-item" data-bs-toggle="modal" data-bs-target="#depositModal"> --}}
+
                 <div class="menu-icon">
                     <i class="fas fa-arrow-down"></i>
                 </div>
@@ -50,7 +52,9 @@
                 <i class="fas fa-chevron-right"></i>
             </a>
             
-            <a href="#" class="menu-item" data-bs-toggle="modal" data-bs-target="#withdrawalModal">
+            <a href="{{route('withdrawal.requests.form') }}" class="menu-item" >
+            {{-- <a href="{{route('withdrawal.requests.form') }}" class="menu-item" data-bs-toggle="modal" data-bs-target="#withdrawalModal"> --}}
+
                 <div class="menu-icon">
                     <i class="fas fa-arrow-up"></i>
                 </div>
@@ -109,16 +113,22 @@
             <div class="modal-body">
                 <div class="notification-list">
                     <!-- Sample notifications -->
+                    @foreach($notifaction as $noti)
                     <div class="notification-item">
                         <div class="notification-icon">
+                            @if($noti->is_read==0)
                             <i class="fas fa-info-circle text-primary"></i>
+                            @else
+                             <i class="fas fa-check-circle text-success"></i>
+                            @endif
                         </div>
                         <div class="notification-content">
-                            <p class="notification-text">Your deposit of ₹10,000 has been processed successfully.</p>
-                            <p class="notification-time">2 hours ago</p>
+                            <p class="notification-text">{{  $noti->message }}</p>
+                           <p class="notification-time">{{ $noti->created_at->diffForHumans() }}</p>
                         </div>
                     </div>
-                    <div class="notification-item">
+                    @endforeach
+                    {{-- <div class="notification-item">
                         <div class="notification-icon">
                             <i class="fas fa-check-circle text-success"></i>
                         </div>
@@ -126,7 +136,7 @@
                             <p class="notification-text">Your withdrawal request has been approved.</p>
                             <p class="notification-time">1 day ago</p>
                         </div>
-                    </div>
+                    </div> --}}
                     <!-- Add more notifications as needed -->
                 </div>
             </div>
@@ -149,15 +159,15 @@
                 <div class="balance-cards">
                     <div class="balance-card">
                         <h6>Available Balance</h6>
-                        <h3>₹25,000</h3>
+                        <h3>₹ {{Auth::guard('tradeuser')->user()->balance }} </h3>
                     </div>
                     <div class="balance-card">
                         <h6>Invested Amount</h6>
-                        <h3>₹50,000</h3>
+                        <h3>₹{{$invest}}</h3>
                     </div>
                     <div class="balance-card">
                         <h6>Total Profit</h6>
-                        <h3>₹5,250</h3>
+                        <h3>₹ {{ Auth::guard('tradeuser')->user()->net_p_l }}</h3>
                     </div>
                 </div>
                 <div class="transaction-history mt-4">
@@ -172,18 +182,20 @@
                             </tr>
                         </thead>
                         <tbody>
+                            @foreach($data as $val)
                             <tr>
-                                <td>2023-06-15</td>
-                                <td>Deposit</td>
-                                <td>₹10,000</td>
-                                <td><span class="badge bg-success">Completed</span></td>
+                                <td>{{ $val->created_at ? \Carbon\Carbon::parse($val->created_at)->format('d-M-Y h:i:s A') : '' }}</td>
+                                <td>{{ ($val->type==1)? 'Deposit': 'Withdrawal' }}</td>
+                                <td>₹ {{$val->Amount }}</td>
+                                <td>
+                                   <p class="detail mt-1 mb-1">
+                                    <span class="badge {{$val->Approve_Status === 'APPROVED' ? 'badge-success' : 'badge-danger'}}">
+                                    {{ $val->Approve_Status}}
+                                    </span>
+                                </p>
+                                </td>
                             </tr>
-                            <tr>
-                                <td>2023-06-10</td>
-                                <td>Withdrawal</td>
-                                <td>₹5,000</td>
-                                <td><span class="badge bg-success">Completed</span></td>
-                            </tr>
+                          @endforeach
                         </tbody>
                     </table>
                 </div>
@@ -212,20 +224,17 @@
                     <form>
                         <div class="mb-3">
                             <label for="fullName" class="form-label">Full Name</label>
-                            <input type="text" class="form-control" id="fullName" value="John Doe">
+                            <input type="text" class="form-control" id="fullName" value="{{Auth::guard('tradeuser')->user()->FullName }}">
                         </div>
                         <div class="mb-3">
-                            <label for="email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="email" value="john.doe@example.com">
+                            <label for="email" class="form-label">User Name</label>
+                            <input type="email" class="form-control" id="email" value="{{Auth::guard('tradeuser')->user()->Username }}">
                         </div>
                         <div class="mb-3">
                             <label for="phone" class="form-label">Phone</label>
-                            <input type="tel" class="form-control" id="phone" value="+91 9876543210">
+                            <input type="tel" class="form-control" id="phone" value="{{Auth::guard('tradeuser')->user()->Mobile }}">
                         </div>
-                        <div class="mb-3">
-                            <label for="address" class="form-label">Address</label>
-                            <textarea class="form-control" id="address" rows="3">123 Main St, Mumbai, India</textarea>
-                        </div>
+                       
                         <button type="submit" class="btn btn-primary">Update Profile</button>
                     </form>
                 </div>
@@ -385,23 +394,33 @@
                 <h5 class="modal-title">Change Password</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+            
             <div class="modal-body">
                 <div class="password-form">
-                    <form>
-                        <div class="mb-3">
-                            <label for="currentPassword" class="form-label">Current Password</label>
-                            <input type="password" class="form-control" id="currentPassword">
-                        </div>
-                        <div class="mb-3">
-                            <label for="newPassword" class="form-label">New Password</label>
-                            <input type="password" class="form-control" id="newPassword">
-                        </div>
-                        <div class="mb-3">
-                            <label for="confirmPassword" class="form-label">Confirm New Password</label>
-                            <input type="password" class="form-control" id="confirmPassword">
-                        </div>
-                        <button type="submit" class="btn btn-primary">Change Password</button>
-                    </form>
+                    @if(session('success'))
+                            <div class="alert alert-success">{{ session('success') }}</div>
+                        @endif
+
+                        @if($errors->any())
+                            @foreach ($errors->all() as $error)
+                                <div class="alert alert-danger">{{ $error }}</div>
+                            @endforeach
+                        @endif
+
+                        <form method="POST" action="{{ route('password.update') }}">
+                            @csrf
+                            <div class="mb-3">
+                                <label for="currentPassword" class="form-label">Current Password</label>
+                                <input type="password" class="form-control" id="currentPassword" name="current_password" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="newPassword" class="form-label">New Password</label>
+                                <input type="password" class="form-control" id="newPassword" name="new_password" required>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">Change Password</button>
+                        </form>
+
                 </div>
             </div>
             <div class="modal-footer">
@@ -627,7 +646,7 @@
         flex: 1;
         min-width: 200px;
         padding: 20px;
-        background: #f8f9fa;
+        background: #020b14;
         border-radius: 10px;
         text-align: center;
     }

@@ -61,8 +61,8 @@
                                             <td>{{ $val->Amount }}</td>
                                             <td>{{ $val->Amount }}</td>
                                             <td>{{ $val->Amount }}</td>
-                                            <td>{{ $val->Timestamp }}</td>
-                                             <td><span class="badge badge-warning">{{ ($val->type==1)? 'Deposit':'withdraw' }}</span></td>
+                                            <td>{{ $val->type }}</td>
+                                             <td><span class="badge badge-warning">Deposit</span></td>
                                             <td><span class="badge badge-warning">{{ $val->Approve_Status }}</span></td>
                                             <td>
                                                 <div class="d-flex">

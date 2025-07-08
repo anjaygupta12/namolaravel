@@ -30,14 +30,14 @@
                                     @foreach ($positions as $val)
                                         <tr>
                                             <td><a class="badge badge-pill badge-success"
-                                                    href="closedtrades-user.aspx?scrip_id=AMBUJACEM25JAN540PE">{{ $val->Symbol }}</a>
+                                                    href="#">{{ $val->Symbol }}</a>
                                             </td>
                                             <td>{{ $val->Lots }}</td>
                                             <td>{{ $val->BUYPRICE }}</td>
                                             <td>{{ $val->SELLPRICE }}</td>
-                                            <td>-1890</td>
+                                            <td>{{ $val->netpl }}</td>
                                             <td>40</td>
-                                            <td>-1930</td>
+                                            <td>{{ $val->netpl - 40 }}</td>
                                         </tr>
                                     @endforeach()
                                 </tbody>
