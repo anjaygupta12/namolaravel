@@ -30,6 +30,7 @@ use Illuminate\Support\Facades\Schema;
 use App\Exports\TradeExport;
 use App\Models\ForexOption;
 use Crabon\Crabon;
+use Illuminate\Support\Facades\Http;
 
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -689,8 +690,24 @@ count(UserId) as users,MAX(timestamp) as timestamp, Symbol, MAX(Pk_id) as Pk_id'
     public function users(Request $request)
     {
         // Start with a base query
-        $query = TradeUser::query()->with('transactions')
-            ->select(['id', 'user_id', 'FullName', 'Username', 'IsActive', 'IsDemo', 'created_at', 'funds', 'balance', 'deposits', 'withdrawals', 'net_p_l', 'broker_id', 'MCXBrokerage']);
+        $query = TradeUser::with('transactions', 'broker')
+            ->select([
+                'id',
+                'broker_id',
+                'user_id',
+                'FullName',
+                'Username',
+                'IsActive',
+                'IsDemo',
+                'created_at',
+                'funds',
+                'balance',
+                'deposits',
+                'withdrawals',
+                'net_p_l',
+                'broker_id',
+                'MCXBrokerage'
+            ]);
 
         // Apply filters if provided
         if ($request->filled('username') && $request->username != '') {
@@ -708,19 +725,6 @@ count(UserId) as users,MAX(timestamp) as timestamp, Symbol, MAX(Pk_id) as Pk_id'
         // Get users data
         $users = $query->orderBy('created_at', 'desc')->get();
 
-        // Map to calculate deposit and withdraw
-        $users = $users->map(function ($q) {
-
-            $deposit = $q->transactions->where('Type', '+')->where('AdminStatus', 'APPROVED')->sum('Amount');
-            $withdraw = $q->transactions->where('Type', '-')->where('AdminStatus', 'APPROVED')->sum('Amount');
-            $q->deposit = $deposit;
-            $q->withdraw = $withdraw;
-
-            $q->funds = $q->funds + $deposit - $withdraw;
-
-            return $q;
-        });
-
         if (Session::has('admin_id')) {
             AdminLog::create([
                 'admin_id' => Session::get('admin_id'),
@@ -733,6 +737,7 @@ count(UserId) as users,MAX(timestamp) as timestamp, Symbol, MAX(Pk_id) as Pk_id'
 
         return view('admin.users', compact('users'));
     }
+
     public function createUsers()
     {
         if (Session::has('admin_id')) {
@@ -764,10 +769,20 @@ count(UserId) as users,MAX(timestamp) as timestamp, Symbol, MAX(Pk_id) as Pk_id'
         $validator = Validator::make($request->all(), [
             'fullname' => 'required',
             'username' => 'required',
-            'mobile' => 'nullable',
-            'city' => 'nullable',
+            'mobile' => 'required',
+            'city' => 'required',
             'transaction_password' => 'nullable|string|min:6',
         ]);
+        if (!$request->id || $request->has('copy')) {
+            $validator = Validator::make($request->all(), [
+                'fullname' => 'required',
+                'username' => 'required|unique:tradeuser,Username',
+                'mobile' => 'required',
+                'city' => 'required',
+                'transaction_password' => 'nullable|string|min:6',
+            ]);
+        }
+
 
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
@@ -818,7 +833,7 @@ count(UserId) as users,MAX(timestamp) as timestamp, Symbol, MAX(Pk_id) as Pk_id'
             $user->ProfitBookInterval = $request->input('profit_book_interval', 120);
 
             // MCX settings
-            $user->MCXEnabled = $request->mcx_enabled;
+            $user->MCXEnabled = $request->input('mcx_enabled', 0);
             $user->MCXMinLotPerTrade = $request->input('mcx_min_lot_per_trade', 0);
             $user->MCXMaxLotPerTrade = $request->input('mcx_max_lot_per_trade', 20);
             $user->MCXMaxLotPerScrip = $request->input('mcx_max_lot_per_scrip', 50);
@@ -833,7 +848,7 @@ count(UserId) as users,MAX(timestamp) as timestamp, Symbol, MAX(Pk_id) as Pk_id'
             $user->MCXBidGapJSON = json_encode($request->input('mcx_bid_gap', []));
 
             // NSE Futures
-            $user->NSEFuturesEnabled = $request->nse_enabled;
+            $user->NSEFuturesEnabled = $request->input('nse_enabled', 0);
             $user->NSEFuturesBrokerage = $request->input('nse_brokerage', 800);
             $user->NSEFuturesMinLotPerTrade = $request->input('nse_equity_min_lot_per_trade', 0);
             $user->NSEFuturesMaxLotPerTrade = $request->input('nse_equity_max_lot_per_trade', 50);
@@ -848,7 +863,7 @@ count(UserId) as users,MAX(timestamp) as timestamp, Symbol, MAX(Pk_id) as Pk_id'
             $user->NSEBidGapPercentage = $request->input('nse_bid_gap_percentage', 0);
 
             // NSE Options
-            $user->NSEOptionsEnabled = $request->options_enabled;
+            $user->NSEOptionsEnabled = $request->input('options_enabled', 0);
             $user->EquityOptionsEnabled = $request->input('equity_options_enabled');
             $user->OptionsBrokerageType = $request->input('options_brokerage_type', 'per_lot');
             $user->OptionsBrokerage = $request->input('options_brokerage', 25);
@@ -911,6 +926,7 @@ count(UserId) as users,MAX(timestamp) as timestamp, Symbol, MAX(Pk_id) as Pk_id'
 
 
             // Set created/modified info
+
             if ($request->id) {
                 $user->ModifiedBy = Session::get('admin_id');
                 $user->ModifiedDate = now();
@@ -923,7 +939,7 @@ count(UserId) as users,MAX(timestamp) as timestamp, Symbol, MAX(Pk_id) as Pk_id'
             return redirect()->route('admin.users')->with('success', 'User ' . ($request->id ? 'updated' : 'created') . ' successfully!');
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->with('error', 'Error ' . ($request->id ? 'updating' : 'creating') . ' user: ' . $e->getMessage())
+            return redirect()->back()->with('error', 'Error: Somethings want Wrong ')
                 ->withInput();
         }
     }
@@ -1004,25 +1020,31 @@ count(UserId) as users,MAX(timestamp) as timestamp, Symbol, MAX(Pk_id) as Pk_id'
         // $funds = Transdetail::where('MemberId', $id)->paginate(2);
         $startOfWeek = Carbon::now()->startOfWeek(); // Monday
         $endOfWeek = Carbon::now()->endOfWeek();     // Sunday
-        $funds = Transdetail::where('MemberId', $id)
-            ->whereBetween('TransDate', [$startOfWeek, $endOfWeek])
-            ->orderByDesc('TransDate')->paginate(3);
+        $funds = DepositeMaster::where('UserId', $id)
+            ->whereBetween('created_at', [$startOfWeek, $endOfWeek])
+            ->orderByDesc('created_at')->paginate(3);
 
-        $trades = MarketBidMaster::where('UserId', $id)
-            ->where('Isactive', 1)->get();
-        $closedTrade = MarketBidMaster::where('UserId', $id)
+        $trades = MarketBidMaster::with('user')->where('UserId', $id)
+            ->where('Isactive', 1)
+            ->orderBy('created_at','desc')
+            ->get();
+        $closedTrade = MarketBidMaster::with('user')->where('UserId', $id)
+         ->orderBy('created_at','desc')
             ->where('Isactive', 2)->get();
-        $mxcPendingTrade = MarketBidMaster::where('UserId', $id)
+        $mxcPendingTrade = MarketBidMaster::with('user')->where('UserId', $id)
             ->where('Isactive', 0)
-            ->where('Symbol', 'like', 'MCX%')->get();
+             ->orderBy('created_at','desc')
+            ->where('TransactionMode', 'MCX')->get();
 
-        $equityPendingTrade = MarketBidMaster::where('UserId', $id)
+        $equityPendingTrade = MarketBidMaster::with('user')->where('UserId', $id)
             ->where('Isactive', 0)
-            ->where('Symbol', 'like', 'Equity%')->get();
+             ->orderBy('created_at','desc')
+            ->where('TransactionMode', 'NSE')->get();
 
-        $comexPendingTrade = MarketBidMaster::where('UserId', $id)
+        $comexPendingTrade = MarketBidMaster::with('user')->where('UserId', $id)
             ->where('Isactive', 0)
-            ->where('Symbol', 'like', 'COMEX%')->get();
+             ->orderBy('created_at','desc')
+            ->where('TransactionMode', 'COMEX')->get();
 
         if (Session::has('admin_id')) {
             AdminLog::create([
@@ -1044,6 +1066,57 @@ count(UserId) as users,MAX(timestamp) as timestamp, Symbol, MAX(Pk_id) as Pk_id'
             'comexPendingTrade'
         ));
     }
+
+   public function getLivePrices($user_id)
+{
+    $trades = MarketBidMaster::where('Isactive', 1)
+        ->where('UserId', $user_id)
+        ->get();
+
+    $symbols = $trades->pluck('Symbol')->unique()->toArray();
+
+    $fyers = DB::table('fyers')->first();
+    $token = $fyers->FYERS_CLIENT_ID . ':' . $fyers->FYERS_ACCESS_TOKEN;
+
+    $url = 'https://api-t1.fyers.in/data/quotes';
+    $queryParams = [
+        'symbols' => implode(',', $symbols),
+    ];
+
+    $response = Http::withHeaders([
+        'Authorization' => $token
+    ])->get($url, $queryParams);
+
+    if (!$response->successful()) {
+        return response()->json(['error' => 'Unable to fetch prices'], 500);
+    }
+
+    $apiData = collect($response->json()['d'])->keyBy('n');
+    $result = [];
+
+    foreach ($trades as $trade) {
+        $symbol = $trade->Symbol;
+
+        if (!isset($apiData[$symbol])) {
+            continue;
+        }
+
+        $data = $apiData[$symbol];
+
+        $sellPrice = $trade->Mode == 'BUY' ? $data['v']['ask'] : $data['v']['bid'];
+        $lotSize = (int)$trade->Lots * $trade->LotSize;
+        $pl = ($sellPrice - $trade->BuyPrice) * $lotSize;
+
+        $result[] = [
+            'Pk_id' => $trade->Pk_id,
+            'Symbol' => $symbol,
+            'TradeLast' => $sellPrice,
+            'pl' => $pl
+        ];
+    }
+
+    return response()->json($result);
+}
 
     /**
      * Show form to edit a user
@@ -1808,12 +1881,12 @@ count(UserId) as users,MAX(timestamp) as timestamp, Symbol, MAX(Pk_id) as Pk_id'
             ->when($request->filled('amount'), function ($q) use ($request) {
                 $q->where('td.AmountS', $request->amount);
             })
-            ->selectRaw("td.type,td.TransPage,tu.FullName,tu.UserName as UserName,td.PK_ID,td.AmountS,
+            ->selectRaw("td.TransType,td.transaction_id,td.type,td.TransPage,tu.FullName,tu.UserName as UserName,td.PK_ID,td.AmountS,
                         td.Remark,'Deposit' as Mode,td.adminstatus,td.transdate as Timestamp")
-            ->orderBy('Timestamp', 'desc')
+            ->orderBy('td.TransDate', 'desc')
             ->get();
 
-        // dd($depositQ);
+        
         return view('admin.funds', compact('depositQ'));
     }
 
@@ -2024,6 +2097,7 @@ count(UserId) as users,MAX(timestamp) as timestamp, Symbol, MAX(Pk_id) as Pk_id'
     {
 
         Transdetail::create([
+            'transaction_id' => date('ymdhis'),
             'MemberId'   => $data->UserId,
             'TransType'  => 'Main Wallet',
             'TransPage'  => $transPage,
@@ -2101,6 +2175,7 @@ count(UserId) as users,MAX(timestamp) as timestamp, Symbol, MAX(Pk_id) as Pk_id'
             if ($type === 'APPROVED') {
                 // Create a wallet transaction
                 Transdetail::create([
+                    'transaction_id' => date('ymdhis'),
                     'MemberId'   => $deposit->UserId,
                     'TransType'  => 'Main Wallet',
                     'TransPage'  => $transPage,

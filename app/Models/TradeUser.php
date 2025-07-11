@@ -302,4 +302,9 @@ protected $fillable = [
     {
         return $this->hasMany(WithdrawlMaster::class, 'UserId', 'id');
     }
+
+        public function broker()
+    {
+       return $this->belongsTo(Broker::class, 'broker_id', 'BrokerId');
+    }
 }

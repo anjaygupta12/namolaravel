@@ -103,7 +103,7 @@
     <div id="appCapsule">
         <div class="section wallet-card-section pt-1">
             <div class="wallet-card">
-                <label id="lblTransactionMode" style="display:none"></label>
+                <label id="lblTransactionMode" style="display:none">MCX</label>
                 <ul class="nav nav-tabs lined" role="tablist">
                     <li class="nav-item">
                         <a class="nav-link active" data-bs-toggle="tab" href="#mcx" onclick="ChangeText('MCX');"
@@ -716,7 +716,7 @@
 
                             if (Array.isArray(data)) {
                                 data.forEach(function(item) {
-                                    console.log(item);
+                                    
                                     if (item && item.Data) {
                                         const symbol = item.name;
                                         cache[symbol] = item;
@@ -801,6 +801,7 @@
                                                     </td>
                                                 </tr>`;
                                                 $("#btlMCX").append(rowHTML);
+                                                sortTableRowsById("#btlMCX");
                                             }
                                         } else if (exchange == 'NSE') {
                                             if ($("#" + CSS.escape(symbol)).length > 0) {
@@ -839,6 +840,7 @@
                                                     </td>
                                                 </tr>`;
                                                 $("#tblNSE").append(rowHTML);
+                                                sortTableRowsById("#tblNSE");
                                             }
                                         } else if (exchange == 'OPTIONS') {
                                             if ($("#" + CSS.escape(symbol)).length > 0) {
@@ -878,6 +880,7 @@
                                             </td>
                                         </tr>`;
                                                 $("#tblOPTIONS").append(rowHTML);
+                                                sortTableRowsById("#tblOPTIONS");
                                             }
                                         } else if (exchange == 'COMEX') {
                                             if ($("#" + CSS.escape(symbol)).length > 0) {
@@ -917,6 +920,7 @@
                                             </td>
                                         </tr>`;
                                                 $("#btlCOMEX").append(rowHTML);
+                                                 sortTableRowsById("#btlCOMEX");
                                             }
                                         }
 
@@ -934,14 +938,31 @@
                 }
             }
 
+            function sortTableRowsById(containerSelector) {
+            $(containerSelector).each(function () {
+                var $tbody = $(this);
+                var $rows = $tbody.find("tr");
+
+                $rows.sort(function (a, b) {
+                    var idA = $(a).attr("id")?.toLowerCase() || "";
+                    var idB = $(b).attr("id")?.toLowerCase() || "";
+                    return idA.localeCompare(idB);
+                });
+
+                $tbody.append($rows); 
+            });
+        }
+
+
             // Original OPENMODALMCXNSE function with minimal changes
             function OPENMODALMCXNSE(symbol, BuyPrice, Sellprice) {
                 // Clear previous interval
+               
                 if (intervalId) {
                     clearInterval(intervalId);
                     intervalId = null;
                 }
-
+                
                 $("#lblsymbol").html(symbol);
                 $("#tblfcsellprice").html('0');
                 $("#tblfcbuyprice").html('0');
@@ -952,6 +973,7 @@
                 var _data = {
                     Symbol: symbol
                 };
+                
                 _data = JSON.stringify(_data);
                 $.ajax({
                     type: "POST",
@@ -972,24 +994,24 @@
                 });
 
 
-
-
                 // Show modal
                 $("#withdrawActionSheetForex_Crypto").modal('show');
 
                 // Update data when modal is shown
                 $('#withdrawActionSheetForex_Crypto').on('shown.bs.modal', function() {
+                    
+   
                     intervalId = setInterval(function() {
-                        const symbolKey = symbol.includes(':') ? symbol.split(':')[1] : symbol;
-                        const item = cache[symbolKey] || cache[symbol]; // Try both keys
-
+                        const symbolKey = $("#lblsymbol").text()
+                       
+                        const item = cache[symbolKey] || cache[symbol]; 
                         if (!item || !item.Data) {
                             console.log('No data for symbol:', symbolKey);
                             return;
                         }
-
+                        
                         const data = item.Data;
-
+                      
                         // Update prices
                         $("#tblfcbuyprice").html(data.bid_price || '0');
                         $("#tblfcsellprice").html(data.ask_price || '0');
@@ -1030,14 +1052,16 @@
                         $("#lblAtp1").html(data.avg_trade_price || '0');
                         $("#lblAtp2").html(data.avg_trade_price || '0');
 
-                    }, 100); // 100ms refresh as in original
+                    }, 100); 
                 });
 
                 // Clean up when modal closes
                 $('#withdrawActionSheetForex_Crypto').on('hidden.bs.modal', function() {
+                  
                     if (intervalId) {
-                        clearInterval(intervalId);
+                        //clearInterval(intervalId);
                         intervalId = null;
+                       
                     }
                 });
             }
@@ -1049,28 +1073,6 @@
             window.OPENMODALMCXNSE = OPENMODALMCXNSE;
         });
 
-        function seachFilter() {
-            $('#search_datamain').html('');
-            input = document.getElementById("mcx_filter")
-
-            OpenWatchListModal(OptionSearch, input);
-            //var input, filter, table, tr, td, i, txtValue;
-            //input = document.getElementById("mcx_filter");
-            //filter = input.value.toUpperCase();
-            //table = document.getElementById("search_datamain");
-            //tr = table.getElementsByTagName("tr");
-            //for (i = 0; i < tr.length; i++) {
-            //    td = tr[i].getElementsByTagName("td")[0];
-            //    if (td) {
-            //        txtValue = td.textContent || td.innerText;
-            //        if (txtValue.toUpperCase().indexOf(filter) > -1) {
-            //            tr[i].style.display = "";
-            //        } else {
-            //            tr[i].style.display = "none";
-            //        }
-            //    }
-            //}
-        }
 
         function OpenWatchListModal(Option, textbox) {
             // Set global search option
@@ -1108,13 +1110,14 @@
 
                         // Process each instrument
                         data.forEach(item => {
+                          
                             const symbol = item.Symbol || 'N/A';
                             const description = item.Description || symbol;
                             const exchange = item.TERMINAL || item.Exchange || 'N/A';
                             const isActive = Boolean(item.ckecked || item.ckecked);
                             const lotSize = item.LotSize ? parseInt(item.LotSize) : 'N/A';
                             const instrumentType = item.InstrumentType || 'N/A';
-
+                              console.log(isActive,'testing',item.ckecked);
                             // Extract market data
                             const marketData = item.Data || {};
                             const lastUpdate = marketData.last_traded_time ?
@@ -1279,7 +1282,6 @@
         }
 
 
-
         function buyfc() {
             if ($("#textfclot").val() !== '' && $("#textfclot").val() !== '0') {
 
@@ -1309,7 +1311,7 @@
                     lblUpperCircuit: $("#lblUpperCircuit").html(),
                     lblLowerCircuit: $("#lblLowerCircuit").html(),
                     tblfcbuyprice: $("#tblfcbuyprice").html(),
-                    tblfcsellprice: $("#tblfcsellprice").html(),
+                    // tblfcsellprice: $("#tblfcsellprice").html(),
                     Price: '0',
                     TransactionMode: $("#lblTransactionMode").html()
                 };
@@ -1369,13 +1371,11 @@
                 var lowValue = $("#lblLow").html()
 
                 if (amount > lowValue) {
-                    Swal.fire({
+                       Swal.fire({
                         icon: "error",
                         title: "Oops...",
-                        text: "Can't take Gratter then Low value",
-                        timer: 1500, // 1.5 seconds
-                        showConfirmButton: false
-                    });
+                        text: "Amount can't be Greater than the low value.",
+                        });
 
                     return false;
                 }
@@ -1424,9 +1424,10 @@
                     lblPrevClose: $("#lblPrevClose").html(),
                     lblUpperCircuit: $("#lblUpperCircuit").html(),
                     lblLowerCircuit: $("#lblLowerCircuit").html(),
-                    // tblfcbuyprice: $("#tblfcbuyprice").val(),
-                    tblfcsellprice: $("#tblfcsellprice").val(),
-                    tblfcbuyprice: $("#txtPriceOrder").val(),
+                    tblfcbuyprice: $("#tblfcbuyprice").val(),
+                    // tblfcsellprice: $("#tblfcsellprice").val(),
+                    // tblfcbuyprice: $("#txtPriceOrder").val(),
+                    tblfcbuyprice: amount,
                     TransactionMode: $("#lblTransactionMode").html()
 
                 }
@@ -1491,7 +1492,6 @@
                     return false;
                 }
 
-
                 $("#lblBid").html();
                 $("#lblAsk").html();
                 $("#lblLast").html();
@@ -1513,6 +1513,7 @@
                     Mode: 'BUY',
                     _token: "{{ csrf_token() }}",
                     isOrder: true,
+                    Symbol: $("#lblsymbol").html(),
                     textfclot: '0',
                     Min: document.getElementById("chkminMarket").checked,
                     Mega: document.getElementById("chkmegaMarket").checked,
@@ -1534,9 +1535,9 @@
                     lblPrevClose: $("#lblPrevClose").html(),
                     lblUpperCircuit: $("#lblUpperCircuit").html(),
                     lblLowerCircuit: $("#lblLowerCircuit").html(),
-                    // tblfcbuyprice: $("#tblfcbuyprice").val(),
-                    tblfcsellprice: $("#tblfcsellprice").val(),
-                    tblfcbuyprice: $("#txtPriceOrder").val(),
+                    tblfcbuyprice: $("#tblfcbuyprice").val(),
+                    // tblfcsellprice: $("#tblfcsellprice").val(),
+                    tblfcbuyprice: amount,
                     TransactionMode: $("#lblTransactionMode").html()
 
 
@@ -1613,8 +1614,9 @@
                     lblPrevClose: $("#lblPrevClose").html(),
                     lblUpperCircuit: $("#lblUpperCircuit").html(),
                     lblLowerCircuit: $("#lblLowerCircuit").html(),
-                    tblfcbuyprice: $("#tblfcbuyprice").html(),
-                    tblfcsellprice: $("#tblfcsellprice").html(),
+                    // tblfcbuyprice: $("#tblfcbuyprice").html(),
+                    // tblfcsellprice: $("#tblfcsellprice").html(),
+                    tblfcbuyprice: $("#tblfcsellprice").html(),
                     Price: '0',
                     TransactionMode: $("#lblTransactionMode").html()
                 };

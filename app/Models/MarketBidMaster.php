@@ -16,7 +16,8 @@ class MarketBidMaster extends Model
         'Volume', 'LastTradeQty', 'Atp', 'LotSize', 'OpenInterest',
         'BidQty', 'AskQty', 'PrevClose', 'UpperCircuit', 'LowerCircuit',
         'Timestamp', 'Lastmodify', 'Isactive', 'UserId', 'Symbol','IsOrder',
-        'IsMin', 'IsMinMega', 'Lots', 'Price', 'IpAddress','OPTION','Min','Mega','holding_margin_req'
+        'IsMin', 'IsMinMega', 'Lots', 'Price', 'IpAddress','OPTION','Min','Mega','holding_margin_req',
+        'used_margin_req','brokrage'
     ];
     
     protected $casts = [

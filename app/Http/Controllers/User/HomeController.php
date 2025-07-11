@@ -22,6 +22,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use App\Models\AdminLogin;
 use App\Models\Notification;
+use App\Models\LotSize;
 
 class HomeController extends Controller
 {
@@ -46,12 +47,13 @@ class HomeController extends Controller
 
     public function portfolio()
     {
-      
-        $usedMargin = MarketBidMaster::where('UserId',Auth::guard('tradeuser')->user()->id)
-        ->where('Isactive',1)->sum('BuyPrice');
-         $marginAvilabe= Auth::guard('tradeuser')->user()->balance-$usedMargin;
-       
-        return View::make('user.portfolio', compact('usedMargin','marginAvilabe'));
+
+        $usedMargin = MarketBidMaster::where('UserId', Auth::guard('tradeuser')->user()->id)
+            ->where('Isactive', 1)->sum('used_margin_req');
+
+        $marginAvilabe = Auth::guard('tradeuser')->user()->balance;
+
+        return View::make('user.portfolio', compact('usedMargin', 'marginAvilabe'));
     }
 
     public function watchlist()
@@ -64,37 +66,37 @@ class HomeController extends Controller
         if (!Auth::guard('tradeuser')->check()) {
             return redirect('/login');
         }
-         $data = DepositeMaster::with('user')
-            ->orderBy('created_at','desc')
+        $data = DepositeMaster::with('user')
+            ->orderBy('created_at', 'desc')
             // ->where('type',0)
             ->get();
-        $notifaction = Notification::where('is_read',0)->get();
-        $invest = MarketBidMaster::where('UserId',Auth::guard('tradeuser')->user()->id)
-        ->where('Isactive',1)->sum('BuyPrice');
+        $notifaction = Notification::where('is_read', 0)->get();
+        $invest = MarketBidMaster::where('UserId', Auth::guard('tradeuser')->user()->id)
+            ->where('Isactive', 1)->sum('BuyPrice');
 
-        return View::make('user.my_account',compact('data','invest','notifaction'));
+        return View::make('user.my_account', compact('data', 'invest', 'notifaction'));
     }
 
     public function updatePassword(Request $request)
-{
-    $request->validate([
-        'current_password' => 'required',
-        'new_password' => 'required|min:8|confirmed', 
-    ]);
+    {
+        $request->validate([
+            'current_password' => 'required',
+            'new_password' => 'required|min:8|confirmed',
+        ]);
 
-    $user = Auth::guard('tradeuser')->user();
+        $user = Auth::guard('tradeuser')->user();
 
-    if (!Hash::check($request->current_password, $user->password)) {
-        return back()->withErrors(['current_password' => 'Current password is incorrect']);
+        if (!Hash::check($request->current_password, $user->password)) {
+            return back()->withErrors(['current_password' => 'Current password is incorrect']);
+        }
+
+        $user->password = Hash::make($request->new_password);
+        $user->save();
+
+        return back()->with('success', 'Password updated successfully.');
+
+        return back()->with('success', 'Password updated successfully');
     }
-
-    $user->password = Hash::make($request->new_password);
-    $user->save();
-
-    return back()->with('success', 'Password updated successfully.');
-
-    return back()->with('success', 'Password updated successfully');
-}
 
     public function depositWithdraw()
     {
@@ -108,19 +110,29 @@ class HomeController extends Controller
     {
         $query = $request->input('query');
         $type = $request->input('type');
-        $clientId = $request->input('clientid');
+        $clientId = Auth::guard('tradeuser')->user()->id;
 
-        $dataQuery = ForexOption::leftjoin('clientsubscription', 'forexoptions.Symbol', '=', 'clientsubscription.Symbol')
+
+        $dataQuery = ForexOption::leftJoin('clientsubscription', function ($join) use ($clientId) {
+            $join->on('forexoptions.Symbol', '=', 'clientsubscription.Symbol')
+                ->where('clientsubscription.UserId', $clientId);
+        })
             ->select('forexoptions.*', 'clientsubscription.Isactive as ckecked')
             ->where('forexoptions.Isactive', 1);
+        // ->where
 
         if ($type == 'MCX') {
-            $dataQuery->where('instrument', 'FUT')
-                ->where('forexoptions.Symbol', 'like', 'MCX%');
+            if (Auth::guard('tradeuser')->user()->MCXEnabled == 1) {
+                $dataQuery->where('instrument', 'FUT')
+                    ->where('forexoptions.Symbol', 'like', 'MCX%');
+            }
         } else if ($type == 'NSE') {
-            $dataQuery->where('instrument', 'FUT')
-                ->where('forexoptions.Symbol', 'like', 'NSE%');
+            if (Auth::guard('tradeuser')->user()->NSEFuturesEnabled == 1) {
+                $dataQuery->where('instrument', 'FUT')
+                    ->where('forexoptions.Symbol', 'like', 'NSE%');
+            }
         } else if ($type == 'OPTIONS') {
+            //  $user->NSEOptionsEnabled
             $dataQuery->where(function ($q) {
                 $q->where('forexoptions.instrument', 'PE')
                     ->orWhere('forexoptions.instrument', 'CE');
@@ -168,6 +180,32 @@ class HomeController extends Controller
         return response()->json(['success' => true, 'message' => ucfirst($request->action) . 'ed successfully']);
     }
 
+    public function brokarageCharge($user, $symbol)
+    {
+        $exchange = explode(":", $symbol)[0];
+        $brokCharge = 0;
+        if (substr($symbol, -2) === "CE" || substr($symbol, -2) === "PE") {
+
+          if (preg_match('/NSE:(NIFTY|BANKNIFTY)/', $symbol, $matches) && $user->OptionsSSBrokerageType == 'per_lot') {
+            $brokrageChangeOneTime = $user->options_brokerage;
+        }
+        if ($exchange == 'MCX' && $user->options_mcx_brokerage_type == 'per_lot') {
+            $brokrageChangeOneTime = $user->options_mcx_brokerage;
+        }
+        if ($user->options_equity_brokerage_type == 'per_lot') {
+            $brokrageChangeOneTime = $user->options_equity_brokerage;
+        }
+        $brokCharge = $brokrageChangeOneTime * 2;
+        
+        } else if ($exchange == 'MCX') {
+            if ($user->mcx_brokerage_type == 'per_crore') {
+                $brokCharge = $user->MCXBrokerage;
+            }
+        } else if ($exchange == 'NSE') {
+            $brokCharge = $user->NSEFuturesBrokerage;
+        }
+        return $brokCharge;
+    }
 
     public function saveTransaction(Request $request)
     {
@@ -191,22 +229,35 @@ class HomeController extends Controller
             return response()->json(['error' => 'You Account is Blocked'], 500);
         }
 
+        //  $this->tradingTime($request->input('Symbol'), $user);
+
         //     if($exchange=='MCX'){
         //     if($mcx_maxLot_size <  $request->input('lblLotSize')){
-        //          return response()->json(['error' => 'You can not take Lot Size gratter then '], 500);
+        //          return response()->json(['error' => 'You can not take Lot Size gratter then'], 500);
         //     }
         //     if($mcx_minLot_size >  $request->input('lblLotSize')){
         //          return response()->json(['error' => 'You can not take Lot Size Less then '], 500);
         //     }
         // }
+           $exchange = explode(":", $request->input('Symbol'))[0];
+       
+      $symbol = $request->input('Symbol');
 
+        $lotSize =(int)DB::table('forexoptions')
+            ->join('lot_size', DB::raw("CONVERT(lot_size.name USING utf8mb4) COLLATE utf8mb4_unicode_ci"), '=', 
+                                DB::raw("CONVERT(forexoptions.SymbolShortName USING utf8mb4) COLLATE utf8mb4_unicode_ci"))
+            ->where('forexoptions.Symbol', $symbol)
+            ->pluck('lot_size.qty')
+            ->first() ?? 1;
+        
 
-        if ($user->balance < $request->tblfcbuyprice * $request->Lots) {
+        if ($user->balance < $request->tblfcbuyprice * ($request->Lots*$lotSize)) {
             return response()->json(['error' => 'Your available balance is insufficient. Trade amount: ' . $user->balance], 500);
         }
 
         $tradeUser = TradeUser::find($user->id);
-        $tradeUser->decrement('balance', $request->tblfcbuyprice * $request->Lots);
+
+        $tradeUser->decrement('balance', $request->tblfcbuyprice * ($request->Lots*$lotSize));
 
         try {
             $user = Auth::guard('tradeuser')->user();
@@ -219,12 +270,18 @@ class HomeController extends Controller
             }
             // $buyPrice = $request->input('tblfcbuyprice', 0) * $request->input('lblBidQty', 1);
 
-            $holdingmargin = $request->input('tblfcbuyprice', 0) - $request->input('lblBid', 0);
+            $perratRate = $request->input('tblfcbuyprice', 0);
+            $lots = ($request->Lots*$lotSize) * 100;
 
+            $holdingmargin = ($perratRate * $lots) / $tradeUser->MCXHoldingMargin;
+            $usedmargin = ($perratRate * $lots) / $tradeUser->MCXIntradayMargin;
+            $brokrage = $this->brokarageCharge($user, $request->input('Symbol'));
+           
             $data = [
                 'Mode' => $request->input('Mode'),
                 'ToAmount' => $request->input('textfclot', 0),
                 'TransactionMode' => $request->input('TransactionMode'),
+                // 'SalePrice' => $request->input('tblfcsellprice', 0),
                 'BuyPrice' => $request->input('tblfcbuyprice', 0),
                 'Bid' => $request->input('lblBid', 0),
                 'Ask' => $request->input('lblAsk', 0),
@@ -236,7 +293,7 @@ class HomeController extends Controller
                 'Volume' => $request->input('lblVolume', 0),
                 'LastTradeQty' => $request->input('lblLastTradedQty', 0),
                 'Atp' => $request->input('lblAtp', 0),
-                'LotSize' => $request->input('Lots', 1),
+                'LotSize' => $lotSize,
                 'OpenInterest' => $request->input('lblOpenInterest', 0),
                 'BidQty' => $request->input('lblBidQty', 0),
                 'AskQty' => $request->input('lblAskQty', 0),
@@ -255,20 +312,21 @@ class HomeController extends Controller
                 'Isactive' => $request->has('isOrder') ? 0 : 1,
                 'IsOrder' => $request->has('isOrder') ? true : false,
                 'holding_margin_req' => $holdingmargin,
-                'created_at' => now(),
-                'updated_at' => now()
+                'used_margin_req' => $usedmargin,
+                'brokrage'=>$brokrage,
             ];
             MarketBidMaster::insert($data);
 
             Transdetail::create([
+                'transaction_id' => date('ymdhis'),
                 'MemberId'   => $user->id,
-                'TransType'  => $request->input('Mode'),
+                'TransType'  => 'BUY',
                 'TransPage'  => 'withdraw  approval',
-                'Type'       => ($request->input('Mode') == 'SELL') ? '-' : '+',
+                'Type'       => '-',
                 'TransDate'  => now(),
-                'Amount'     => $request->input('tblfcbuyprice', 0),
-                'AmountS'    => $request->input('tblfcbuyprice', 0),
-                'Remark'     => ($request->input('Mode') == 'SELL') ? 'deposit' : 'withdraw',
+                'Amount'     => $request->tblfcbuyprice * ($request->Lots*$lotSize),
+                'AmountS'    => $request->tblfcbuyprice * ($request->Lots*$lotSize),
+                'Remark'     => 'Buy Trade',
                 'LoginId'    => $user->id,
                 'AddRemark'  => 'APPROVED BY ADMIN',
                 'AdminStatus' => 'APPROVED'
@@ -310,7 +368,7 @@ class HomeController extends Controller
             'Timestamp'     => Carbon::now(),
             'LastModify'    => Carbon::now(),
             'Isactive'      => true,
-            'type'          =>1
+            'type'          => 1
         ]);
 
         return redirect()->back()->with('success', 'Deposit request submitted successfully.');
@@ -329,9 +387,9 @@ class HomeController extends Controller
         if ($request->ajax()) {
 
             $data = DepositeMaster::with('user')
-            ->orderBy('created_at','desc')
-            ->where('type',0)
-            ->get();
+                ->orderBy('created_at', 'desc')
+                ->where('type', 0)
+                ->get();
             return response()->json($data);
         }
 
@@ -339,7 +397,7 @@ class HomeController extends Controller
     }
     public function withdrawalRequestsSubmit(Request $request)
     {
-       
+
         $request->validate([
             'payment_method' => 'required|string|max:50',
             'amount'         => 'required|numeric|min:1',
@@ -362,7 +420,7 @@ class HomeController extends Controller
             'Timestamp'     => Carbon::now(),
             'LastModify'    => Carbon::now(),
             'Isactive'      => true,
-            'type'          =>0
+            'type'          => 0
         ]);
 
 
@@ -660,6 +718,10 @@ class HomeController extends Controller
                     ->where('UserId', Auth::guard('tradeuser')->user()->id)
                     ->first();
 
+                // tarading timinng ......
+
+                $this->tradingTime($symbol, $user);
+
                 $createdDate = Carbon::parse($trade->created_at);
                 $interval = (int) $user->ProfitBookInterval;
                 $targetTime = $createdDate->copy()->addMinutes($interval);
@@ -682,22 +744,44 @@ class HomeController extends Controller
                             'SalePrice' => $sellPrice
                         ]);
 
-
+                    $exchange = explode(":", $symbol)[0];
+                    $TradeUser = TradeUser::find($user->id);
                     // options config
                     if (substr($symbol, -2) === "CE" || substr($symbol, -2) === "PE") {
                         $this->optionConfig($symbol, $user);
+                    } else if ($exchange == 'MCX') {
+                        if ($TradeUser->mcx_brokerage_type == 'per_crore') {
+                            // $TradeUser->decrement('balance', $TradeUser->MCXBrokerage);
+                            $this->trnsectionDeatil($user->id, 'SELL brokerage charge', 'SELL brokerage charge', $TradeUser->MCXBrokerage, 0);
+                        }
+                    } else if ($exchange == 'NSE') {
+                        $TradeUser->decrement('balance', $TradeUser->NSEFuturesBrokerage);
+                        $this->trnsectionDeatil($user->id, 'SELL brokerage charge', 'SELL brokerage charge', $TradeUser->NSEFuturesBrokerage, 0);
                     }
-                    // trading time
-                    $this->tradingTime($symbol, $user);
-                    $TradeUser = TradeUser::find($user->id);
+                   
+                    $TradeUser->save();
+                    $lotSize =(int)DB::table('forexoptions')
+                        ->join('lot_size', DB::raw("CONVERT(lot_size.name USING utf8mb4) COLLATE utf8mb4_unicode_ci"), '=', 
+                                            DB::raw("CONVERT(forexoptions.SymbolShortName USING utf8mb4) COLLATE utf8mb4_unicode_ci"))
+                        ->where('forexoptions.Symbol', $symbol)
+                        ->pluck('lot_size.qty')
+                        ->first() ?? 1;
 
-                    $salePrice = $sellPrice * $trade->Lots;
-                    $buyPrice = $trade->BuyPrice * $trade->Lots;
+                    $salePrice = $sellPrice * $trade->lotSize;
+                    $buyPrice = $trade->BuyPrice * $trade->lotSize;
+                    $holdingMargin = $trade->holding_margin_req;
+                    $usedMargin = $trade->used_margin_req;
+                    $netBalance = $salePrice+$holdingMargin+$usedMargin;
 
-                    $TradeUser->increment('balance', $salePrice);
-                    $TradeUser->increment('net_p_l', $buyPrice - $salePrice);
+                    $trade->used_margin_req = 0;
+                    $trade->used_margin_req = 0;
 
-                    $this->trnsectionDeatil($user->id, 'Deposit', 'Sale Price', $salePrice, 1);
+                    $TradeUser->increment('balance', $netBalance);
+                    $TradeUser->increment('net_p_l', $salePrice - $buyPrice);
+                    $TradeUser->brokrage = $this->brokarageCharge($user, $symbol);
+                    $TradeUser->save();
+                    $trade->save();
+                    $this->trnsectionDeatil($user->id, 'SELL Deposit', 'Sale Price', $salePrice, 1);
                 }
             }
             if (!empty($errors)) {
@@ -717,8 +801,38 @@ class HomeController extends Controller
         }
     }
 
-    public function tradingTime($symbol, $user){
-        
+    public function tradingTime($symbol, $user)
+    {
+        $now = Carbon::now();
+        $dayOfWeek = $now->dayOfWeek;
+
+        if ($dayOfWeek === 0 || $dayOfWeek === 6) {
+            return response()->json(['error' => 'Trading is not allowed on weekends.'], 500);
+        }
+        $time = $now->format('H:i');
+
+        if ($symbol === 'MCX') {
+            $start = '09:30';
+            $end   = '23:30';
+        } elseif ($symbol === 'NSE') {
+            $start = '09:15';
+            $end   = '15:30';
+        } elseif ($symbol === 'COMEX') {
+            $start = '04:30';
+            $end   = '02:30';
+            if ($time <= $end || $time >= $start) {
+                return true;
+            } else {
+                return response()->json(['error' => 'Trading not allowed at this time for COMEX'], 500);
+            }
+        } else {
+            return response()->json(['message' => 'Invalid exchange symbol.'], 500);
+        }
+        if ($time < $start || $time > $end) {
+            return response()->json(['message' => 'You cannot close trade after trading hours.'], 500);
+        }
+
+        return true;
     }
 
     public function optionConfig($symbol, $user)
@@ -733,7 +847,7 @@ class HomeController extends Controller
         if (preg_match('/NSE:(NIFTY|BANKNIFTY)/', $symbol, $matches) && $user->OptionsSSBrokerageType == 'per_lot') {
             $brokrageChangeOneTime = $user->options_brokerage;
         }
-        if ($exchange=='MCX' && $user->options_mcx_brokerage_type == 'per_lot') {
+        if ($exchange == 'MCX' && $user->options_mcx_brokerage_type == 'per_lot') {
             $brokrageChangeOneTime = $user->options_mcx_brokerage;
         }
         if ($user->options_equity_brokerage_type == 'per_lot') {
@@ -742,15 +856,17 @@ class HomeController extends Controller
 
         $TradeUser = TradeUser::find($user->id);
 
-        $this->trnsectionDeatil($user->id, 'brokerage', 'BUY brokerage charge', $$brokrageChangeOneTime, 0);
+        $this->trnsectionDeatil($user->id, 'BUY brokerage charge', 'BUY brokerage charge', $$brokrageChangeOneTime, 0);
         $TradeUser->decrement('balance', $brokrageChangeOneTime * 2);
-        $this->trnsectionDeatil($user->id, 'brokerage', 'SELL brokerage charge', $brokrageChangeOneTime, 0);
+        $this->trnsectionDeatil($user->id, 'BUY brokerage charge', 'SELL brokerage charge', $brokrageChangeOneTime, 0);
+        $TradeUser->save();
     }
 
     public function trnsectionDeatil($user_id, $remark, $transpage, $amount, $type)
     {
 
         Transdetail::create([
+            'transaction_id' => date('ymdhis'),
             'MemberId'   => $user_id,
             'TransType'  => $remark,
             'TransPage'  => $transpage,

@@ -11,7 +11,7 @@ class Transdetail extends Model
     public $timestamps = false;
     
     protected $fillable = [
-        'MemberId', 'TransType', 'TransPage', 'Type', 'TransDate', 'Amount', 
+        'MemberId', 'transaction_id','TransType', 'TransPage', 'Type', 'TransDate', 'Amount', 
         'AmountS', 'Remark', 'LoginId', 'Pass', 'Expass', 'BitIsActive', 
         'CounterId', 'eWalletBit', 'PayoutId', 'tmpStr', 'productcode', 
         'RefTransID', 'AddRemark', 'ProductClaim', 'PayMode', 'PayRemark', 

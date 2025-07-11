@@ -18,7 +18,7 @@
                         <ul class="nav nav-tabs lined">
                             <li class="nav-item btn btn-danger" style="border-radius:0;margin:0 2px;height:25px;">
                                 <a class="text-white" href="#">Ledger&nbsp;Bal:&nbsp;
-                                    {{ Auth::guard('tradeuser')->user()->balance }}</a>
+                                   0.00 </a>
                             </li>
                             <li class="nav-item btn btn-danger" style="border-radius:0;margin:0 2px;height:25px;">
                                 <a class="text-white" href="#" data-bs-toggle="modal"

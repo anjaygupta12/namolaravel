@@ -16,14 +16,28 @@
     <script src="https://esaytraders.live/admin/js/jquery.js"></script>
     <script>
         function toggle_exposure() {
-            if (document.getElementById("exposure_per_lot").style.display == "none")
-                document.getElementById("exposure_per_lot").style.display = "flex";
-            else
-                document.getElementById("exposure_per_lot").style.display = "none";
-            if (document.getElementById("exposure_per_turnover").style.display == "none")
-                document.getElementById("exposure_per_turnover").style.display = "flex";
-            else
+            var select = document.querySelector('select[name="mcx_exposure_type"]');
+        var selectedValue = select.value;
+      
+    
+            if(selectedValue=='per_lot'){
+                 
+                 document.getElementById("exposure_per_lot").style.display = "flex";
                 document.getElementById("exposure_per_turnover").style.display = "none";
+            }else{
+                 
+                document.getElementById("exposure_per_lot").style.display = "none";
+                 document.getElementById("exposure_per_turnover").style.display = "flex";
+            }
+
+            // if (document.getElementById("exposure_per_lot").style.display == "none")
+            //     document.getElementById("exposure_per_lot").style.display = "flex";
+            // else
+            //     document.getElementById("exposure_per_lot").style.display = "none";
+            // if (document.getElementById("exposure_per_turnover").style.display == "none")
+            //     document.getElementById("exposure_per_turnover").style.display = "flex";
+            // else
+            //     document.getElementById("exposure_per_turnover").style.display = "none";
         }
 
         function toggle_brokerage_type() {
@@ -233,7 +247,7 @@
                         <legend>MCX Futures: </legend>
                         <div class="px-3 form-check col-md-6">
                             <div class="form-group field-mcxusers-commodity">
-                                <input type="hidden" name="Mcxusers[commodity]" value="0"><label><input
+                                <input type="hidden" name="mcx_enabled" value="0"><label><input
                                         type="checkbox" id="mcxusers-commodity" class="form-check-input"
                                         name="mcx_enabled" value="1"
                                         {{ old('mcx_enabled', $user->MCXEnabled) ? 'checked' : '' }}> MCX Trading <span
@@ -323,6 +337,13 @@
                                             Per Lot Basis</option>
                                     </select>
                                 </div>
+                                 {{-- <div class="dropdown">
+                                    <select name="mcx_exposure_type" onchange="toggle_exposure();">
+                                        <option value="">Select Margin/Exposure Calculation type</option>
+                                        <option value="per_turnover" selected="">Per Turnover Basis</option>
+                                        <option value="per_lot">Per Lot Basis</option>
+                                    </select>
+                                </div> --}}
                                 <div class="help-block"></div>
                             </div>
                         </div>
@@ -430,7 +451,7 @@
                                 <label class="control-label" for="mcxusers-equity_brokerage">Equity brokerage Per
                                     Crore</label>
                                 <input type="text" id="mcxusers-equity_brokerage" class="form-control"
-                                    name="nse_brokerage" value="{{ old('nse_brokerage', $user->NSEBrokerage) }}">
+                                    name="nse_brokerage" value="{{ old('nse_brokerage', $user->NSEFuturesBrokerage) }}">
                                 <div class="help-block"></div>
                             </div>
                         </div>

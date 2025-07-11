@@ -72,6 +72,7 @@
         <div class="card-body">
             <form class="form" action="{{ route('admin.store.trade.user') }}" method="POST">
                 @csrf
+                <input type="hidden" name="copy" value="1">
                 <div class="mx-2">
                     <fieldset class="row">
                         <legend>Personal Details: </legend>

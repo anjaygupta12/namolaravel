@@ -65,6 +65,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
         Route::get('users/edit/{id}', [AdminController::class, 'editUser'])->name('users-edit');
         Route::get('users/reset/{id}', [AdminController::class, 'resetAccount'])->name('users-reset');
         Route::get('recalculate-brokerage/{id}', [AdminController::class, 'recalculateBrokerage'])->name('recalculate-brokerage');
+        Route::get('/live-prices/{id}', [AdminController::class, 'getLivePrices']);
 
         Route::post('/trades/export', [AdminController::class, 'exportExcel'])->name('trades.export');
         Route::post('/trades/pdf', [AdminController::class, 'exportPdf'])->name('trades.pdf');

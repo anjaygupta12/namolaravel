@@ -182,11 +182,13 @@
                     if (response.success) {
                         $('#tblpending').html('');
                         var html = '';
-
+                        
                         response.data.forEach(function(trade) {
                             var badgeClass = trade.Mode === 'BUY ORDER' ? 'badge-success' :
                                 'badge-danger';
                             var actionText = trade.Mode === 'BUY ORDER' ? 'Bought' : 'Sold';
+                             let fullSymbol = trade.Symbol || '-';
+                            let cleanSymbol = fullSymbol.split(':')[1] || fullSymbol;
 
                             html += `
                             <tr>
@@ -195,17 +197,17 @@
                                         <span class="badge ${badgeClass}">Bought X1</span>&nbsp;&nbsp;
                                         <span class="badge badge-success">${trade.BuyPrice}</span>
                                     </p>
-                                    <h4 class="comodity mt-1">${trade.Symbol}</h4>
+                                    <h4 class="comodity mt-1">${cleanSymbol}</h4>
                                     <p class="date mt-1">${actionText} by Trader</p>
-                                  
+                                    <p class="date" >Margin used <b>${trade.used_margin_req }</b></p>
+
                                 </td>
                                 <td></td>
                                 <td class="text-end text-primary">
                                     <p class="date mb-1">${formatDateTime(trade.Timestamp)}</p>
                                     <p class="text-white fw-bold mb-0">8.3</p>
                                     <button class="badge badge-danger" onclick="CloseStockmodal(${trade.Pk_id})"> Close Trade</button>
-                                    <p class="text-white fw-bold">Holding margin Req: ${trade.holding_margin_req || '3735'}</p>
-                                </td>
+                                    <p class="detail">Holding margin Req <b>${trade.holding_margin_req }</b></p>                                </td>
                             </tr>
                         `;
                         });
@@ -231,14 +233,20 @@
 
                         response.data.forEach(function(trade) {
                             console.log(trade);
+                            let fullSymbol = trade.Symbol || '-';
+                            let cleanSymbol = fullSymbol.split(':')[1] || fullSymbol;
                             html += `
                         <tr>
                             <td scope="row">
-                                <h4 class="comodity mb-1">${trade.Symbol || '-'}</h4>
-                                <p class="date">Sold by Trader 
-                                    
-                                </p>
+                               <p class="date">
+                                        <span class="badge badge-danger">Bought X${parseInt(trade.Lots) || 1}</span>&nbsp;&nbsp;
+                                        <span class="badge badge-success">Market</span>
+                                    </p>
+
+                               <h4 class="comodity mb-1">${cleanSymbol}</h4>
+                                <p class="date">Sold by Trader </p>
                                 <p class="detail">${formatDateTime(trade.Timestamp) || '-'}</p>
+                                <p class="date" >Margin used <b>${trade.used_margin_req }</b></p>
                             </td>
                             <td class="text-center align-middle">
                                 <span class="text-warning">${trade.Mode || 'N/A'}</span>
@@ -252,6 +260,7 @@
                                 <button class="badge badge-danger" onclick="CloseStockmodal(${trade.Pk_id})"> Close Trade</button>
                                
                                 <p class="detail">${formatDateTime(trade.Timestamp) || '-'}</p>
+                                <p class="detail">Holding margin Req <b>${trade.holding_margin_req }</b></p>
                             </td>
                         </tr>
                     `;
@@ -267,19 +276,25 @@
             });
         }
 
-        function formatDateTime(input) {
-            const date = new Date(input);
+function formatDateTime(input) {
+    const date = new Date(input);
 
-            const day = String(date.getDate()).padStart(2, '0');
-            const month = String(date.getMonth() + 1).padStart(2, '0'); // Months start from 0
-            const year = date.getFullYear();
+    const day = String(date.getDate()).padStart(2, '0');
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+                        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const month = monthNames[date.getMonth()];
+    const year = date.getFullYear();
 
-            const hours = String(date.getHours()).padStart(2, '0');
-            const minutes = String(date.getMinutes()).padStart(2, '0');
-            const seconds = String(date.getSeconds()).padStart(2, '0');
+    let hours = date.getHours();
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
 
-            return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
-        }
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12; 
+
+    return `${day}-${month}-${year} ${hours}:${minutes}:${seconds} ${ampm}`;
+}
+
 
         function LoadClosedTrades() {
             $.ajax({
@@ -292,17 +307,20 @@
                         var html = '';
 
                         response.data.forEach(function(trade) {
+                             let fullSymbol = trade.Symbol || '-';
+                            let cleanSymbol = fullSymbol.split(':')[1] || fullSymbol;
+
                             html += `
                             <tr>
                                 <td scope="row">
-                                    <h4 class="comodity mb-1">${trade.Symbol}</h4>
+                                    <h4 class="comodity mb-1">${cleanSymbol}</h4>
                                    
                                     <p class="detail">${formatDateTime(trade.Timestamp)}</p>
                                 </td>
                                 <td></td>
                                 <td class="text-end text-primary">
                                     <p class="text-white fw-bold mb-1">
-                                        <span class="badge badge-danger">QTY:${trade.quantity }</span>
+                                        <span class="badge badge-danger">QTY:${trade.Lots }</span>
                                     </p>
                                     <p class="date">Bought by Trader <span class="badge badge-success">6.2</span></p>
                                     <p class="detail">${formatDateTime(trade.Timestamp)}</p>

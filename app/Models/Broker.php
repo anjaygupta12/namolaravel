@@ -8,6 +8,7 @@ use Illuminate\support\Facades\Hash;
 class Broker extends Model
 {
     protected $table = 'brokers';
+    protected $primaryKey = 'id';
     
      protected $fillable = [
         'first_name', 'last_name', 'username',

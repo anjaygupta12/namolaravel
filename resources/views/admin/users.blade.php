@@ -134,7 +134,7 @@
                                             <td>{{ $user->net_p_l }}</td>
                                             <td>{{ $user->MCXBrokerage }}</td>
                                             <td>{{ $user->net_p_l }}</td>
-                                            <td>{{ $user->broker_id == 0 ? 'Yes' : 'No' }}</td>
+                                            <td>{{ $user->broker_id == 0 ? 'Admin' : $user->broker->username }}</td>
                                             <td>{{ $user->IsDemo ? 'Yes' : 'No' }}</td>
                                             <td>
                                                 <form action="{{ route('admin.users-toggle-status', $user->id) }}"

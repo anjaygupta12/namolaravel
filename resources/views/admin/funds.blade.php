@@ -61,25 +61,23 @@
                                     <tr>
                                         <th>ID</th>
                                         <th>username</th>
-                                        <th>name</th>
                                         <th>Amount</th>
                                         <th>Txn Type</th>
                                         <th>Notes</th>
-                                        <th>Txn Mode</th>
                                         <th>Created At</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach ($depositQ as $item)
                                         <tr>
-                                            <td>{{ $loop->iteration }}</td>
+                                            <td>{{ $item->transaction_id }}</td>
                                             <td>{{ $item->UserName }}</td>
-                                            <td>{{ $item->FullName }}</td>
-                                            <td>{{ $item->AmountS }}</td>
-                                            <td>{{ ($item->type=='+')?'Deposit':'withdraw' }}</td>
-                                            <td>{{ $item->Remark ?? '' }}</td>
-                                            <td>{{ $item->Mode }}
+                                            <td style="color: {{ $item->type != '+' ? 'red' : 'green' }}">{{ $item->AmountS }}</td>
+                                            <td style="color: {{ $item->type != '+' ? 'red' : 'green' }}">
+                                                {{ $item->type != '+' ? 'Withdraw' : 'Deposit' }}
                                             </td>
+                                            <td>{{ $item->Remark ?? '' }}</td>
+                                           
                                             <td>{{ $item->Timestamp }}</td>
                                         </tr>
                                     @endforeach
@@ -99,7 +97,9 @@
     <script>
         $(document).ready(function() {
             // Initialize DataTables
-            $('.table').DataTable();
+           $('.table').DataTable({
+    "order": [[5, "desc"]]  // index starts at 0
+});
 
             // Fund transaction modal handlers
             $('.btn-success, .btn-warning').on('click', function() {
