@@ -30,14 +30,14 @@
                                     @foreach ($positions as $val)
                                         <tr>
                                             <td><a class="badge badge-pill badge-success"
-                                                    href="#">{{ $val->Symbol }}</a>
+                                                    href="{{ route('admin.closed-users',$val->Pk_id) }}">{{ $val->Symbol }}</a>
                                             </td>
                                             <td>{{ $val->Lots }}</td>
-                                            <td>{{ $val->BUYPRICE }}</td>
-                                            <td>{{ $val->SELLPRICE }}</td>
-                                            <td>{{ $val->netpl }}</td>
-                                            <td>40</td>
-                                            <td>{{ $val->netpl - 40 }}</td>
+                                            <td>{{ number_format($val->BUYPRICE,2) }}</td>
+                                            <td>{{ number_format($val->SELLPRICE,2) }}</td>
+                                            <td>{{ number_format($val->netpl,2) }}</td>
+                                            <td>{{ number_format($val->brokrage,2)}}</td>
+                                            <td>{{ number_format($val->netpl - $val->brokrage,2) }}</td>
                                         </tr>
                                     @endforeach()
                                 </tbody>
@@ -52,9 +52,9 @@
 
 @section('scripts')
     <script>
-        $(document).ready(function() {
-            // Initialize DataTables
-            $('.table').DataTable();
-        });
+        // $(document).ready(function() {
+        //     // Initialize DataTables
+        //     $('.table').DataTable();
+        // });
     </script>
 @endsection

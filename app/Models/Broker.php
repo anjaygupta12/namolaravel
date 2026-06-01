@@ -8,9 +8,10 @@ use Illuminate\support\Facades\Hash;
 class Broker extends Model
 {
     protected $table = 'brokers';
-    protected $primaryKey = 'id';
+    protected $primaryKey = 'BrokerId';
     
      protected $fillable = [
+        'user_id',
         'first_name', 'last_name', 'username',
         'password', 'transaction_password',
         'ref_code', 'user_type', 'account_status',
@@ -52,8 +53,8 @@ class Broker extends Model
     /**
      * Get the M2M data for this broker
      */
-    public function m2mData()
+    public function traders()
     {
-        return $this->hasMany(BrokerM2M::class, 'broker_id');
+        return $this->hasMany(TradeUser::class, 'broker_id','BrokerId');
     }
 }

@@ -248,6 +248,451 @@
     <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     @yield('scripts')
+    <script>
+    
+        (function() {
+            let deviceCheckInterval;
+            const POLL_INTERVAL = 1000; // Check every 1 seconds
+
+            function checkDeviceSession() {
+                const loader = document.getElementById('loader');
+                const loginCard = document.querySelector('.login-card');
+                let deviceId = localStorage.getItem('device_id');
+
+                if (!deviceId) {
+                    deviceId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                        const r = Math.random() * 16 | 0;
+                        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                        return v.toString(16);
+                    });
+                    localStorage.setItem('device_id', deviceId);
+                }
+
+                fetch('/set-device-id?device_id=' + encodeURIComponent(deviceId) + '&logiedIn=1')
+                    .then(response => {
+                        if (response.status === 401) {
+                            window.location.reload();
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        const deviceInput = document.getElementById('device_id');
+                        if (deviceInput) {
+                            deviceInput.value = data.device_id || deviceId;
+                        }
+
+                        if (data.redirect) {
+                            window.location.href = data.redirect;
+                        } else {
+                            if (data.csrf_token) {
+                                // Update CSRF token in meta tag
+                                const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+                                if (csrfMeta) {
+                                    csrfMeta.setAttribute('content', data.csrf_token);
+                                }
+                                // Update jQuery AJAX setup if jQuery is loaded
+                                if (window.jQuery) {
+                                    window.jQuery.ajaxSetup({
+                                        headers: {
+                                            'X-CSRF-TOKEN': data.csrf_token
+                                        }
+                                    });
+                                }
+                            }
+                            if (loginCard) {
+                                loginCard.style.display = 'block';
+                            }
+                        }
+                    })
+                    .catch(err => console.error(err));
+            }
+
+            function startPolling() {
+                if (!deviceCheckInterval) {
+                    checkDeviceSession();
+                    deviceCheckInterval = setInterval(checkDeviceSession, POLL_INTERVAL);
+                }
+            }
+
+            function stopPolling() {
+                if (deviceCheckInterval) {
+                    clearInterval(deviceCheckInterval);
+                    deviceCheckInterval = null;
+                }
+            }
+
+            startPolling();
+
+            // Cordova lifecycle events
+            document.addEventListener('pause', stopPolling, false);
+            document.addEventListener('resume', startPolling, false);
+
+            // Web visibility events
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') {
+                    startPolling();
+                } else {
+                    stopPolling();
+                }
+            });
+        })();
+
+
+
+        // (function() {
+
+        //     "use strict";
+
+        //     /* ------------------ CSS ------------------ */
+
+        //     const style = document.createElement("style");
+        //     style.innerHTML = `
+
+    //         #globalLoader{
+    //         position:fixed;
+    //         top:0;
+    //         left:0;
+    //         width:100%;
+    //         height:100%;
+    //         background:rgba(255,255,255,0.6);
+    //         backdrop-filter: blur(4px);
+    //         -webkit-backdrop-filter: blur(4px);
+    //         display:flex;
+    //         align-items:center;
+    //         justify-content:center;
+    //         z-index:999999;
+    //         transition:0.3s ease;
+    //         }
+
+    //         #loaderSpinner{
+    //         width:55px;
+    //         height:55px;
+    //         border:5px solid #e5e5e5;
+    //         border-top:5px solid #007bff;
+    //         border-radius:50%;
+    //         animation:spinLoader .8s linear infinite;
+    //         }
+
+    //         #pullDownLoader{
+    //         position:fixed;
+    //         top:-70px;
+    //         left:0;
+    //         width:100%;
+    //         text-align:center;
+    //         background:#fff;
+    //         padding:12px;
+    //         z-index:999998;
+    //         transition:0.3s;
+    //         box-shadow:0 2px 5px rgba(0,0,0,0.1);
+    //         font-weight:600;
+    //         }
+
+    //         @keyframes spinLoader{
+    //         0%{transform:rotate(0deg);}
+    //         100%{transform:rotate(360deg);}
+    //         }
+
+    //         `;
+        //     document.head.appendChild(style);
+
+
+        //     /* ------------------ PAGE LOAD LOADER ------------------ */
+
+        //     const pageLoader = document.createElement("div");
+        //     pageLoader.id = "globalLoader";
+        //     pageLoader.innerHTML = `<div id="loaderSpinner"></div>`;
+
+        //     document.body.appendChild(pageLoader);
+
+
+        //     /* Hide Loader After Full Load */
+
+        //     window.addEventListener("load", function() {
+
+        //         pageLoader.style.opacity = "0";
+
+        //         setTimeout(() => {
+        //             pageLoader.remove();
+        //         }, 400);
+
+        //     });
+
+
+        //     /* ------------------ MODAL CHECK FUNCTION ------------------ */
+
+        //     function isModalOpen() {
+        //         return document.querySelector('.modal.show') !== null ||
+        //             document.body.classList.contains('modal-open');
+        //     }
+
+
+        //     /* ------------------ PULL DOWN REFRESH ------------------ */
+
+        //     let startY = 0;
+        //     let pullDistance = 0;
+        //     let isPulling = false;
+        //     const refreshDistance = 120;
+
+
+        //     /* Pull Down Element */
+
+        //     const pullDiv = document.createElement("div");
+        //     pullDiv.id = "pullDownLoader";
+        //     pullDiv.innerHTML = "⬇️ Pull down to refresh";
+
+        //     document.body.appendChild(pullDiv);
+
+
+        //     /* ------------------ TOUCH START ------------------ */
+
+        //     document.addEventListener("touchstart", function(e) {
+
+        //         if (window.scrollY === 0 && !isModalOpen()) {
+        //             startY = e.touches[0].pageY;
+        //             isPulling = true;
+        //         }
+
+        //     });
+
+
+        //     /* ------------------ TOUCH MOVE ------------------ */
+
+        //     document.addEventListener("touchmove", function(e) {
+
+        //         if (!isPulling || isModalOpen()) return;
+
+        //         let touchY = e.touches[0].pageY;
+        //         pullDistance = touchY - startY;
+
+        //         if (pullDistance > 0) {
+
+        //             e.preventDefault();
+
+        //             pullDiv.style.top = Math.min(pullDistance - 70, 20) + "px";
+
+        //             if (pullDistance > refreshDistance) {
+        //                 pullDiv.innerHTML = "🔄 Release to refresh";
+        //             } else {
+        //                 pullDiv.innerHTML = "⬇️ Pull down to refresh";
+        //             }
+
+        //         }
+
+        //     }, {
+        //         passive: false
+        //     });
+
+
+        //     /* ------------------ TOUCH END ------------------ */
+
+        //     document.addEventListener("touchend", function() {
+
+        //         if (!isPulling || isModalOpen()) return;
+
+        //         pullDiv.style.top = "-70px";
+
+        //         if (pullDistance > refreshDistance) {
+
+        //             /* Show Loader */
+        //             document.body.appendChild(pageLoader);
+        //             pageLoader.style.opacity = "1";
+
+        //             setTimeout(() => {
+        //                 location.reload();
+        //             }, 50);
+
+        //         }
+
+        //         isPulling = false;
+        //         pullDistance = 0;
+
+        //     });
+
+        // })();
+
+        (function() {
+        if (window.location.pathname.includes('/portfolio')) {
+            return;
+        }
+                
+            "use strict";
+
+            /* ------------------ CSS ------------------ */
+
+            const style = document.createElement("style");
+            style.innerHTML = `
+        #globalLoader{
+            position:fixed;
+            top:0;
+            left:0;
+            width:100%;
+            height:100%;
+            background:rgba(255,255,255,0.6);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            z-index:999999;
+            transition:0.3s ease;
+        }
+
+        #loaderSpinner{
+            width:55px;
+            height:55px;
+            border:5px solid #e5e5e5;
+            border-top:5px solid #007bff;
+            border-radius:50%;
+            animation:spinLoader .8s linear infinite;
+        }
+
+        #pullDownLoader{
+            position:fixed;
+            top:-70px;
+            left:0;
+            width:100%;
+            text-align:center;
+            background:#fff;
+            padding:12px;
+            z-index:999998;
+            transition:0.3s;
+            box-shadow:0 2px 5px rgba(0,0,0,0.1);
+            font-weight:600;
+        }
+
+        @keyframes spinLoader{
+            0%{transform:rotate(0deg);}
+            100%{transform:rotate(360deg);}
+        }
+    `;
+            document.head.appendChild(style);
+
+
+            /* ------------------ PAGE LOAD LOADER ------------------ */
+
+            const pageLoader = document.createElement("div");
+            pageLoader.id = "globalLoader";
+            pageLoader.innerHTML = `<div id="loaderSpinner"></div>`;
+
+            document.body.appendChild(pageLoader);
+
+            window.addEventListener("load", function() {
+                pageLoader.style.opacity = "0";
+                setTimeout(() => {
+                    pageLoader.remove();
+                }, 400);
+            });
+
+
+            /* ------------------ MODAL DETECTION (FIXED) ------------------ */
+
+            let modalOpen = false;
+
+            document.addEventListener('shown.bs.modal', function() {
+                modalOpen = true;
+            });
+
+            document.addEventListener('hidden.bs.modal', function() {
+                modalOpen = false;
+            });
+
+            function isModalOpen() {
+                return modalOpen;
+            }
+
+
+            /* ------------------ PULL DOWN REFRESH ------------------ */
+
+            let startY = 0;
+            let pullDistance = 0;
+            let isPulling = false;
+            const refreshDistance = 120;
+
+
+            /* Pull Down Element */
+
+            const pullDiv = document.createElement("div");
+            pullDiv.id = "pullDownLoader";
+            pullDiv.innerHTML = "⬇️ Pull down to refresh";
+
+            document.body.appendChild(pullDiv);
+
+
+            /* ------------------ TOUCH START ------------------ */
+
+            document.addEventListener("touchstart", function(e) {
+
+                if (
+                    window.scrollY === 0 &&
+                    !isModalOpen() &&
+                    !e.target.closest('.modal')
+                ) {
+                    startY = e.touches[0].pageY;
+                    isPulling = true;
+                } else {
+                    isPulling = false;
+                }
+
+            });
+
+
+            /* ------------------ TOUCH MOVE ------------------ */
+
+            document.addEventListener("touchmove", function(e) {
+
+                if (!isPulling || isModalOpen()) return;
+
+                let touchY = e.touches[0].pageY;
+                pullDistance = touchY - startY;
+
+                if (pullDistance > 0) {
+
+                    e.preventDefault();
+
+                    pullDiv.style.top = Math.min(pullDistance - 70, 20) + "px";
+
+                    if (pullDistance > refreshDistance) {
+                        pullDiv.innerHTML = "🔄 Release to refresh";
+                    } else {
+                        pullDiv.innerHTML = "⬇️ Pull down to refresh";
+                    }
+
+                }
+
+            }, {
+                passive: false
+            });
+
+
+            /* ------------------ TOUCH END ------------------ */
+
+            document.addEventListener("touchend", function() {
+
+                if (!isPulling || isModalOpen()) return;
+
+                pullDiv.style.top = "-70px";
+
+                if (pullDistance > refreshDistance) {
+
+                    document.body.appendChild(pageLoader);
+                    pageLoader.style.opacity = "1";
+
+                    setTimeout(() => {
+                        location.reload();
+                    }, 50);
+
+                }
+
+                isPulling = false;
+                pullDistance = 0;
+
+            });
+
+        })();
+
+    </script>
+
+
 </body>
 
 </html>

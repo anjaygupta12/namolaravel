@@ -54,6 +54,12 @@
                         </div>
                     @endif
                     
+                    @if ($errors->has('error'))
+                    <div class="alert alert-danger">
+                        {{ $errors->first('error') }}
+                    </div>
+                @endif
+
                     @if(session('success'))
                         <div class="alert alert-success">
                             {{ session('success') }}

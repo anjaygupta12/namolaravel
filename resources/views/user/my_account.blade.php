@@ -78,7 +78,7 @@
                 <i class="fas fa-chevron-right"></i>
             </a>
             
-            <a href="https://esaytraders.live/esaytraders.live.apk" target="_blank" class="menu-item">
+            <a href="https://namotraders.in/namo.apk" target="_blank" class="menu-item">
                 <div class="menu-icon">
                     <i class="fas fa-download"></i>
                 </div>
@@ -156,7 +156,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div class="balance-cards">
+                {{-- <div class="balance-cards">
                     <div class="balance-card">
                         <h6>Available Balance</h6>
                         <h3>₹ {{Auth::guard('tradeuser')->user()->balance }} </h3>
@@ -169,31 +169,31 @@
                         <h6>Total Profit</h6>
                         <h3>₹ {{ Auth::guard('tradeuser')->user()->net_p_l }}</h3>
                     </div>
-                </div>
+                </div> --}}
                 <div class="transaction-history mt-4">
-                    <h6>Recent Transactions</h6>
+                    {{-- <h6>Recent Transactions</h6> --}}
                     <table class="table">
                         <thead>
                             <tr>
                                 <th>Date</th>
-                                <th>Description</th>
+                                {{-- <th>Description</th> --}}
                                 <th>Amount</th>
-                                <th>Status</th>
+                                {{-- <th>Status</th> --}}
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($data as $val)
                             <tr>
-                                <td>{{ $val->created_at ? \Carbon\Carbon::parse($val->created_at)->format('d-M-Y h:i:s A') : '' }}</td>
-                                <td>{{ ($val->type==1)? 'Deposit': 'Withdrawal' }}</td>
-                                <td>₹ {{$val->Amount }}</td>
-                                <td>
+                                <td>{{ $val->created_at ? \Carbon\Carbon::parse($val->LastModify)->format('d-M-Y h:i:s A') : '' }}</td>
+                                {{-- <td>{{ ($val->type==1)? 'Deposit': 'Withdrawal' }}</td> --}}
+                                <td><span class="badge badge-success" > + {{$val->Amount }} </span></td>
+                                {{-- <td>
                                    <p class="detail mt-1 mb-1">
                                     <span class="badge {{$val->Approve_Status === 'APPROVED' ? 'badge-success' : 'badge-danger'}}">
                                     {{ $val->Approve_Status}}
                                     </span>
                                 </p>
-                                </td>
+                                </td> --}}
                             </tr>
                           @endforeach
                         </tbody>
@@ -562,7 +562,7 @@
     }
     
     .menu-item:hover {
-        background-color: #f9f9f9;
+        background-color: #040303;
     }
     
     .menu-icon {
@@ -646,7 +646,7 @@
         flex: 1;
         min-width: 200px;
         padding: 20px;
-        background: #020b14;
+        background: #d2e9ff;
         border-radius: 10px;
         text-align: center;
     }

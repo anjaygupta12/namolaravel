@@ -8,7 +8,7 @@ class Role extends Model
 {
     protected $table = 'roles';
     protected $fillable = ['name', 'description'];
-    
+
     /**
      * Get the permissions for the role.
      */
@@ -16,7 +16,7 @@ class Role extends Model
     {
         return $this->belongsToMany(Permission::class, 'role_permissions', 'role_id', 'permission_id');
     }
-    
+
     /**
      * Get the admins that belong to the role.
      */

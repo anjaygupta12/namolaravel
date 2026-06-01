@@ -30,7 +30,7 @@
                         <p class="card-category">Update your login password</p>
                     </div>
                     <div class="card-body">
-                        <form method="POST" action="{{ route('admin.update-transaction-password') }}">
+                        <form method="POST" action="{{ route('admin.update-user-password') }}">
                             @csrf
                             <input type="hidden" name="Login" value="1">
                             {{-- <div class="row">
@@ -47,8 +47,9 @@
                             <div class="row">
                                 <div class="col-md-12">
                                     <div class="form-group">
-                                        <label class="bmd-label-floating">New Transaction Password</label>
+                                        <label class="bmd-label-floating">Change Password</label>
                                         <input type="password" name="new_password" class="form-control new_password" required>
+                                    <input type="hidden" name="user" value="{{ collect(request()->query())->keys()[0] ?? '' }}">
                                     </div>
                                 </div>
                             </div>
@@ -61,30 +62,13 @@
                                     </div>
                                 </div>
                             </div> --}}
-                            <button type="submit" class="btn btn-primary pull-right">Update Transaction Password</button>
+                            <button type="submit" class="btn btn-primary pull-right">Update</button>
                             <div class="clearfix"></div>
                         </form>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-header ">
-                        <h4 class="card-title">Password Guidelines</h4>
-                        <p class="card-category">Security recommendations</p>
-                    </div>
-                    <div class="card-body">
-                        <ul>
-                            <li>Use at least 8 characters</li>
-                            <li>Include uppercase and lowercase letters</li>
-                            <li>Include at least one number</li>
-                            <li>Include at least one special character</li>
-                            <li>Avoid using personal information</li>
-                            <li>Don't reuse passwords from other sites</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
+
         </div>
     </div>
 @endsection
@@ -102,7 +86,7 @@
                 alert('All fields are required');
                 return false;
             }
-             alert('Admin Password changed Successfully.');
+             alert('Password changed Successfully.');
         });
     });
 </script>

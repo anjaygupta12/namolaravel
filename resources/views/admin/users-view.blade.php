@@ -8,9 +8,25 @@
             color: #000000;
             position: relative;
         }
+
+        h3 {
+            color: #fff
+        }
     </style>
     <div class="container-fluid">
         <div class="row">
+            @if (session('success'))
+                <div class="alert alert-success">
+                    {{ session('success') }}
+                </div>
+            @endif
+
+            @if (session('error'))
+                <div class="alert alert-danger">
+                    {{ session('error') }}
+                </div>
+            @endif
+
             <div class="col-md-12">
                 <div class="card">
                     <div class="card-body">
@@ -34,7 +50,7 @@
                         </form>
 
                         <!-- Download Trades PDF -->
-                        <form method="POST" action="{{ route('admin.trades.pdf') }}">
+                        <form method="POST" action="{{ route('admin.trades.pdf', $user->id) }}">
                             @csrf
                             <div class="row mb-3">
                                 <div class="col-md-4">
@@ -83,7 +99,7 @@
                             <li><a class="dropdown-item" href="{{ route('admin.users-edit', $user->id) }}">Update</a></li>
                             <li role="separator" class="dropdown-divider"></li>
                             <li>
-                                <a class="dropdown-item" href="{{ route('admin.users-reset', $user->id) }}"
+                                <a class="dropdown-item" href="{{ route('admin.reset-coount-confirm', $user->id) }}"
                                     onclick="return confirm('Are you sure you want to reset this account? All history will be cleared...')">
                                     Reset Account
                                 </a>
@@ -160,7 +176,7 @@
                                             <tbody>
                                                 <tr>
                                                     <th>ID</th>
-                                                    <td>{{ $user->id }}</td>
+                                                    <td>{{ $user->user_id }}</td>
                                                 </tr>
                                                 <tr>
                                                     <th>Name</th>
@@ -188,7 +204,7 @@
                                                 </tr>
                                                 <tr>
                                                     <th>Allow Fresh Entry Order above high &amp; below low?</th>
-                                                    <td>{{ $user->AllowOrdersBetweenHighLow ? 'Yes' : 'NO' }}</td>
+                                                    <td>{{ $user->AllowOrdersBeyondHighLow ? 'Yes' : 'NO' }}</td>
                                                 </tr>
                                                 <tr>
                                                     <th>demo account?</th>
@@ -196,135 +212,146 @@
                                                 </tr>
                                                 <tr>
                                                     <th>Auto-close trades if losses cross beyond the configured limit</th>
-                                                    <td>Yes</td>
+                                                    <td>{{ $user->AutoSquareOff == 1 ? 'Yes' : 'NO' }}</td>
                                                 </tr>
                                                 <tr>
                                                     <th>Auto-close trades if insufficient fund to hold overnight</th>
-                                                    <td>Yes</td>
+                                                    <td>{{ $user->MCXMinLotPerTrade == 1 ? 'Yes' : 'NO' }}</td>
                                                 </tr>
                                                 <tr>
                                                     <th>Minimum lot size required per single trade of MCX</th>
-                                                    <td>0</td>
+                                                    <td>{{ $user->MCXMinLotPerTrade }}</td>
                                                 </tr>
                                                 <tr>
                                                     <th>Maximum lot size allowed per single trade of MCX</th>
-                                                    <td>5</td>
+                                                    <td>{{ $user->MCXMaxLotPerTrade }}</td>
                                                 </tr>
                                                 <tr>
                                                     <th>Minimum lot size required per single trade of Equity</th>
-                                                    <td>0</td>
+                                                    <td>{{ $user->NSEFuturesMinLotPerTrade }}</td>
                                                 </tr>
                                                 <tr>
                                                     <th>Maximum lot size allowed per single trade of Equity</th>
-                                                    <td>5</td>
+                                                    <td>{{ $user->NSEFuturesMaxLotPerTrade }}</td>
                                                 </tr>
                                                 <tr>
                                                     <th>Minimum lot size required per single trade of Equity INDEX</th>
-                                                    <td>0</td>
+                                                    <td>{{ $user->NSEFuturesMaxLotPerTrade }}</td>
                                                 </tr>
                                                 <tr>
                                                     <th>Maximum lot size allowed per single trade of Equity INDEX</th>
-                                                    <td>20</td>
+                                                    <td>{{ $user->NSEIndexMaxLotPerTrade }}</td>
                                                 </tr>
                                                 <tr>
-                                                    <th>Maximum lot size allowed per scrip of MCX to be actively open at a
+                                                    <th>Maximum lot size allowed per script of MCX to be actively open at a
                                                         time</th>
-                                                    <td>15</td>
+
+                                                    <td>{{ $user->MCXMaxLotPerScrip }}</td>
                                                 </tr>
                                                 <tr>
                                                     <th>Maximum lot size allowed per scrip of Equity to be actively open at
                                                         a time</th>
-                                                    <td>20</td>
+                                                    <td>{{ $user->OptionsSSEquityMaxLotPerScrip }}</td>
                                                 </tr>
                                                 <tr>
                                                     <th>Maximum lot size allowed per scrip of Equity INDEX to be actively
                                                         open at a time</th>
-                                                    <td>100</td>
+                                                    <td>{{ $user->OptionsIndexMaxLotPerScrip }}</td>
                                                 </tr>
                                                 <tr>
                                                     <th>Minimum lot size required per single trade of Equity Options</th>
-                                                    <td>0</td>
+                                                    <td>{{ $user->OptionsEquityMinLotPerTrade }}</td>
                                                 </tr>
                                                 <tr>
                                                     <th>Maximum lot size allowed per single trade of Equity Options</th>
-                                                    <td>25</td>
+                                                    <td>{{ $user->OptionsEquityMaxLotPerTrade }}</td>
                                                 </tr>
                                                 <tr>
                                                     <th>Minimum lot size required per single trade of Equity INDEX Options
                                                     </th>
-                                                    <td>0</td>
+                                                    <td>{{ $user->OptionsIndexMinLotPerTrade }}</td>
                                                 </tr>
                                                 <tr>
                                                     <th>Maximum lot size allowed per single trade of Equity INDEX Options
                                                     </th>
-                                                    <td>25</td>
+                                                    <td>{{ $user->OptionsIndexMaxLotPerTrade }}</td>
                                                 </tr>
                                                 <tr>
                                                     <th>Maximum lot size allowed per scrip of Equity to be actively open at
                                                         a time</th>
-                                                    <td>50</td>
+                                                    <td>{{ $user->OptionsEquityMaxLotPerScrip }}</td>
                                                 </tr>
                                                 <tr>
                                                     <th>Maximum lot size allowed per scrip of Equity INDEX Options to be
                                                         actively open at a time</th>
-                                                    <td>50</td>
+                                                    <td>{{ $user->OptionsIndexMaxLotPerScrip }}</td>
                                                 </tr>
                                                 <tr>
                                                     <th>auto-Close all active trades when the losses reach % of
                                                         Ledger-balance</th>
-                                                    <td>90</td>
+                                                    <td>{{ $user->AutoSquareOffPercentage }}</td>
                                                 </tr>
                                                 <tr>
                                                     <th>Notify client when the losses reach % of Ledger-balance</th>
-                                                    <td>70</td>
+                                                    <td>{{ $user->NotifyPercentage }}</td>
                                                 </tr>
                                                 <tr>
                                                     <th>MCX Trading</th>
-                                                    <td>Active</td>
+                                                    <td>{{ $user->MCXEnabled == 1 ? 'Active' : 'InActive' }}</td>
                                                 </tr>
                                                 <tr>
+
                                                     <th>MCX brokerage per_crore</th>
-                                                    <td>1000.0000</td>
+                                                    <td>{{ $user->MCXBrokerage }}</td>
                                                 </tr>
                                                 <tr>
                                                     <th>Equity Trading</th>
-                                                    <td>Active</td>
+                                                    <td>{{ $user->NSEFuturesEnabled == 1 ? 'Active' : 'InActive' }}</td>
                                                 </tr>
                                                 <tr>
                                                     <th>Equity brokerage</th>
-                                                    <td>1000.0000</td>
+                                                    <td>{{ $user->NSEFuturesBrokerage }}</td>
                                                 </tr>
                                                 <tr>
                                                     <th>Intraday Exposure/Margin Equity</th>
-                                                    <td>500</td>
+                                                    <td>{{ $user->NSEFuturesIntradayMargin }}</td>
                                                 </tr>
                                                 <tr>
                                                     <th>Holding Exposure/Margin Equity</th>
-                                                    <td>70</td>
+                                                    <td>{{ $user->NSEFuturesHoldingMargin }}</td>
                                                 </tr>
                                                 <tr>
-                                                    <th>Options Trading</th>
-                                                    <td>Active</td>
+                                                    <th>Index Options Trading</th>
+                                                    <td>{{ $user->NSEOptionsEnabled == 1 ? 'Active' : 'InActive' }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Equity Options Trading</th>
+                                                    <td>{{ $user->EquityOptionsEnabled == 1 ? 'Active' : 'InActive' }}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <th>MCX Options Trading</th>
+                                                    <td>{{ $user->MCXOptionsEnabled == 1 ? 'Active' : 'InActive' }}</td>
                                                 </tr>
                                                 <tr>
                                                     <th>Options brokerage</th>
-                                                    <td>25.0000</td>
+                                                    <td>{{ $user->OptionsBrokerage }}</td>
                                                 </tr>
                                                 <tr>
-                                                    <th>Intraday Exposure/Margin Options</th>
-                                                    <td>5</td>
+                                                    <th>Intraday Exposure/Margin Options Index</th>
+                                                    <td>{{ $user->OptionsIntradayMargin }}</td>
                                                 </tr>
                                                 <tr>
-                                                    <th>Holding Exposure/Margin Options</th>
-                                                    <td>2</td>
+                                                    <th>Holding Exposure/Margin Options Index</th>
+                                                    <td>{{ $user->OptionsHoldingMargin }}</td>
                                                 </tr>
                                                 <tr>
                                                     <th>Ledger Balance</th>
-                                                    <td>0.0000</td>
+                                                    <td>{{ $user->balance }}</td>
                                                 </tr>
                                                 <tr>
                                                     <th>Broker</th>
-                                                    <td>0 : </td>
+                                                    <td>{{ $user->broker->user_id }}: {{ $user->broker->UserName }}</td>
                                                 </tr>
                                                 <tr>
                                                     <th>Account Created At</th>
@@ -337,15 +364,26 @@
                                                 </tr>
                                                 <tr>
                                                     <th>Total Profit / Loss</th>
-                                                    <td>0</td>
+                                                    <td>{{ number_format($user->weekly_profit_loss, 2) }}</td>
                                                 </tr>
                                                 <tr>
-                                                    <th>Total Brokerage</th>
-                                                    <td>0</td>
+                                                    <th>Total Broker</th>
+                                                    <td>{{ $user->bidamount->whereBetween('updated_at', [now()->startOfWeek(Carbon\Carbon::MONDAY), now()->endOfWeek(Carbon\Carbon::FRIDAY)])->where('Isactive', 2)->sum('brokrage') }}
+                                                    </td>
                                                 </tr>
                                                 <tr>
                                                     <th>Net Profit / Loss</th>
-                                                    <td>0</td>
+                                                    @php
+                                                        $newBrokrage = $user->bidamount
+                                                            ->whereBetween('updated_at', [
+                                                                now()->startOfWeek(Carbon\Carbon::MONDAY),
+                                                                now()->endOfWeek(Carbon\Carbon::FRIDAY),
+                                                            ])
+                                                            ->where('Isactive', 2)
+                                                            ->sum('brokrage');
+                                                    @endphp
+                                                    <td>{{ number_format($user->weekly_profit_loss - $newBrokrage, 2) }}
+                                                    </td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -377,20 +415,31 @@
                                                 @foreach ($funds as $val)
                                                     <tr>
                                                         <td>{{ $val->Amount }}</td>
-                                                        <td>{!! $val->type == 1
-                                                            ? '<span class="badge badge-success">Deposit</span>'
-                                                            : '<span class="badge badge-danger">Withdraw</span>' !!}</td>
 
-                                                        <td>{{ \Carbon\Carbon::parse($val->created_at)->format('d-M-Y h:i:s A') }}
+                                                        <td>
+                                                            @if ($val->type == 1)
+                                                                <span class="text-success">
+                                                                    {{ $val->notes == 'Opening Balance.' ? 'Opening Balance' : 'Deposit' }}
+                                                                </span>
+                                                            @else
+                                                                <span class="text-danger">
+                                                                    Withdraw
+                                                                </span>
+                                                            @endif
                                                         </td>
+
+                                                        <td>
+                                                            {{ \Carbon\Carbon::parse($val->LastModify)->format('d-M-Y h:i:s A') }}
+                                                        </td>
+
                                                         <td>{{ $val->notes }}</td>
                                                     </tr>
                                                 @endforeach
                                             </tbody>
                                         </table>
-                                        <div class="pagination-wrapper">
+                                        {{-- <div class="pagination-wrapper">
                                             {{ $funds->links() }}
-                                        </div>
+                                        </div> --}}
                                     </div>
                                 </div>
                             </div>
@@ -408,6 +457,7 @@
                                             <table class="table table-striped">
                                                 <thead>
                                                     <tr>
+                                                        <th>#</th>
                                                         <th>X</th>
                                                         <th>ID</th>
                                                         <th>Scrip</th>
@@ -428,16 +478,26 @@
                                                 <tbody>
                                                     @foreach ($trades as $trade)
                                                         @php
-                                                            $lotSize = (int) $trade->Lots * $trade->LotSize;
+                                                            $lotSize = round($trade->Lots * $trade->LotSize, 2);
+
                                                         @endphp
                                                         <tr id="row-{{ $trade->Pk_id }}">
                                                             <td>{{ $loop->iteration }}</td>
-                                                            <td>{{ $trade->Pk_id }}</td>
-                                                            <td>{{ $trade->Symbol }}</td>
+                                                            <td><a style="color: white; font-weight: bold;"
+                                                                    href="{{ route('admin.close-trade-confirm', ['id' => $trade->Pk_id, 'userid' => request()->route('id')]) }}">
+                                                                    X </a>
+                                                            </td>
+                                                            <td><a style="color: white; font-weight: bold;"
+                                                                    href="{{ route('admin.trade-view', ['id' => $trade->Pk_id, 'userid' => request()->route('id')]) }}">{{ $trade->trade_id }}</a>
+                                                            </td>
+                                                            <td>{{ explode(':', $trade->Symbol)[1] ?? $trade->Symbol }}
+                                                            </td>
                                                             <td>{{ $trade->Mode == 'BUY' ? $trade->BuyPrice : '' }}</td>
                                                             <td>{{ $trade->Mode == 'SELL' ? $trade->BuyPrice : '' }}</td>
-                                                            <td>{{ (int) $trade->Lots }} / {{ number_format($lotSize, 2) }}
+                                                            <td>{{ $trade->Lots }} /
+                                                                {{ $trade->is_qty == 1 ? $trade->quentity : $lotSize }}
                                                             </td>
+
                                                             <td>{{ $trade->Mode == 'BUY' ? number_format($trade->BuyPrice * $lotSize, 2) : '' }}
                                                             </td>
                                                             <td>{{ $trade->Mode == 'SELL' ? number_format($trade->BuyPrice * $lotSize, 2) : '' }}
@@ -446,12 +506,12 @@
                                                             <td class="pl">0.00 </td>
                                                             <td>{{ $trade->used_margin_req }}
                                                             </td>
-                                                            <td>{{ \Carbon\Carbon::parse($trade->created_at)->format('d-M-Y h:i:s A') }}
+                                                            <td>{{ $trade->Mode == 'BUY' ? \Carbon\Carbon::parse($trade->created_at)->format('d-M-Y h:i:s A') : '' }}
                                                             </td>
-                                                            <td>{{ $trade->Isactive != 1 ? \Carbon\Carbon::parse($trade->updated_at)->format('d-M-Y h:i:s A') : '' }}
+                                                            <td>{{ $trade->Mode == 'SELL' ? \Carbon\Carbon::parse($trade->created_at)->format('d-M-Y h:i:s A') : '' }}
                                                             </td>
-                                                            <td>{{ $trade->IpAddress }}</td>
-                                                            <td>{{ $trade->Isactive != 1 ? $trade->IpAddress : '' }}</td>
+                                                            <td>{{ $trade->Mode == 'BUY' ? $trade->IpAddress : '' }}</td>
+                                                            <td>{{ $trade->Mode == 'SELL' ? $trade->IpAddress : '' }}</td>
                                                             <!-- If you have a separate SellIp, replace this -->
                                                         </tr>
                                                     @endforeach
@@ -469,91 +529,100 @@
                             <div class="card-body">
                                 <div class="table-responsive">
                                     <h3>Closed Trades</h3>
-                                    <div id="w5" class="grid-view">
-                                        <table class="table" style="table-layout: fixed; width: 100%;">
-                                            <colgroup>
-                                                <col style="width: 50px">
-                                                <col style="width: 80px">
-                                                <col style="width: 90px">
-                                                <col style="width: 90px">
-                                                <col style="width: 100px">
-                                                <col style="width: 110px">
-                                                <col style="width: 110px">
-                                                <col style="width: 120px">
-                                                <col style="width: 100px">
-                                                <col style="width: 150px">
-                                                <col style="width: 180px">
-                                                <col style="width: 120px">
-                                                <col style="width: 120px">
-                                            </colgroup>
-                                            <thead>
-                                                <tr>
-                                                    <th>ID</th>
-                                                    <th>Scrip</th>
-                                                    <th>Buy Rate</th>
-                                                    <th>Sell Rate</th>
-                                                    <th>Lots / Units</th>
-                                                    <th>Buy Turnover</th>
-                                                    <th>Sell Turnover</th>
-                                                    <th>Profit / Loss</th>
-                                                    <th>Brokerage</th>
-                                                    <th>Bought at</th>
-                                                    <th>Sold at</th>
-                                                    <th>Buy Ip</th>
-                                                    <th>Sell Ip</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @forelse($closedTrade as $trade)
-                                                
-                                                    @php
-                                                     $lotSize = (int) $trade->Lots * $trade->LotSize;
-                                                        $buyRate = (float) $trade->BuyPrice;
-                                                        $sellRate = (float) $trade->SalePrice;
-                                                        $lots = (float) $trade->Lots;
-                                                        $buyTurnover = $buyRate * $lotSize;
-                                                        $sellTurnover = $sellRate * $lotSize;
-                                                        $profitLoss = $sellTurnover - $buyTurnover;
-                                                        $brokerage = $trade->brokrage;
-                                                        $lotSize = (int) $trade->Lots * $trade->LotSize;
+                                    <div id="pjax-grid-index" data-pjax-container="" data-pjax-push-state=""
+                                        data-pjax-timeout="1000">
+                                        <div id="w4" class="grid-view">
+                                            <table class="table table-striped">
 
-                                                        $buyDate = \Carbon\Carbon::parse($trade->created_at)->format(
-                                                            'Y-m-d',
-                                                        );
-                                                        $sellDate = \Carbon\Carbon::parse($trade->updated_at)->format(
-                                                            'Y-m-d',
-                                                        );
-
-                                                        $sameDate = $buyDate === $sellDate ? '✔️' : '❌';
-                                                    @endphp
+                                                <thead>
                                                     <tr>
-                                                        <td>{{ $trade->Pk_id }}</td>
-                                                        <td>{{ $trade->Symbol }}</td>
-                                                        <td>{{ number_format($buyRate, 2) }}</td>
-                                                        <td>{{ number_format($sellRate, 2) }}</td>
-                                                        <td>{{ $lots }}/ {{ $lotSize }}</td>
-                                                        <td> {{ number_format($buyTurnover, 2) }}</td>
-                                                        <td>{{ number_format($sellTurnover, 2) }}</td>
-                                                        <td style="color: {{ $profitLoss >= 0 ? 'green' : 'red' }};">
-                                                            {{ number_format($profitLoss, 2) }}
-                                                        </td>
-
-                                                        <td>{{ (int) $trade->Isactive === 2 ? number_format($brokerage, 2) : '0.00' }}
-                                                        </td>
-                                                        <td>{{ $trade->created_at }}</td>
-                                                        <td>{{ $trade->updated_at }} {!! $sameDate !!}</td>
-                                                        <td>{{ $trade->IpAddress }}</td>
-                                                        <td>{{ $trade->IpAddress }}</td>
+                                                        <th>ID</th>
+                                                        <th>Scrip</th>
+                                                        <th>Buy Rate</th>
+                                                        <th>Sell Rate</th>
+                                                        <th>Lots / Units</th>
+                                                        <th>Buy Turnover</th>
+                                                        <th>Sell Turnover</th>
+                                                        <th>Profit / Loss</th>
+                                                        <th>Brokerage</th>
+                                                        <th>Bought at</th>
+                                                        <th>Sold at</th>
+                                                        <th>Buy Ip</th>
+                                                        <th>Sell Ip</th>
                                                     </tr>
-                                                @empty
-                                                    <tr>
-                                                        <td colspan="13" class="text-center">No records found</td>
-                                                    </tr>
-                                                @endforelse
-                                            </tbody>
-                                        </table>
+                                                </thead>
+                                                <tbody>
+                                                    @forelse($closedTrade as $trade)
+                                                        @php
+                                                            $lotSize = round($trade->Lots * $trade->LotSize, 2);
 
-                                        </table>
+                                                            $lots = (float) $trade->Lots;
+
+                                                            if ($trade->Mode == 'SELL') {
+                                                                $buyRate = (float) $trade->SalePrice;
+                                                                $sellRate = (float) $trade->BuyPrice;
+                                                            } else {
+                                                                $buyRate = (float) $trade->BuyPrice;
+                                                                $sellRate = (float) $trade->SalePrice;
+                                                            }
+
+                                                            $buyTurnover = $buyRate * $lotSize;
+                                                            $sellTurnover = $sellRate * $lotSize;
+
+                                                            //  if($trade->Mode=='SELL'){
+                                                            //      $profitLoss = $buyTurnover -  $sellTurnover;
+                                                            // //  }else{
+                                                            $profitLoss = $sellTurnover - $buyTurnover;
+                                                            //  }
+
+                                                            $brokerage = $trade->brokrage;
+                                                            $lotSize = round($trade->Lots * $trade->LotSize, 2);
+
+                                                            $buyDate = \Carbon\Carbon::parse(
+                                                                $trade->created_at,
+                                                            )->format('Y-m-d H:i:s A');
+                                                            $sellDate = \Carbon\Carbon::parse(
+                                                                $trade->updated_at,
+                                                            )->format('Y-m-d H:i:s');
+
+                                                            $sameDate = $buyDate === $sellDate ? '✔️' : '❌';
+                                                        @endphp
+                                                        <tr>
+                                                            <td><a style="color: white; font-weight: bold;"
+                                                                    href="{{ route('admin.trade-view', ['id' => $trade->Pk_id, 'userid' => request()->route('id')]) }}">{{ $trade->trade_id }}</a>
+                                                            </td>
+                                                            <td>{{ explode(':', $trade->Symbol)[1] ?? $trade->Symbol }}
+                                                            </td>
+                                                            <td>{{ number_format($buyRate, 2) }}</td>
+                                                            <td>{{ number_format($sellRate, 2) }}</td>
+                                                            <td>{{ $lots }} /
+                                                                {{ $trade->is_qty == 1 ? $trade->quentity : $lotSize }}</td>
+                                                            <td> {{ number_format($buyTurnover, 2) }}</td>
+                                                            <td>{{ number_format($sellTurnover, 2) }}</td>
+                                                            <td style="color: {{ $profitLoss >= 0 ? 'green' : 'red' }};">
+                                                                {{ number_format($profitLoss, 2) }}
+                                                            </td>
+
+                                                            <td>{{ number_format($brokerage, 2) }}
+                                                            </td>
+                                                            <td>{{ $trade->Mode == 'BUY' ? $trade->created_at : $trade->updated_at }}
+                                                            </td>
+                                                            <td>{{ $trade->Mode == 'BUY' ? $trade->updated_at : $trade->created_at }}
+                                                            </td>
+                                                            <td>{{ $trade->Mode == 'BUY' ? $trade->IpAddress : $trade->sell_ip_address }}
+                                                            </td>
+                                                            <td>{{ $trade->Mode == 'SELL' ? $trade->IpAddress : $trade->sell_ip_address }}
+                                                            </td>
+                                                        </tr>
+                                                    @empty
+                                                        <tr>
+                                                            <td colspan="13" class="text-center">No records found</td>
+                                                        </tr>
+                                                    @endforelse
+                                                </tbody>
+                                            </table>
+
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -583,11 +652,14 @@
                                             <tbody>
                                                 @forelse($mxcPendingTrade as $trade)
                                                     <tr>
-                                                        <td>{{ $trade->Pk_id }}</td>
+                                                        <td><a style="color: white; font-weight: bold;"
+                                                                href="{{ route('admin.trade-view', ['id' => $trade->Pk_id, 'userid' => request()->route('id')]) }}">{{ $trade->trade_id }}</a>
+                                                        </td>
+
                                                         <td>{{ $trade->Mode }}</td>
                                                         <td>{{ $trade->Lots }}</td>
-                                                        <td>{{ $trade->Symbol }}</td>
-                                                        <td>{{ $trade->OPTION ?? '-' }}</td>
+                                                        <td>{{ explode(':', $trade->Symbol)[1] ?? $trade->Symbol }}</td>
+                                                        <td>{{ $trade->activeConditions }}</td>
                                                         <td>{{ number_format((float) $trade->BuyPrice, 2) }}
                                                             {{-- @if ($trade->Mode == 'BUY')
                                                                 {{ number_format((float) $trade->BuyPrice, 2) }}
@@ -635,11 +707,15 @@
                                             <tbody>
                                                 @forelse($equityPendingTrade as $trade)
                                                     <tr>
-                                                        <td>{{ $trade->Pk_id }}</td>
+                                                        <td><a
+                                                                style="color: white; font-weight: bold;
+                                                                href="{{ route('admin.trade-view', ['id' => $trade->Pk_id, 'userid' => request()->route('id')]) }}">{{ $trade->trade_id }}</a>
+                                                        </td>
+
                                                         <td>{{ $trade->Mode }}</td>
                                                         <td>{{ $trade->Lots }}</td>
-                                                        <td>{{ $trade->Symbol }}</td>
-                                                        <td>{{ $trade->OPTION ?? '-' }}</td>
+                                                        <td>{{ explode(':', $trade->Symbol)[1] ?? $trade->Symbol }}</td>
+                                                        <td>{{ $trade->activeConditions ?? '-' }}</td>
                                                         <td>
                                                             {{ number_format((float) $trade->BuyPrice, 2) }}
                                                             {{-- @if ($trade->Mode == 'BUY')
@@ -686,10 +762,14 @@
                                         <tbody>
                                             @forelse($comexPendingTrade as $trade)
                                                 <tr>
-                                                    <td>{{ $trade->Pk_id }}</td>
+                                                    <td><a
+                                                            style="color: white; font-weight: bold;
+                                                            href="{{ route('admin.trade-view', ['id' => $trade->Pk_id, 'userid' => request()->route('id')]) }}">{{ $trade->trade_id }}</a>
+                                                    </td>
+
                                                     <td>{{ $trade->Mode }}</td>
                                                     <td>{{ $trade->Lots }}</td>
-                                                    <td>{{ $trade->Symbol }}</td>
+                                                    <td>{{ explode(':', $trade->Symbol)[1] ?? $trade->Symbol }}</td>
                                                     <td>{{ $trade->OPTION ?? '-' }}</td>
                                                     <td>{{ number_format((float) $trade->BuyPrice, 2) }}
                                                         {{-- @if ($trade->Mode == 'BUY')
@@ -763,45 +843,46 @@
     </div>
 
     <script>
+        function updateLivePL() {
+            const id = "{{ Request::segment(4) }}";
+            fetch('/admin/live-prices/' + id)
+                .then(res => res.json())
+                .then(data => {
+                    console.log(data, id);
+                    data.forEach(trade => {
+                        const row = document.getElementById(`row-${trade.Pk_id}`);
+                        if (row) {
+                            const tradeLastCell = row.querySelector('.trade-last');
+                            const plCell = row.querySelector('.pl');
 
-   function updateLivePL() {
-    const id = "{{ Request::segment(4) }}";
-    fetch('/admin/live-prices/' + id)
-        .then(res => res.json())
-        .then(data => {
-            console.log(data);
-            data.forEach(trade => {
-                const row = document.getElementById(`row-${trade.Pk_id}`);
-                if (row) {
-                    const tradeLastCell = row.querySelector('.trade-last');
-                    const plCell = row.querySelector('.pl');
+                            if (tradeLastCell && trade.TradeLast !== undefined) {
+                                tradeLastCell.textContent = trade.TradeLast;
+                            }
 
-                    if (tradeLastCell && trade.TradeLast !== undefined) {
-                        tradeLastCell.textContent = trade.TradeLast;
-                    }
+                            if (plCell && trade.pl !== undefined) {
+                                plCell.textContent = Number(trade.pl).toFixed(2);
 
-                    if (plCell && trade.pl !== undefined) {
-                        plCell.textContent = trade.pl;
-
-                        // Apply color based on positive/negative
-                        if (trade.pl > 0) {
-                            plCell.style.color = 'green';
-                        } else if (trade.pl < 0) {
-                            plCell.style.color = 'red';
-                        } else {
-                            plCell.style.color = 'black';
+                                // Apply color based on positive/negative
+                                if (trade.pl > 0) {
+                                    plCell.style.color = 'green';
+                                } else if (trade.pl < 0) {
+                                    plCell.style.color = 'red';
+                                } else {
+                                    plCell.style.color = 'black';
+                                }
+                            }
                         }
-                    }
-                }
-            });
-        })
-        .catch(err => console.error('Live price fetch error:', err));
-}
+                    });
+                })
+                .catch(err => console.error('Live price fetch error:', err));
+        }
 
-updateLivePL();
-setInterval(updateLivePL, 1000);
-
-</script>
+        // updateLivePL();
+        // setInterval(updateLivePL, 1000);
+        document.addEventListener("DOMContentLoaded", function() {
+            updateLivePL(); // Run only on page refresh / page load
+        });
+    </script>
 
 
 @endsection

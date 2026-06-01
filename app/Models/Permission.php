@@ -7,8 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 class Permission extends Model
 {
     protected $table = 'permissions';
-    protected $fillable = ['name', 'description'];
-    
+    protected $fillable = ['name', 'description','slug'];
+
     /**
      * Get the roles that own the permission.
      */

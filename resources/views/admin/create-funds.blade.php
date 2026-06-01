@@ -52,7 +52,7 @@
                     <div class="col-md-6">
                         <div class="form-group">
                             <label>User</label>
-                            <p class="form-control-plaintext mb-0">
+                            <p class="form-control-plaintext mb-0 " style="color:white;" >
                                 {{ $data->FullName }} ({{ $data->id }})
                             </p>
                             <input type="hidden" name="userid" value="{{ $data->id }}">

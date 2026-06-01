@@ -97,9 +97,9 @@
     <script>
         $(document).ready(function() {
             // Initialize DataTables
-           $('.table').DataTable({
-    "order": [[5, "desc"]]  // index starts at 0
-});
+//            $('.table').DataTable({
+//     "order": [[5, "desc"]]  // index starts at 0
+// });
 
             // Fund transaction modal handlers
             $('.btn-success, .btn-warning').on('click', function() {

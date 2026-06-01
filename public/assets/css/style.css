@@ -9,8 +9,8 @@ body {
     font-size: 15px;
     line-height: 1.6rem;
     letter-spacing: .004em;
-    color: #958d9e;
-    background: #1e3040;
+    color: #000000;
+    background: #f8f9fa;
     width: 100%;
     height: 100%;
     overflow-x: hidden;
@@ -24,7 +24,7 @@ body {
     display: grid !important;
 }
 a {
-    color: #6236FF;
+    color: #f8f9fa;
     outline: 0 !important;
     text-decoration: none
 }
@@ -33,7 +33,7 @@ a {
     a:active,
     a:focus {
         outline: 0 !important;
-        color: #6236FF;
+        color: #f8f9fa;
         text-decoration: none
     }
 
@@ -51,7 +51,7 @@ a {
     left: 0;
     right: 0;
     z-index: 999;
-    background: #FFFFFF;
+    background: #000000FFF;
     color: #27173E;
     border-bottom: 1px solid #DCDCE9
 }
@@ -65,7 +65,7 @@ a {
         right: 0;
         width: 100%;
         z-index: 99999;
-        background: #FFF
+        background: #000000
     }
 
     .appHeader.no-border {
@@ -104,7 +104,7 @@ a {
             align-items: center;
             justify-content: center;
             padding: 10px;
-            color: #6236FF;
+            color: #f8f9fa;
             position: relative
         }
 
@@ -141,11 +141,11 @@ a {
         }
 
     .appHeader.text-light {
-        color: #FFF
+        color: #000000
     }
 
         .appHeader.text-light .headerButton {
-            color: #FFF
+            color: #000000
         }
 
     .appHeader.bg-primary,
@@ -160,7 +160,7 @@ a {
     }
 
         .appHeader.bg-primary:before {
-            background: #6236FF !important
+            background: #f8f9fa !important
         }
 
         .appHeader.bg-secondary:before {
@@ -198,7 +198,7 @@ a {
     display: flex;
     margin-top: env(safe-area-inset-top);
     align-items: center;
-    background: #FFF;
+    background: #000000;
     z-index: 1000;
     border-bottom: 1px solid #DCDCE9
 }
@@ -217,7 +217,7 @@ a {
     bottom: 0;
     left: 0;
     right: 0;
-    background: #6236ff;
+    background: #f8f9fa;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -284,7 +284,7 @@ a {
             align-items: center;
             justify-content: center;
             border-radius: 200px;
-            background: #6236FF
+            background: #f8f9fa
         }
 
             .appBottomMenu .item .action-button.large {
@@ -297,7 +297,7 @@ a {
 
             .appBottomMenu .item .action-button .icon,
             .appBottomMenu .item .action-button ion-icon {
-                color: #FFF !important;
+                color: #000000 !important;
                 margin: 0 !important;
                 line-height: 0 !important
             }
@@ -305,9 +305,13 @@ a {
         .appBottomMenu .item strong {
             margin-top: 4px;
             display: block;
-            color: #c8c3c3;
+            color: #000000;
             font-weight: 400;
             font-size:15px
+        }
+                .text-white {
+            --bs-text-opacity: 1;
+            color: #000000!important;
         }
 
         .appBottomMenu .item:active {
@@ -315,14 +319,15 @@ a {
         }
 
         .appBottomMenu .item.active:before {
-            background: #6236FF
+            background: #f8f9fa
         }
 
         .appBottomMenu .item.active .icon,
         .appBottomMenu .item.active ion-icon,
         .appBottomMenu .item.active strong {
-            color: #fff !important;
-            font-weight: 500
+            color: #000000 !important;
+            font-weight: 500;
+            font-weight: bold;
         }
 
         .appBottomMenu .item:hover .icon,
@@ -331,19 +336,22 @@ a {
             color: #27173E
         }
 
+                .appBottomMenu .item:hover .cal .fas {
+            color: #27173E!important;
+        }
     .appBottomMenu.text-light {
-        color: #FFF
+        color: #000000
     }
 
         .appBottomMenu.text-light .item {
-            color: #FFF;
+            color: #000000;
             opacity: .7
         }
 
             .appBottomMenu.text-light .item .icon,
             .appBottomMenu.text-light .item ion-icon,
             .appBottomMenu.text-light .item strong {
-                color: #FFF
+                color: #000000
             }
 
             .appBottomMenu.text-light .item.active {
@@ -353,7 +361,7 @@ a {
                 .appBottomMenu.text-light .item.active .icon,
                 .appBottomMenu.text-light .item.active ion-icon,
                 .appBottomMenu.text-light .item.active strong {
-                    color: #FFF !important
+                    color: #000000 !important
                 }
 
     .appBottomMenu.bg-primary,
@@ -401,7 +409,7 @@ a {
     }
 
 .content-hero {
-    background: #FFF;
+    background: #000000;
     border-bottom: 1px solid #DCDCE9;
     padding: 16px
 }
@@ -414,7 +422,7 @@ a {
     }
 
 .wide-block {
-    background: #fff;
+    background: #000000;
     border-top: 1px solid #DCDCE9;
     border-bottom: 1px solid #DCDCE9;
     padding-left: 16px;
@@ -499,13 +507,13 @@ a {
 
 .sidebar-balance {
     padding: 6px 16px;
-    background: #6236FF
+    background: #f8f9fa
 }
 
     .sidebar-balance .listview-title {
         padding-right: 0;
         padding-left: 0;
-        color: #FFF;
+        color: #000000;
         opacity: .6
     }
 
@@ -514,7 +522,7 @@ a {
         letter-spacing: -0.01em;
         line-height: 1em;
         font-weight: 32px;
-        color: #FFF;
+        color: #000000;
         margin-bottom: 6px
     }
 
@@ -523,7 +531,7 @@ a {
     align-items: flex-start;
     justify-content: space-between;
     padding: 0px 16px 10px 16px;
-    background: #6236FF
+    background: #f8f9fa
 }
 
     .action-group .action-button {
@@ -544,7 +552,7 @@ a {
             margin: 0 auto 8px auto;
             border-radius: 100%;
             font-size: 18px;
-            color: #FFF;
+            color: #000000;
             display: flex;
             align-items: center;
             justify-content: center
@@ -608,7 +616,7 @@ a {
     font-size: 12px;
     text-align: center;
     line-height: 1.2em;
-    background: #FFF
+    background: #000000
 }
 
     .appFooter .footer-title {
@@ -992,7 +1000,7 @@ h3,
 h4,
 h5,
 h6 {
-    color: #fff;
+    color: #000000;
     margin: 0 0 10px 0
 }
 
@@ -1016,7 +1024,7 @@ h6 {
 
 .text-muted {
     font-size: 13px;
-    color: #958d9e !important
+    color: #000000 !important
 }
 
 h1 {
@@ -1052,7 +1060,7 @@ h6 {
 .lead {
     font-weight: 400;
     font-size: 17px;
-    color: #958d9e
+    color: #000000
 }
 
 mark {
@@ -1077,7 +1085,7 @@ blockquote.blockquote {
 }
 
     blockquote.blockquote .blockquote-footer {
-        color: #958d9e;
+        color: #000000;
         margin-top: 10px
     }
 
@@ -1189,7 +1197,7 @@ blockquote.blockquote {
     right: 0;
     bottom: 0;
     z-index: 99999;
-    background: #6236FF;
+    background: #f8f9fa;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1236,7 +1244,7 @@ body.animationGoBack {
         top: 0;
         bottom: 0;
         width: 100%;
-        background-color: #6236FF;
+        background-color: #f8f9fa;
         background-image: url("../img/loading-icon.png");
         background-repeat: no-repeat;
         background-size: 42px auto;
@@ -1272,7 +1280,7 @@ body.animationGoBack {
 
 .badge-primary,
 a.badge-primary {
-    background: #6236FF !important
+    background: #f8f9fa !important
 }
 
 .badge-secondary,
@@ -1282,18 +1290,20 @@ a.badge-secondary {
 
 .badge-success,
 a.badge-success {
-    background: #1DCC70 !important
+    color: #1DCC70!important;
+    /* background: #1DCC70 !important */
 }
 
 .badge-danger,
 a.badge-danger {
-    background: #FF396F !important
+    color: #FF396F!important;
+    /* background: #FF396F !important */
 }
 
 .badge-warning,
 a.badge-warning {
     background: #FFB400 !important;
-    color: #FFF
+    color: #000000
 }
 
 .badge-info,
@@ -1354,7 +1364,7 @@ a.badge-dark {
 }
 
 .listview-title {
-    color: #958d9e;
+    color: #000000;
     padding: 7px 16px;
     font-size: 13px;
     font-weight: 500
@@ -1365,7 +1375,7 @@ a.badge-dark {
     padding: 0;
     margin: 0;
     color: #27173E;
-    background: #fff;
+    background: #000000;
     border-top: 1px solid #DCDCE9;
     border-bottom: 1px solid #DCDCE9;
     line-height: 1.3em
@@ -1378,7 +1388,7 @@ a.badge-dark {
 
     .listview .text-small {
         font-size: 13px;
-        color: #958d9e
+        color: #000000
     }
 
     .listview .text-xsmall {
@@ -1418,7 +1428,7 @@ a.badge-dark {
         }
 
         .listview > li footer {
-            color: #958d9e;
+            color: #000000;
             margin-top: 3px
         }
 
@@ -1434,7 +1444,7 @@ a.badge-dark {
             padding: 12px 16px;
             font-size: 13px;
             min-height: auto;
-            color: #958d9e
+            color: #000000
         }
 
             .listview > li.divider-title:after {
@@ -1527,7 +1537,7 @@ a.badge-dark {
 
             .image-listview > li .item .icon-box.transparent {
                 font-size: 28px;
-                color: #6236FF
+                color: #f8f9fa
             }
 
         .image-listview > li .item .in {
@@ -1608,7 +1618,7 @@ a.badge-dark {
 }
 
 .card {
-    background: #ffffff;
+    background: #000000fff;
     border-radius: 10px;
     border: 0;
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.09)
@@ -1658,7 +1668,7 @@ a.badge-dark {
     .card .card-footer {
         background: transparent;
         border-top: 1px solid #DCDCE9;
-        color: #958d9e;
+        color: #000000;
         padding: 12px 16px
     }
 
@@ -1676,7 +1686,7 @@ a.badge-dark {
     }
 
         .card .card-img-overlay .card-title {
-            color: #fff
+            color: #000000
         }
 
         .card .card-img-overlay .card-text {
@@ -1700,7 +1710,7 @@ a.badge-dark {
         .card.bg-warning .card-title,
         .card.bg-info .card-title,
         .card.bg-dark .card-title {
-            color: #fff
+            color: #000000
         }
 
         .card.bg-primary .card-text,
@@ -1720,12 +1730,12 @@ a.badge-dark {
         .card.bg-warning .card-header,
         .card.bg-info .card-header,
         .card.bg-dark .card-header {
-            color: #fff;
+            color: #000000;
             border-bottom: 1px solid rgba(255, 255, 255, 0.15)
         }
 
     .card.bg-light {
-        background: #fff
+        background: #000000
     }
 
 .btn {
@@ -1807,39 +1817,39 @@ a.badge-dark {
     }
 
 .btn-facebook {
-    color: #fff !important;
+    color: #000000 !important;
     background: #39579b
 }
 
 .btn-twitter {
-    color: #fff !important;
+    color: #000000 !important;
     background: #049ff6
 }
 
 .btn-instagram {
-    color: #fff !important;
+    color: #000000 !important;
     background: #df237b
 }
 
 .btn-linkedin {
-    color: #fff !important;
+    color: #000000 !important;
     background: #0075aa
 }
 
 .btn-twitch {
-    color: #fff !important;
+    color: #000000 !important;
     background: #923cff
 }
 
 .btn-whatsapp {
-    color: #fff !important;
+    color: #000000 !important;
     background: #0ad561
 }
 
 .btn-primary {
-    background: #6236FF !important;
-    border-color: #6236FF !important;
-    color: #FFFFFF !important
+
+    border-color: #f8f9fa !important;
+    color: #000000FFF !important
 }
 
     .btn-primary:hover,
@@ -1852,15 +1862,15 @@ a.badge-dark {
 
     .btn-primary.disabled,
     .btn-primary:disabled {
-        background: #6236FF;
-        border-color: #6236FF;
+        background: #f8f9fa;
+        border-color: #f8f9fa;
         opacity: 0.5
     }
 
 .btn-secondary {
     background: #8494A8 !important;
     border-color: #8494A8 !important;
-    color: #FFFFFF !important
+    color: #000000FFF !important
 }
 
     .btn-secondary:hover,
@@ -1881,7 +1891,7 @@ a.badge-dark {
 .btn-success {
     background: #1DCC70 !important;
     border-color: #1DCC70 !important;
-    color: #FFFFFF !important
+    color: #000000FFF !important
 }
 
     .btn-success:hover,
@@ -1902,7 +1912,7 @@ a.badge-dark {
 .btn-danger {
     background: #FF396F !important;
     border-color: #FF396F !important;
-    color: #FFFFFF !important
+    color: #000000FFF !important
 }
 
     .btn-danger:hover,
@@ -1921,10 +1931,10 @@ a.badge-dark {
     }
 
 .btn-warning {
-    color: #fff !important;
+    color: #000000 !important;
     background: #FFB400 !important;
     border-color: #FFB400 !important;
-    color: #FFFFFF !important
+    color: #000000FFF !important
 }
 
     .btn-warning:hover,
@@ -1943,13 +1953,13 @@ a.badge-dark {
     }
 
 .btn-link {
-    color: #6236FF !important
+    color: #f8f9fa !important
 }
 
 .btn-info {
     background: #05D0A4 !important;
     border-color: #05D0A4 !important;
-    color: #FFFFFF !important
+    color: #000000FFF !important
 }
 
     .btn-info:hover,
@@ -1970,7 +1980,7 @@ a.badge-dark {
 .btn-dark {
     background: #333 !important;
     border-color: #333 !important;
-    color: #FFFFFF !important
+    color: #000000FFF !important
 }
 
     .btn-dark:hover,
@@ -1991,7 +2001,7 @@ a.badge-dark {
 .btn-light {
     background: rgba(255, 255, 255, 0.5) !important;
     border-color: rgba(255, 255, 255, 0.5) !important;
-    color: #FFFFFF !important;
+    color: #000000FFF !important;
     color: #27173E !important
 }
 
@@ -2012,28 +2022,28 @@ a.badge-dark {
 
 .btn-outline-primary {
     background: transparent;
-    border-color: #6236FF;
-    color: #6236FF;
+    border-color: #f8f9fa;
+    color: #f8f9fa;
     transition: 0.2s all
 }
 
     .btn-outline-primary:hover,
     .btn-outline-primary:active {
         background: rgba(98, 54, 255, 0.15) !important;
-        border-color: #6236FF !important;
-        color: #6236FF !important
+        border-color: #f8f9fa !important;
+        color: #f8f9fa !important
     }
 
     .btn-outline-primary.active {
-        background: #6236FF !important;
-        color: #FFF !important;
-        border-color: #6236FF !important
+        background: #f8f9fa !important;
+        color: #000000 !important;
+        border-color: #f8f9fa !important
     }
 
     .btn-outline-primary.disabled,
     .btn-outline-primary:disabled {
-        color: #6236FF !important;
-        border-color: #6236FF !important;
+        color: #f8f9fa !important;
+        border-color: #f8f9fa !important;
         background: transparent !important;
         opacity: 0.5
     }
@@ -2054,7 +2064,7 @@ a.badge-dark {
 
     .btn-outline-secondary.active {
         background: #8494A8 !important;
-        color: #FFF !important;
+        color: #000000 !important;
         border-color: #8494A8 !important
     }
 
@@ -2082,7 +2092,7 @@ a.badge-dark {
 
     .btn-outline-success.active {
         background: #1DCC70 !important;
-        color: #FFF !important;
+        color: #000000 !important;
         border-color: #1DCC70 !important
     }
 
@@ -2110,7 +2120,7 @@ a.badge-dark {
 
     .btn-outline-danger.active {
         background: #FF396F !important;
-        color: #FFF !important;
+        color: #000000 !important;
         border-color: #FF396F !important
     }
 
@@ -2138,7 +2148,7 @@ a.badge-dark {
 
     .btn-outline-warning.active {
         background: #FFB400 !important;
-        color: #FFF !important;
+        color: #000000 !important;
         border-color: #FFB400 !important
     }
 
@@ -2166,7 +2176,7 @@ a.badge-dark {
 
     .btn-outline-info.active {
         background: #05D0A4 !important;
-        color: #FFF !important;
+        color: #000000 !important;
         border-color: #05D0A4 !important
     }
 
@@ -2180,28 +2190,28 @@ a.badge-dark {
 
 .btn-outline-light {
     background: transparent;
-    border-color: #fff;
-    color: #fff;
+    border-color: #000000;
+    color: #000000;
     transition: 0.2s all
 }
 
     .btn-outline-light:hover,
     .btn-outline-light:active {
         background: rgba(255, 255, 255, 0.15) !important;
-        border-color: #fff !important;
-        color: #fff !important
+        border-color: #000000 !important;
+        color: #000000 !important
     }
 
     .btn-outline-light.active {
-        background: #fff !important;
-        color: #FFF !important;
-        border-color: #fff !important
+        background: #000000 !important;
+        color: #000000 !important;
+        border-color: #000000 !important
     }
 
     .btn-outline-light.disabled,
     .btn-outline-light:disabled {
-        color: #fff !important;
-        border-color: #fff !important;
+        color: #000000 !important;
+        border-color: #000000 !important;
         background: transparent !important;
         opacity: 0.5
     }
@@ -2213,7 +2223,7 @@ a.badge-dark {
 .btn-text-primary {
     background: transparent;
     border-color: transparent;
-    color: #6236FF !important;
+    color: #f8f9fa !important;
     transition: 0.2s all
 }
 
@@ -2225,13 +2235,13 @@ a.badge-dark {
     .btn-text-primary.active {
         background: rgba(98, 54, 255, 0.15) !important;
         border-color: transparent !important;
-        color: #6236FF !important
+        color: #f8f9fa !important
     }
 
     .btn-text-primary.disabled,
     .btn-text-primary:disabled {
-        color: #6236FF !important;
-        border-color: #6236FF !important;
+        color: #f8f9fa !important;
+        border-color: #f8f9fa !important;
         background: transparent !important;
         opacity: 0.5
     }
@@ -2368,13 +2378,13 @@ a.badge-dark {
 
 .btn-text-light {
     background: transparent;
-    color: #FFF
+    color: #000000
 }
 
     .btn-text-light:hover,
     .btn-text-light:active,
     .btn-text-light.active {
-        color: #FFF;
+        color: #000000;
         background: rgba(255, 255, 255, 0.1)
     }
 
@@ -2415,13 +2425,13 @@ a.badge-dark {
 .btn-check:checked + .btn-outline-success,
 .btn-check:checked + .btn-outline-info,
 .btn-check:checked + .btn-outline-dark {
-    color: #fff !important;
+    color: #000000 !important;
     transition: 0.1s all
 }
 
 .btn-check:checked + .btn-outline-primary {
-    background: #6236FF !important;
-    border-color: #6236FF !important
+    background: #f8f9fa !important;
+    border-color: #f8f9fa !important
 }
 
 .btn-check:checked + .btn-outline-secondary {
@@ -2457,7 +2467,7 @@ a.badge-dark {
 .accordion {
     border-top: 1px solid #DCDCE9;
     border-bottom: 1px solid #DCDCE9;
-    background: #fff;
+    background: #000000;
     overflow: hidden
 }
 
@@ -2559,7 +2569,7 @@ a.badge-dark {
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                color: #6236FF
+                color: #f8f9fa
             }
 
         .accordion .accordion-header.bg-primary .accordion-button,
@@ -2570,7 +2580,7 @@ a.badge-dark {
         .accordion .accordion-header.bg-warning .accordion-button,
         .accordion .accordion-header.bg-info .accordion-button,
         .accordion .accordion-header.bg-dark .accordion-button {
-            color: #FFF
+            color: #000000
         }
 
             .accordion .accordion-header.bg-primary .accordion-button:before,
@@ -2646,7 +2656,7 @@ a.badge-dark {
 
         .modal.action-sheet .close-button:hover,
         .modal.action-sheet .close-button:active {
-            color: #958d9e
+            color: #000000
         }
 
     .modal.action-sheet .modal-content {
@@ -2717,7 +2727,7 @@ a.badge-dark {
             }
 
             .action-button-list > li .btn.text-primary {
-                color: #6236FF !important
+                color: #f8f9fa !important
             }
 
             .action-button-list > li .btn.text-secondary {
@@ -2741,7 +2751,7 @@ a.badge-dark {
             }
 
             .action-button-list > li .btn.text-light {
-                color: #fff !important
+                color: #000000 !important
             }
 
             .action-button-list > li .btn.text-dark {
@@ -2807,13 +2817,13 @@ a.badge-dark {
             font-size: 32px;
             width: 64px;
             height: 64px;
-            background: #6236FF;
-            color: #fff;
+            background: #f8f9fa;
+            color: #000000;
             display: inline-flex;
             border-radius: 200px;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 0 0 10px #FFF;
+            box-shadow: 0 0 0 10px #000000;
             margin: -32px 0 14px 0 !important
         }
 
@@ -2884,7 +2894,7 @@ a.badge-dark {
                 border: 0 !important;
                 font-size: 15px;
                 margin-right: 1px;
-                background: #FFF
+                background: #000000
             }
 
                 .dialogbox .modal-dialog .modal-content .btn-inline .btn:hover,
@@ -2940,7 +2950,7 @@ a.badge-dark {
     line-height: 1em;
     margin-top: 30px;
     margin-bottom: -10px;
-    color: #6236FF;
+    color: #f8f9fa;
     text-align: center
 }
 
@@ -2992,7 +3002,7 @@ a.badge-dark {
                 top: 0;
                 width: 100%;
                 z-index: 100;
-                background: #FFF
+                background: #000000
             }
 
                 .modalbox .modal-dialog .modal-content .modal-header .modal-title {
@@ -3102,7 +3112,7 @@ a.badge-dark {
     .dropdown .dropdown-menu .dropdown-header,
     .dropup .dropdown-menu .dropdown-header {
         padding: 9px 16px;
-        color: #958d9e;
+        color: #000000;
         font-weight: 400;
         font-size: 11px
     }
@@ -3110,7 +3120,7 @@ a.badge-dark {
     .dropdown .dropdown-menu .text,
     .dropup .dropdown-menu .text {
         padding: 9px 16px;
-        color: #958d9e
+        color: #000000
     }
 
     .dropdown .dropdown-menu .icon,
@@ -3138,37 +3148,37 @@ a.badge-dark {
 }
 
 .bg-main {
-    background: #6236FF
+    background: #f8f9fa
 }
 
 .bg-primary {
-    background: #6236FF !important;
-    color: #FFF
+    background: #f8f9fa !important;
+    color: #000000
 }
 
 .bg-secondary {
     background: #8494A8 !important;
-    color: #FFF
+    color: #000000
 }
 
 .bg-success {
     background: #1DCC70 !important;
-    color: #FFF
+    color: #000000
 }
 
 .bg-danger {
     background: #FF396F !important;
-    color: #FFF
+    color: #000000
 }
 
 .bg-warning {
     background: #FFB400 !important;
-    color: #FFF
+    color: #000000
 }
 
 .bg-info {
     background: #05D0A4 !important;
-    color: #FFF
+    color: #000000
 }
 
 .bg-light {
@@ -3177,12 +3187,12 @@ a.badge-dark {
 
 .bg-dark {
     background: #222 !important;
-    color: #FFF
+    color: #000000
 }
 
 .text-primary,
 a.text-primary {
-    color: #6236FF !important
+    color: #f8f9fa !important
 }
 
 .text-secondary,
@@ -3212,7 +3222,7 @@ a.text-info {
 
 .text-light,
 a.text-light {
-    color: #FFF !important
+    color: #000000 !important
 }
 
 .text-dark,
@@ -3260,7 +3270,7 @@ a.text-dark {
             top: 16px;
             content: '';
             display: block;
-            background: #FFF;
+            background: #000000;
             border-radius: 20px
         }
 
@@ -3308,66 +3318,66 @@ a.text-dark {
         }
 
 .alert-primary {
-    background: #6236FF;
-    color: #fff;
-    border: 1px solid #6236FF
+    background: #f8f9fa;
+    color: #000000;
+    border: 1px solid #f8f9fa
 }
 
     .alert-primary a {
-        color: #fff !important;
+        color: #000000 !important;
         text-decoration: underline
     }
 
     .alert-primary .alert-title {
-        color: #FFF
+        color: #000000
     }
 
     .alert-primary .close {
-        color: #FFF
+        color: #000000
     }
 
 .alert-outline-primary {
     background: transparent;
-    color: #6236FF;
-    border: 2px solid #6236FF
+    color: #f8f9fa;
+    border: 2px solid #f8f9fa
 }
 
     .alert-outline-primary a {
-        color: #6236FF !important;
+        color: #f8f9fa !important;
         text-decoration: underline !important
     }
 
     .alert-outline-primary .alert-title {
-        color: #6236FF
+        color: #f8f9fa
     }
 
     .alert-outline-primary .btn-close {
-        color: #6236FF;
+        color: #f8f9fa;
         opacity: 1
     }
 
         .alert-outline-primary .btn-close:before,
         .alert-outline-primary .btn-close:after {
-            background: #6236FF
+            background: #f8f9fa
         }
 
 .alert-secondary {
     background: #8494A8;
-    color: #fff;
+    color: #000000;
     border: 1px solid #8494A8
 }
 
     .alert-secondary a {
-        color: #fff !important;
+        color: #000000 !important;
         text-decoration: underline
     }
 
     .alert-secondary .alert-title {
-        color: #FFF
+        color: #000000
     }
 
     .alert-secondary .close {
-        color: #FFF
+        color: #000000
     }
 
 .alert-outline-secondary {
@@ -3397,21 +3407,21 @@ a.text-dark {
 
 .alert-success {
     background: #1DCC70;
-    color: #fff;
+    color: #000000;
     border: 1px solid #1DCC70
 }
 
     .alert-success a {
-        color: #fff !important;
+        color: #000000 !important;
         text-decoration: underline
     }
 
     .alert-success .alert-title {
-        color: #FFF
+        color: #000000
     }
 
     .alert-success .close {
-        color: #FFF
+        color: #000000
     }
 
 .alert-outline-success {
@@ -3441,21 +3451,21 @@ a.text-dark {
 
 .alert-danger {
     background: #FF396F;
-    color: #fff;
+    color: #000000;
     border: 1px solid #FF396F
 }
 
     .alert-danger a {
-        color: #fff !important;
+        color: #000000 !important;
         text-decoration: underline
     }
 
     .alert-danger .alert-title {
-        color: #FFF
+        color: #000000
     }
 
     .alert-danger .close {
-        color: #FFF
+        color: #000000
     }
 
 .alert-outline-danger {
@@ -3485,21 +3495,21 @@ a.text-dark {
 
 .alert-warning {
     background: #FFB400;
-    color: #fff;
+    color: #000000;
     border: 1px solid #FFB400
 }
 
     .alert-warning a {
-        color: #fff !important;
+        color: #000000 !important;
         text-decoration: underline
     }
 
     .alert-warning .alert-title {
-        color: #FFF
+        color: #000000
     }
 
     .alert-warning .close {
-        color: #FFF
+        color: #000000
     }
 
 .alert-outline-warning {
@@ -3529,21 +3539,21 @@ a.text-dark {
 
 .alert-info {
     background: #05D0A4;
-    color: #fff;
+    color: #000000;
     border: 1px solid #05D0A4
 }
 
     .alert-info a {
-        color: #fff !important;
+        color: #000000 !important;
         text-decoration: underline
     }
 
     .alert-info .alert-title {
-        color: #FFF
+        color: #000000
     }
 
     .alert-info .close {
-        color: #FFF
+        color: #000000
     }
 
 .alert-outline-info {
@@ -3572,17 +3582,17 @@ a.text-dark {
         }
 
 .alert-light {
-    background: #FFF;
+    background: #000000;
     color: #27173E
 }
 
 .alert-dark {
     background: #333;
-    color: #FFF
+    color: #000000
 }
 
     .alert-dark a {
-        color: #FFF !important;
+        color: #000000 !important;
         text-decoration: underline !important
     }
 
@@ -3597,16 +3607,18 @@ a.text-dark {
 }
 
 .table {
-    color: #958d9e;
+    color: #000000;
     margin: 0;
     font-size: 13px;
     line-height: 1.4em;
     border-radius: 10px
 }
 
-    .table tr {
-        border-color: #DCDCE9
-    }
+.table tr {
+    border-color: #f8f9fa;
+    background: #ffffff;
+    border-block-width: 3px;
+}
 
     .table thead th {
         border-top: 0;
@@ -3622,7 +3634,7 @@ a.text-dark {
 
 .table-striped > tbody > tr:nth-of-type(odd) {
     background: rgba(220, 220, 233, 0.1);
-    color: #958d9e
+    color: #000000
 }
 
 .table-bordered {
@@ -3685,7 +3697,7 @@ a.text-dark {
     .table.bg-danger thead tr th,
     .table.bg-warning thead tr th,
     .table.bg-info thead tr th {
-        color: #fff;
+        color: #000000;
         font-weight: 500
     }
 
@@ -3707,7 +3719,7 @@ textarea,
     font-size: 17px;
     margin: 0;
     font-weight: 500;
-    color: #fff;
+    color: #000000;
     display: block;
     line-height: 1.2em;
     text-align: left
@@ -3726,7 +3738,7 @@ textarea,
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #958d9e;
+        color: #000000;
         height: 38px;
         font-size: 22px;
         position: absolute;
@@ -3751,7 +3763,7 @@ textarea,
         }
 
         .form-group .input-wrapper.active .label {
-            color: #6236FF !important
+            color: #f8f9fa !important
         }
 
     .form-group.basic {
@@ -3761,20 +3773,20 @@ textarea,
 
         .form-group.basic .form-control,
         .form-group.basic .custom-select {
-            background: #294660;
+            background: #ffffff;
             border: none;
             border-bottom: 1px solid #DCDCE9;
             padding: 0 20px 0 20px;
             border-radius: 0;
             height: 40px;
-            color: #fff;
+            color: #000000;
             font-size: 17px;
         }
 
             .form-group.basic .form-control:focus,
             .form-group.basic .custom-select:focus {
-                border-bottom-color: #6236FF;
-                box-shadow: inset 0 -1px 0 0 #6236FF
+                border-bottom-color: #f8f9fa;
+                box-shadow: inset 0 -1px 0 0 #f8f9fa
             }
 
         .form-group.basic .custom-select {
@@ -3816,7 +3828,7 @@ textarea,
     font-weight: 700;
     color: #27173E !important;
     box-shadow: none !important;
-    background: #fff !important
+    background: #000000 !important
 }
 
     .verification-input:focus {
@@ -3950,7 +3962,7 @@ textarea,
                 top: auto;
                 transform: translate(0, 0);
                 font-size: 11px;
-                color: #958d9e;
+                color: #000000;
                 background-color: #DCDCE9
             }
 
@@ -3960,7 +3972,7 @@ textarea,
 }
 
     .form-group.boxed .form-control {
-        background: #fff;
+        background: #000000;
         box-shadow: none;
         height: 42px;
         border-radius: 10px;
@@ -3968,7 +3980,7 @@ textarea,
     }
 
         .form-group.boxed .form-control:focus {
-            border-color: #6236FF
+            border-color: #f8f9fa
         }
 
     .form-group.boxed textarea.form-control {
@@ -4020,7 +4032,7 @@ textarea,
         }
 
             .nav-tabs.capsuled .nav-item .nav-link {
-                color: #958d9e;
+                color: #000000;
                 font-weight: 500;
                 font-size: 13px;
                 border: 0 !important;
@@ -4071,9 +4083,10 @@ textarea,
         }
 
             .nav-tabs.lined .nav-item .nav-link {
-                color: #958d9e;
+                color: #000000;
                 font-weight: 500;
                 font-size: 13px;
+                font-weight: bold;
                 border: 0 !important;
                 border-bottom: 2px solid transparent !important;
                 line-height: 1.2em;
@@ -4097,14 +4110,28 @@ textarea,
                 }
 
                 .nav-tabs.lined .nav-item .nav-link.active {
-                    /*color: #fff;
+                    /*color: #000000;
                     background: transparent;
-                    border-bottom-color: #fff !important*/
+                    border-bottom-color: #000000 !important*/
                     color: #000000;
-                    background: #ffffff;
-                    border-bottom-color: #fff !important;
+                    background: #f8f9fa;
+                    border-bottom-color: #000000 !important;
                     margin: 0px 0px 5px 0px !important;
                 }
+   button, input, optgroup, select, textarea {
+    color: black;
+    border-style: none;
+    background-color: #f8f9fa;
+    margin: 0;
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+}
+
+.list_cntnt {
+    color:#000000;
+}
+
 
 .form-check {
     padding: 0;
@@ -4159,8 +4186,8 @@ textarea,
 }
 
 .form-check-input:checked ~ .form-check-label:after {
-    background-color: #6236FF;
-    border-color: #6236FF !important
+    background-color: #f8f9fa;
+    border-color: #f8f9fa !important
 }
 
 .form-check-input:checked ~ .form-check-label:before {
@@ -4233,7 +4260,7 @@ textarea,
             height: 24px;
             top: 5px;
             left: 4px;
-            background: #ffffff;
+            background: #000000fff;
             box-shadow: 0 3px 6px 0 rgba(0, 0, 0, 0.1), 0 1px 3px 0 rgba(0, 0, 0, 0.08);
             transition: .15s ease-in-out
         }
@@ -4270,7 +4297,7 @@ textarea,
     .message-item .title {
         font-size: 12px;
         font-weight: 500;
-        color: #958d9e;
+        color: #000000;
         line-height: 1.2em;
         padding: 0 0 0 10px
     }
@@ -4301,14 +4328,14 @@ textarea,
     }
 
         .message-item.user .bubble {
-            background: #6236FF !important;
-            color: #FFF;
+            background: #f8f9fa !important;
+            color: #000000;
             border-radius: 16px 16px 0 16px
         }
 
 .chatFooter {
     min-height: 56px;
-    background: #FFF;
+    background: #000000;
     border-top: 1px solid #DCDCE9;
     position: fixed;
     left: 0;
@@ -4339,7 +4366,7 @@ textarea,
 }
 
 .progress-bar {
-    background: #6236FF;
+    background: #f8f9fa;
     height: 14px;
     line-height: 1em;
     display: flex;
@@ -4397,8 +4424,8 @@ textarea,
         align-items: center;
         justify-content: center;
         border-radius: 100px;
-        background: #958d9e;
-        color: #fff;
+        background: #000000;
+        color: #000000;
         font-size: 14px
     }
 
@@ -4421,26 +4448,26 @@ textarea,
         }
 
 .chip-primary {
-    background: #6236FF !important;
-    color: #fff
+    background: #f8f9fa !important;
+    color: #000000
 }
 
     .chip-primary .chip-delete {
-        color: #fff
+        color: #000000
     }
 
     .chip-primary.chip-outline {
-        color: #6236FF !important;
-        box-shadow: inset 0 0 0 1px #6236FF !important
+        color: #f8f9fa !important;
+        box-shadow: inset 0 0 0 1px #f8f9fa !important
     }
 
 .chip-danger {
     background: #FF396F !important;
-    color: #fff
+    color: #000000
 }
 
     .chip-danger .chip-delete {
-        color: #fff
+        color: #000000
     }
 
     .chip-danger.chip-outline {
@@ -4450,11 +4477,11 @@ textarea,
 
 .chip-success {
     background: #1DCC70 !important;
-    color: #fff
+    color: #000000
 }
 
     .chip-success .chip-delete {
-        color: #fff
+        color: #000000
     }
 
     .chip-success.chip-outline {
@@ -4464,11 +4491,11 @@ textarea,
 
 .chip-warning {
     background: #FFB400 !important;
-    color: #fff
+    color: #000000
 }
 
     .chip-warning .chip-delete {
-        color: #fff
+        color: #000000
     }
 
     .chip-warning.chip-outline {
@@ -4478,11 +4505,11 @@ textarea,
 
 .chip-info {
     background: #05D0A4 !important;
-    color: #fff
+    color: #000000
 }
 
     .chip-info .chip-delete {
-        color: #fff
+        color: #000000
     }
 
     .chip-info.chip-outline {
@@ -4491,7 +4518,7 @@ textarea,
     }
 
 .chip-light {
-    background: #fff !important;
+    background: #000000 !important;
     color: #222 !important
 }
 
@@ -4500,17 +4527,17 @@ textarea,
     }
 
     .chip-light.chip-outline {
-        color: #fff !important;
-        box-shadow: inset 0 0 0 1px #fff !important
+        color: #000000 !important;
+        box-shadow: inset 0 0 0 1px #000000 !important
     }
 
 .chip-dark {
     background: #222 !important;
-    color: #fff
+    color: #000000
 }
 
     .chip-dark .chip-delete {
-        color: #fff
+        color: #000000
     }
 
     .chip-dark.chip-outline {
@@ -4676,7 +4703,7 @@ textarea,
     right: 0;
     width: 100%;
     padding: 0 16px;
-    background: #FFF;
+    background: #000000;
     min-height: 84px;
     padding-bottom: env(safe-area-inset-bottom)
 }
@@ -4784,7 +4811,7 @@ textarea,
 
     .toast-box .toast-title {
         font-size: 15px;
-        color: #fff
+        color: #000000
     }
 
     .toast-box .btn {
@@ -4809,7 +4836,7 @@ textarea,
             width: 32px;
             height: 32px;
             margin-right: 8px;
-            color: #fff
+            color: #000000
         }
 
         .toast-box .in .text {
@@ -4889,7 +4916,7 @@ textarea,
     }
 
 .notification-dialog.android-style {
-    background: #ffffff;
+    background: #000000fff;
     box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1), 0 11px 25px 0 rgba(0, 0, 0, 0.18);
     padding: 20px 16px 24px 16px
 }
@@ -4941,7 +4968,7 @@ textarea,
 
             .notification-dialog.android-style .notification-header .close-button:hover,
             .notification-dialog.android-style .notification-header .close-button:active {
-                color: #958d9e
+                color: #000000
             }
 
     .notification-dialog.android-style .notification-content {
@@ -4984,7 +5011,7 @@ textarea,
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #6236FF !important;
+            color: #f8f9fa !important;
             font-size: 13px;
             border-right: 1px solid #DCDCE9;
             padding: 16px 6px
@@ -5036,7 +5063,7 @@ textarea,
             .notification-dialog.ios-style .notification-header .in strong {
                 font-size: 13px;
                 font-weight: 400;
-                color: #fff
+                color: #000000
             }
 
         .notification-dialog.ios-style .notification-header .right {
@@ -5059,7 +5086,7 @@ textarea,
             align-items: center;
             justify-content: center;
             font-size: 20px;
-            color: #fff;
+            color: #000000;
             opacity: 0.5
         }
 
@@ -5089,7 +5116,7 @@ textarea,
             font-size: 15px;
             margin: 0 0 5px 0;
             line-height: 1.4em;
-            color: #fff;
+            color: #000000;
             font-weight: 500
         }
 
@@ -5106,7 +5133,7 @@ textarea,
     }
 
         .notification-dialog.ios-style .notification-footer .notification-button {
-            color: #fff !important;
+            color: #000000 !important;
             flex: 1;
             display: flex;
             align-items: center;
@@ -5120,7 +5147,7 @@ textarea,
                 font-size: 20px;
                 line-height: 1em;
                 margin-right: 10px;
-                color: #fff
+                color: #000000
             }
 
             .notification-dialog.ios-style .notification-footer .notification-button:last-child {
@@ -5151,7 +5178,7 @@ textarea,
         height: 0;
         border-left: 14px solid transparent;
         border-right: 14px solid transparent;
-        border-top: 10px solid #fff;
+        border-top: 10px solid #000000;
         position: absolute;
         bottom: -7px;
         z-index: 10;
@@ -5213,7 +5240,7 @@ textarea,
             height: 0;
             border-left: 10px solid transparent;
             border-right: 10px solid transparent;
-            border-top: 10px solid #fff;
+            border-top: 10px solid #000000;
             position: absolute;
             top: -8px;
             z-index: 10;
@@ -5315,11 +5342,11 @@ textarea,
         content: "";
         display: block;
         height: 140px;
-        background: #6236FF
+        background: #f8f9fa
     }
 
 .wallet-card {
-    background: #1e3040;
+    background: #f8f9fa;
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.09);
     border-radius: 10px;
     padding: 20px 24px;
@@ -5348,7 +5375,7 @@ textarea,
                 align-items: center;
                 justify-content: center;
                 line-height: 1em;
-                color: #6236FF;
+                color: #f8f9fa;
                 background: rgba(98, 54, 255, 0.1);
                 width: 50px;
                 height: 64px;
@@ -5357,8 +5384,8 @@ textarea,
             }
 
                 .wallet-card .balance .right .button:hover {
-                    background: #6236FF !important;
-                    color: #fff !important
+                    background: #f8f9fa !important;
+                    color: #000000 !important
                 }
 
         .wallet-card .balance .title {
@@ -5397,14 +5424,14 @@ textarea,
                 }
 
             .wallet-card .wallet-footer .item .icon-wrapper {
-                background: #6236FF;
+                background: #f8f9fa;
                 width: 48px;
                 height: 48px;
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
                 border-radius: 10px;
-                color: #fff;
+                color: #000000;
                 font-size: 24px;
                 margin-bottom: 14px
             }
@@ -5418,7 +5445,7 @@ textarea,
             }
 
 .stat-box {
-    background: #ffffff;
+    background: #000000fff;
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.09);
     border-radius: 10px;
     padding: 20px 24px
@@ -5426,7 +5453,7 @@ textarea,
 
     .stat-box .title {
         font-size: 13px;
-        color: #958d9e;
+        color: #000000;
         font-weight: 500;
         display: block;
         margin-bottom: 8px;
@@ -5442,7 +5469,7 @@ textarea,
     }
 
 .transactions .item {
-    background: #ffffff;
+    background: #000000fff;
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.09);
     border-radius: 10px;
     padding: 20px 24px;
@@ -5459,7 +5486,7 @@ textarea,
     .transactions .item p {
         font-size: 11px;
         margin: 0;
-        color: #958d9e;
+        color: #000000;
         font-weight: 500
     }
 
@@ -5496,7 +5523,7 @@ textarea,
 }
 
 .bill-box {
-    background: #ffffff;
+    background: #000000fff;
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.09);
     border-radius: 10px;
     padding: 20px 24px;
@@ -5515,10 +5542,10 @@ textarea,
         .bill-box .img-wrapper .iconbox {
             width: 48px;
             height: 48px;
-            background: #6236FF;
+            background: #f8f9fa;
             border-radius: 10px;
             line-height: 1em;
-            color: #fff;
+            color: #000000;
             font-size: 24px;
             display: inline-flex;
             align-items: center;
@@ -5543,7 +5570,7 @@ textarea,
 
 .goals .item {
     padding: 20px 24px;
-    background: #ffffff;
+    background: #000000fff;
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.09);
     border-radius: 10px;
     margin-bottom: 10px
@@ -5577,7 +5604,7 @@ textarea,
     }
 
 .user-card {
-    background: #ffffff;
+    background: #000000fff;
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.09);
     display: block;
     padding: 10px;
@@ -5595,7 +5622,7 @@ textarea,
 
 .blog-card {
     padding: 0;
-    background: #ffffff;
+    background: #000000fff;
     border-radius: 10px;
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.09)
 }
@@ -5635,9 +5662,9 @@ textarea,
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: #6236FF;
+    background: #f8f9fa;
     font-size: 26px;
-    color: #fff
+    color: #000000
 }
 
 .splash-page {
@@ -5647,13 +5674,13 @@ textarea,
     .splash-page .iconbox {
         width: 72px;
         height: 72px;
-        background: #6236FF;
+        background: #f8f9fa;
         border-radius: 100%;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 32px;
-        color: #fff;
+        color: #000000;
         margin: auto
     }
 
@@ -5663,7 +5690,7 @@ textarea,
     left: 0;
     right: 0;
     padding: 0 16px;
-    background: #fff;
+    background: #000000;
     min-height: 84px;
     display: flex;
     align-items: center;
@@ -5695,13 +5722,13 @@ textarea,
 }
 
     .avatar-section .imaged {
-        border: 5px solid #fff;
+        border: 5px solid #000000;
         box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.09)
     }
 
     .avatar-section .button {
-        background: #6236FF;
-        color: #fff;
+        background: #f8f9fa;
+        color: #000000;
         width: 32px;
         height: 32px;
         border-radius: 100%;
@@ -5716,10 +5743,10 @@ textarea,
 
 .card-block {
     height: 220px;
-    background: #6236FF;
+    background: #f8f9fa;
     border-radius: 10px;
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.09);
-    color: #fff;
+    color: #000000;
     position: relative
 }
 
@@ -5744,7 +5771,7 @@ textarea,
 
         .card-block .card-button > .btn {
             background: transparent !important;
-            color: #fff !important
+            color: #000000 !important
         }
 
     .card-block span.label {
@@ -5789,7 +5816,7 @@ textarea,
 
         .card-block .balance .title {
             font-weight: 700;
-            color: #fff;
+            color: #000000;
             margin-top: 7px;
             font-size: 24px
         }
@@ -5814,7 +5841,7 @@ textarea,
                 line-height: 1.3em;
                 margin-top: 8px;
                 display: block;
-                color: #958d9e;
+                color: #000000;
                 font-weight: 500;
                 font-size: 11px
             }
@@ -5855,8 +5882,8 @@ textarea,
 .gradientSection {
     position: relative;
     text-align: center;
-    background: #6236FF;
-    background-image: linear-gradient(-208deg, #6236FF 38%, #8a69ff 100%)
+    background: #f8f9fa;
+    background-image: linear-gradient(-208deg, #f8f9fa 38%, #8a69ff 100%)
 }
 
     .gradientSection .in {
@@ -5867,18 +5894,18 @@ textarea,
 
     .gradientSection .title {
         font-size: 13px;
-        color: #fff;
+        color: #000000;
         opacity: 0.6
     }
 
     .gradientSection .total {
         letter-spacing: -0.01em;
-        color: #fff;
+        color: #000000;
         font-size: 32px
     }
 
     .gradientSection .caption {
-        color: #fff;
+        color: #000000;
         display: flex;
         align-items: center;
         justify-content: center
@@ -5913,7 +5940,7 @@ textarea,
 }
 
     .wallet-inline-button .item {
-        color: #fff;
+        color: #000000;
         font-size: 11px
     }
 
@@ -5981,9 +6008,9 @@ textarea,
         width: 64px;
         height: 64px;
         border-radius: 100px;
-        background: #6236FF;
+        background: #f8f9fa;
         font-size: 32px;
-        color: #fff
+        color: #000000
     }
 
     .card-with-icon p {
@@ -6042,7 +6069,7 @@ textarea,
     }
 
         .coinbox .fixed-button:hover {
-            color: #958d9e
+            color: #000000
         }
 
 .coin-head {
@@ -6149,7 +6176,7 @@ textarea,
     justify-content: center;
     position: relative;
     z-index: 999;
-    color: #fff;
+    color: #000000;
     background: #ccccdf
 }
 
@@ -6902,7 +6929,7 @@ body.dark-mode {
     body.dark-mode h4,
     body.dark-mode h5,
     body.dark-mode h6 {
-        color: #fff
+        color: #000000
     }
 
         body.dark-mode h1 small,
@@ -6924,7 +6951,7 @@ body.dark-mode {
 
     body.dark-mode blockquote.blockquote {
         background: rgba(45, 31, 59, 0.5);
-        color: #fff
+        color: #000000
     }
 
         body.dark-mode blockquote.blockquote .blockquote-footer {
@@ -6933,7 +6960,7 @@ body.dark-mode {
 
     body.dark-mode .appHeader {
         background: #161129;
-        color: #fff;
+        color: #000000;
         border-bottom-color: #2d1f3b
     }
 
@@ -6970,7 +6997,7 @@ body.dark-mode {
     }
 
     body.dark-mode .section-title {
-        color: #fff
+        color: #000000
     }
 
     body.dark-mode .content-header,
@@ -6986,17 +7013,17 @@ body.dark-mode {
         body.dark-mode .appBottomMenu .item .icon,
         body.dark-mode .appBottomMenu .item ion-icon,
         body.dark-mode .appBottomMenu .item strong {
-            color: #fff
+            color: #000000
         }
 
         body.dark-mode .appBottomMenu .item:hover .icon,
         body.dark-mode .appBottomMenu .item:hover ion-icon,
         body.dark-mode .appBottomMenu .item:hover strong {
-            color: #fff
+            color: #000000
         }
 
         body.dark-mode .appBottomMenu.bg-light {
-            background: #fff !important
+            background: #000000 !important
         }
 
             body.dark-mode .appBottomMenu.bg-light .item .icon,
@@ -7011,7 +7038,7 @@ body.dark-mode {
     }
 
         body.dark-mode .appFooter .footer-title {
-            color: #fff
+            color: #000000
         }
 
     body.dark-mode .section-heading .link {
@@ -7031,11 +7058,11 @@ body.dark-mode {
         }
 
     body.dark-mode .sidebar-balance .listview-title {
-        color: #fff
+        color: #000000
     }
 
     body.dark-mode .profileBox .in strong {
-        color: #fff
+        color: #000000
     }
 
     body.dark-mode .profileBox .in .text-muted {
@@ -7047,7 +7074,7 @@ body.dark-mode {
     }
 
     body.dark-mode .listview {
-        color: #fff;
+        color: #000000;
         background: #161129;
         border-top-color: #2d1f3b;
         border-bottom-color: #2d1f3b
@@ -7081,7 +7108,7 @@ body.dark-mode {
         }
 
     body.dark-mode .link-listview > li a {
-        color: #fff !important
+        color: #000000 !important
     }
 
         body.dark-mode .link-listview > li a:after {
@@ -7097,7 +7124,7 @@ body.dark-mode {
     }
 
     body.dark-mode .image-listview > li a.item {
-        color: #fff !important
+        color: #000000 !important
     }
 
         body.dark-mode .image-listview > li a.item:active {
@@ -7129,7 +7156,7 @@ body.dark-mode {
         body.dark-mode .accordion .accordion-header .btn,
         body.dark-mode .accordion .accordion-header .accordion-button {
             background: #161129 !important;
-            color: #fff
+            color: #000000
         }
 
             body.dark-mode .accordion .accordion-header .btn:active,
@@ -7149,7 +7176,7 @@ body.dark-mode {
             }
 
         body.dark-mode .accordion .accordion-header.bg-primary .accordion-button {
-            background: #6236FF !important
+            background: #f8f9fa !important
         }
 
         body.dark-mode .accordion .accordion-header.bg-secondary .accordion-button {
@@ -7190,11 +7217,11 @@ body.dark-mode {
     }
 
         body.dark-mode .modalbox .modal-dialog .modal-content .modal-header .modal-title {
-            color: #fff
+            color: #000000
         }
 
     body.dark-mode .panelbox .modal-dialog .modal-content .modal-header .modal-title {
-        color: #fff
+        color: #000000
     }
 
     body.dark-mode .modal.action-sheet .modal-content .modal-header {
@@ -7202,11 +7229,11 @@ body.dark-mode {
     }
 
         body.dark-mode .modal.action-sheet .modal-content .modal-header .modal-title {
-            color: #fff
+            color: #000000
         }
 
     body.dark-mode .action-button-list > li .btn {
-        color: #fff
+        color: #000000
     }
 
         body.dark-mode .action-button-list > li .btn:active,
@@ -7215,7 +7242,7 @@ body.dark-mode {
         }
 
         body.dark-mode .action-button-list > li .btn.text-dark {
-            color: #fff !important
+            color: #000000 !important
         }
 
     body.dark-mode .action-button-list > li.action-divider {
@@ -7228,7 +7255,7 @@ body.dark-mode {
 
         body.dark-mode .card .card-subtitle,
         body.dark-mode .card .card-title {
-            color: #fff
+            color: #000000
         }
 
         body.dark-mode .card .listview {
@@ -7236,7 +7263,7 @@ body.dark-mode {
         }
 
         body.dark-mode .card .card-header {
-            color: #fff;
+            color: #000000;
             border-bottom-color: #2d1f3b
         }
 
@@ -7256,8 +7283,8 @@ body.dark-mode {
         }
 
         body.dark-mode .card.bg-light {
-            background: #fff !important;
-            color: #958d9e
+            background: #000000 !important;
+            color: #000000
         }
 
             body.dark-mode .card.bg-light .card-header {
@@ -7270,7 +7297,7 @@ body.dark-mode {
             }
 
     body.dark-mode .form-check .form-check-label {
-        color: #fff
+        color: #000000
     }
 
         body.dark-mode .form-check .form-check-label:after {
@@ -7290,16 +7317,16 @@ body.dark-mode {
     }
 
     body.dark-mode .form-switch .form-check-label:before {
-        background: #ffffff
+        background: #000000fff
     }
 
     body.dark-mode .form-switch .form-check-input:checked ~ .form-check-label:after {
-        background: #6236FF !important
+        background: #f8f9fa !important
     }
 
     body.dark-mode .chip {
         background: #372648;
-        color: #fff
+        color: #000000
     }
 
         body.dark-mode .chip.chip-outline {
@@ -7311,7 +7338,7 @@ body.dark-mode {
         }
 
         body.dark-mode .chip .chip-delete {
-            color: #fff
+            color: #000000
         }
 
     body.dark-mode .dialogbox .modal-dialog .modal-content .btn-list .btn {
@@ -7343,7 +7370,7 @@ body.dark-mode {
             }
 
     body.dark-mode .dialogbox .modal-dialog .modal-content .modal-header .modal-title {
-        color: #fff
+        color: #000000
     }
 
     body.dark-mode .dialogbox .modal-dialog .modal-content .modal-footer {
@@ -7358,7 +7385,7 @@ body.dark-mode {
 
         body.dark-mode .dropdown .dropdown-menu .dropdown-item,
         body.dark-mode .dropup .dropdown-menu .dropdown-item {
-            color: #fff
+            color: #000000
         }
 
             body.dark-mode .dropdown .dropdown-menu .dropdown-item:hover,
@@ -7366,7 +7393,7 @@ body.dark-mode {
             body.dark-mode .dropup .dropdown-menu .dropdown-item:hover,
             body.dark-mode .dropup .dropdown-menu .dropdown-item:active {
                 background: rgba(45, 31, 59, 0.5);
-                color: #fff
+                color: #000000
             }
 
             body.dark-mode .dropdown .dropdown-menu .dropdown-item .dropdown-divider,
@@ -7388,7 +7415,7 @@ body.dark-mode {
         body.dark-mode .dropdown .dropdown-menu ion-icon,
         body.dark-mode .dropup .dropdown-menu .icon,
         body.dark-mode .dropup .dropdown-menu ion-icon {
-            color: #fff
+            color: #000000
         }
 
     body.dark-mode .exampleBox {
@@ -7397,11 +7424,11 @@ body.dark-mode {
     }
 
     body.dark-mode .iconExample {
-        color: #fff
+        color: #000000
     }
 
     body.dark-mode .form-group .label {
-        color: #fff
+        color: #000000
     }
 
     body.dark-mode .form-group .input-info {
@@ -7415,22 +7442,22 @@ body.dark-mode {
     body.dark-mode .form-group.basic .form-control,
     body.dark-mode .form-group.basic .custom-select {
         border-bottom-color: #372648;
-        color: #fff
+        color: #000000
     }
 
     body.dark-mode .verification-input {
         border-color: #372648 !important;
-        color: #fff !important;
+        color: #000000 !important;
         background: #161129 !important
     }
 
         body.dark-mode .verification-input:focus {
-            border-color: #6236FF !important
+            border-color: #f8f9fa !important
         }
 
     body.dark-mode .input-group .input-group-text {
         border-bottom-color: #372648;
-        color: #fff
+        color: #000000
     }
 
     body.dark-mode .custom-file-upload label {
@@ -7454,13 +7481,13 @@ body.dark-mode {
         }
 
     body.dark-mode .form-group.boxed .form-control {
-        color: #fff;
+        color: #000000;
         border-color: #372648;
         background: #141025
     }
 
         body.dark-mode .form-group.boxed .form-control:focus {
-            border-color: #6236FF
+            border-color: #f8f9fa
         }
 
     body.dark-mode .message-divider {
@@ -7469,7 +7496,7 @@ body.dark-mode {
 
     body.dark-mode .message-item .bubble {
         background: #2d1f3b;
-        color: #fff
+        color: #000000
     }
 
     body.dark-mode .message-item .title {
@@ -7477,7 +7504,7 @@ body.dark-mode {
     }
 
     body.dark-mode .message-item .footer {
-        color: #fff
+        color: #000000
     }
 
     body.dark-mode .chatFooter {
@@ -7490,7 +7517,7 @@ body.dark-mode {
     }
 
         body.dark-mode .notification-dialog.android-style .notification-header .in strong {
-            color: #fff
+            color: #000000
         }
 
         body.dark-mode .notification-dialog.android-style .notification-header .close-button {
@@ -7542,11 +7569,11 @@ body.dark-mode {
 
         body.dark-mode .searchbox .form-control:focus {
             border-color: #070509;
-            color: #fff
+            color: #000000
         }
 
             body.dark-mode .searchbox .form-control:focus ~ .input-icon {
-                color: #fff
+                color: #000000
             }
 
     body.dark-mode .searchbox .close {
@@ -7566,7 +7593,7 @@ body.dark-mode {
         }
 
         body.dark-mode .table thead th {
-            color: #fff
+            color: #000000
         }
 
         body.dark-mode .table td,
@@ -7644,7 +7671,7 @@ body.dark-mode {
         }
 
             body.dark-mode .nav-tabs.capsuled .nav-item .nav-link.active {
-                color: #fff;
+                color: #000000;
                 background: #3a284c;
                 box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.22), 0 2px 1px 0 rgba(0, 0, 0, 0.04)
             }
@@ -7654,7 +7681,7 @@ body.dark-mode {
     }
 
         body.dark-mode .nav-tabs.lined .nav-item .nav-link.active {
-            color: #6236FF
+            color: #f8f9fa
         }
 
     body.dark-mode .timeline:before {
@@ -7676,7 +7703,7 @@ body.dark-mode {
         }
 
         body.dark-mode .wallet-card .balance .title {
-            color: #fff
+            color: #000000
         }
 
         body.dark-mode .wallet-card .wallet-footer {
@@ -7684,7 +7711,7 @@ body.dark-mode {
         }
 
             body.dark-mode .wallet-card .wallet-footer .item strong {
-                color: #fff
+                color: #000000
             }
 
     body.dark-mode .stat-box {
@@ -7696,7 +7723,7 @@ body.dark-mode {
         }
 
         body.dark-mode .stat-box .value {
-            color: #fff
+            color: #000000
         }
 
     body.dark-mode .transactions .item {
@@ -7708,11 +7735,11 @@ body.dark-mode {
         }
 
         body.dark-mode .transactions .item .detail strong {
-            color: #fff
+            color: #000000
         }
 
         body.dark-mode .transactions .item .right .price {
-            color: #fff
+            color: #000000
         }
 
     body.dark-mode .bill-box {
@@ -7720,7 +7747,7 @@ body.dark-mode {
     }
 
         body.dark-mode .bill-box .price {
-            color: #fff
+            color: #000000
         }
 
     body.dark-mode .goals .item {
@@ -7728,7 +7755,7 @@ body.dark-mode {
     }
 
         body.dark-mode .goals .item .price {
-            color: #fff
+            color: #000000
         }
 
     body.dark-mode .user-card {
@@ -7736,7 +7763,7 @@ body.dark-mode {
     }
 
         body.dark-mode .user-card strong {
-            color: #fff
+            color: #000000
         }
 
     body.dark-mode .blog-card {
@@ -7764,7 +7791,7 @@ body.dark-mode {
         }
 
     body.dark-mode .transfer-verification .transfer-amount .caption {
-        color: #fff
+        color: #000000
     }
 
     body.dark-mode .ios-add-to-home .modal-content:before {
@@ -7772,7 +7799,7 @@ body.dark-mode {
     }
 
     body.dark-mode .ios-add-to-home .modal-content .action-sheet-content {
-        color: #fff
+        color: #000000
     }
 
     body.dark-mode .android-add-to-home .modal-content:before {
@@ -7780,7 +7807,7 @@ body.dark-mode {
     }
 
     body.dark-mode .android-add-to-home .modal-content .action-sheet-content {
-        color: #fff
+        color: #000000
     }
 
     body.dark-mode .coinbox h4 {
@@ -7788,7 +7815,7 @@ body.dark-mode {
     }
 
     body.dark-mode .coinbox .text {
-        color: #fff
+        color: #000000
     }
 
     body.dark-mode .coinbox .fixed-button {
@@ -7808,15 +7835,15 @@ body.dark-mode {
     }
 
     body.dark-mode .widget-card .stats strong {
-        color: #fff
+        color: #000000
     }
 
     body.dark-mode .exchange-group .form-select {
-        color: #fff
+        color: #000000
     }
 
     body.dark-mode .exchange-heading .group-label {
-        color: #fff
+        color: #000000
     }
 
     body.dark-mode .exchange-heading .exchange-wallet-info {
@@ -7828,7 +7855,7 @@ body.dark-mode {
     }
 
     body.dark-mode .exchange-icon {
-        color: #fff;
+        color: #000000;
         background: #20162a
     }
 
@@ -7843,19 +7870,22 @@ body.dark-mode {
 
 
 
-.comodity{color:#fff;font-weight:bold;margin-bottom:0;}
+.comodity{color:#000000;font-weight:bold;margin-bottom:0;}
 .date {
     margin-bottom: 5px;
-    color: #fff;
+    color: #000000;
     font-weight: bold;
 }
 .detail {
     margin-bottom: 0;
-    color: #fff;
+    color: #000000;
     font-weight: bold;
 }
 .left{display:none !important;}
 
+.btn-close-white {
+    color:#000000;
+}
 
 @media only screen and (min-device-width : 320px) and (max-device-width : 480px) {
     .section {

@@ -13,10 +13,11 @@
                     <div class="card-body">
                         <div class="row mb-3">
                             <div class="col-md-12">
-                                <form class="form-inline">
-                                    <button type="submit" class="btn btn-primary">Create Pending Order</button>
-                                </form>
+                                <a href="{{ route('admin.pending-orders-create') }}" class="btn btn-primary">
+                                    Create Pending Order
+                                </a>
                             </div>
+
                         </div>
                         <div class="table-responsive">
                             <table class="table">
@@ -39,7 +40,7 @@
                                     @foreach ($pendingOrders as $val)
                                         <tr>
                                             <td>{{ $loop->iteration }}</td>
-                                            <td>{{ $val->Pk_id }}</td>
+                                            <td>{{ $val->trade_id }}</td>
                                             <td>
                                                 {{ $val->created_at ? \Carbon\Carbon::parse($val->created_at)->format('d-M-Y h:i:s A') : '' }}
                                             </td>
@@ -47,8 +48,8 @@
                                             <td>{{ $val->user->user_id }}</td>
                                             <td>{{ $val->Mode }} ORDER</td>
                                             <td>{{ $val->BuyPrice }}</td>
-                                            <td>{{ $val->LotSize }}</td>
-                                            <td>Below</td>
+                                            <td>{{ $val->Lots }}</td>
+                                            <td>{{ ($val->Mode =='SELL')?'Above':'Below'}}</td>
                                             <td>Pending</td>
                                             <td>
                                                 <a href="#" title="View" aria-label="View" data-pjax="0"><svg
@@ -58,7 +59,11 @@
                                                         <path fill="currentColor"
                                                             d="M573 241C518 136 411 64 288 64S58 136 3 241a32 32 0 000 30c55 105 162 177 285 177s230-72 285-177a32 32 0 000-30zM288 400a144 144 0 11144-144 144 144 0 01-144 144zm0-240a95 95 0 00-25 4 48 48 0 01-67 67 96 96 0 1092-71z">
                                                         </path>
-                                                    </svg></a><a href="delete-order.php?id=10026" onclick="return confirm("
+                                                    </svg></a><a href="{{ route('admin.trade-delete', [
+                                                        'id' => $val->Pk_id,
+                                                        'userid' => $val->user->user_id,
+                                                    ]) }}
+                                                    " onclick="return confirm("
                                                     are="" you="" sure="" want=""
                                                     to="" delete="" this="" item?")"="" title="Delete"
                                                     aria-label="Delete" data-pjax="0"

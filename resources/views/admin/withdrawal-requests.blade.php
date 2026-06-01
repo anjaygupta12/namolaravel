@@ -166,9 +166,9 @@
 <script>
     $(document).ready(function() {
         // Initialize DataTables
-        $('.table').DataTable({
-            "order": [[ 6, "desc" ]]
-        });
+        // $('.table').DataTable({
+        //     "order": [[ 6, "desc" ]]
+        // });
         
         // View withdrawal details
         $('.btn-info').on('click', function() {

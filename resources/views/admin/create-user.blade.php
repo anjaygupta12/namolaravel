@@ -82,8 +82,7 @@
                         <div class="col-md-6">
                             <div class="form-group field-mcxusers-name">
                                 <label class="control-label" for="mcxusers-name">Name</label>
-                                <input type="text" id="mcxusers-name" class="form-control" name="fullname"
-                                    value="">
+                                <input type="text" name="fullname" class="form-control" value="{{ old('fullname') }}">
                                 <div class="hint-block">Insert Real name of the trader. Will be visible in trading App</div>
                                 <div class="help-block"></div>
                             </div>
@@ -92,7 +91,7 @@
                             <div class="form-group field-mcxusers-mobile">
                                 <label class="control-label" for="mcxusers-mobile">Mobile</label>
                                 <input type="text" id="mcxusers-mobile" class="form-control" name="mobile"
-                                    value="">
+                                    value="{{ old('mobile') }}">
                                 <div class="hint-block">Optional</div>
                                 <div class="help-block"></div>
                             </div>
@@ -101,7 +100,7 @@
                             <div class="form-group field-mcxusers-phone">
                                 <label class="control-label" for="mcxusers-phone">Username</label>
                                 <input type="text" id="mcxusers-phone" class="form-control" name="username"
-                                    value="">
+                                    value="{{ old('username') }}">
                                 <div class="hint-block">username for loggin-in with, is not case sensitive. must be unique
                                     for every trader. should not contain symbols.</div>
                                 <div class="help-block"></div>
@@ -111,7 +110,7 @@
                             <div class="form-group field-mcxusers-phone">
                                 <label class="control-label" for="mcxusers-phone">Password</label>
                                 <input type="text" id="mcxusers-phone" class="form-control" name="password"
-                                    value="">
+                                    value="{{ old('password') }}">
                                 <div class="hint-block">password for loggin-in with, is case sensitive.</div>
                                 <div class="help-block"></div>
                             </div>
@@ -120,7 +119,7 @@
                             <div class="form-group field-mcxusers-credits">
                                 <label class="control-label" for="mcxusers-credits">Initial Funds</label>
                                 <input type="number" id="mcxusers-credits" class="form-control" name="funds"
-                                    value="0">
+                                    value="{{ old('funds') }}">
                                 <div class="help-block"></div>
                             </div>
                         </div>
@@ -128,7 +127,7 @@
                         <div class="col-md-6">
                             <div class="form-group field-mcxusers-city">
                                 <label class="control-label" for="mcxusers-city">City</label>
-                                <input type="text" id="mcxusers-city" class="form-control" name="city" value="">
+                                <input type="text" id="mcxusers-city" class="form-control" name="city" value="{{ old('city') }}">
                                 <div class="hint-block">Optional</div>
                                 <div class="help-block"></div>
                             </div>
@@ -145,7 +144,7 @@
                                 <!-- Checkbox for checked state -->
                                 <label>
                                     <input type="checkbox" id="mcxusers-demo" class="form-check-input" name="Mcxusers[demo]"
-                                        value="1">
+                                        value="1" {{ old('Mcxusers.demo') ? 'checked' : '' }}>
                                     Demo account?
                                     <span class="form-check-sign"><span class="check"></span></span>
                                 </label>
@@ -153,6 +152,21 @@
                             </div>
                         </div>
 
+                          <div class="px-3 form-check col-md-6">
+                            <div class="form-group field-mcxusers-demo">
+                                <!-- Hidden input for unchecked state -->
+                                <input type="hidden" name="stop_trade" value="0">
+
+                                <!-- Checkbox for checked state -->
+                                <label>
+                                    <input type="checkbox" id="stop_trade" class="form-check-input" name="stop_trade"
+                                        value="1" {{ old('stop_trade') ? 'checked' : '' }}>
+                                    Stop Trade ?
+                                    <span class="form-check-sign"><span class="check"></span></span>
+                                </label>
+                                <div class="help-block"></div>
+                            </div>
+                        </div>
 
                         <div class="px-3 form-check col-md-6">
                             <div class="form-group field-mcxusers-allow_entry_ahbl">
@@ -229,9 +243,9 @@
                         <div class="col-md-6">
                             <div class="form-group field-mcxusers-auto_square_notify_at">
                                 <label class="control-label" for="mcxusers-auto_square_notify_at">Min. Time to book profit
-                                    (No. of Seconds)</label>
+                                    (No. of minutes)</label>
                                 <input type="number" id="profit_book_interval" class="form-control"
-                                    name="profit_book_interval" value="120">
+                                    name="profit_book_interval" value="2">
                                 <div class="hint-block">Example: 120, will hold the trade for 2 minutes before closing a
                                     trade in profit</div>
                                 <div class="help-block"></div>
@@ -1114,7 +1128,7 @@
                                 <div class="dropdown">
                                     <select name="options_brokerage_type">
                                         <option value="">Select Brokerage Calculation type</option>
-                                       
+
                                         <option value="per_lot" selected="">Per Lot Basis</option>
                                     </select>
                                 </div>
@@ -1137,7 +1151,7 @@
                                 <div class="dropdown">
                                     <select name="options_equity_brokerage_type">
                                         <option value="">Select Brokerage Calculation type</option>
-                                     
+
                                         <option value="per_lot" selected="">Per Lot Basis</option>
                                     </select>
                                 </div>
@@ -1160,7 +1174,7 @@
                                 <div class="dropdown">
                                     <select name="options_mcx_brokerage_type">
                                         <option value="">Select Brokerage Calculation type</option>
-                                       
+
                                         <option value="per_lot" selected="">Per Lot Basis</option>
                                     </select>
                                 </div>
@@ -1727,8 +1741,8 @@
                                     <select name="broker_id" id="broker_id">
                                         <option value="0">Select Broker</option>
                                          @foreach ($brokers as $broker)
-                                            <option value="{{ $broker->BrokerId }}">
-                                                {{ $broker->BrokerId }} : {{ $broker->username }}
+                                            <option value="{{ $broker->PK_ID }}">
+                                                {{ $broker->PK_ID }} : {{ $broker->UserName }}
                                             </option>
                                         @endforeach
                                     </select>

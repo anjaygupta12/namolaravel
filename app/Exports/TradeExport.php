@@ -4,7 +4,7 @@ namespace App\Exports;
 
 use Maatwebsite\Excel\Concerns\FromCollection;
 
-use App\Models\marketbidmaster;
+use App\Models\MarketBidMaster;
 use Illuminate\Contracts\View\View;
 use Maatwebsite\Excel\Concerns\FromView;
 use Illuminate\Support\Facades\DB;
@@ -23,7 +23,7 @@ class TradeExport implements FromView
 
     public function view(): View
     {
-        $trades = marketbidmaster::where('UserId',$this->userID)
+        $trades = MarketBidMaster::where('UserId',$this->userID)
         ->whereDate('created_at', '>=', $this->from)
                     ->whereDate('created_at', '<=', $this->to)
                     ->orderBy('created_at', 'desc')

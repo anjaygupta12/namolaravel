@@ -50,6 +50,7 @@ protected $fillable = [
     'AccountHolderName',
     'IsActive',
     'IsDemo',
+    'StopTrade',
     'AllowOrdersBeyondHighLow',
     'AllowOrdersBetweenHighLow',
     'TradeEquityAsUnits',
@@ -182,7 +183,42 @@ protected $fillable = [
     'balance',
     'deposits',
     'withdrawals',
-    'net_p_l'
+    'net_p_l',
+    'comex_trading_enabled',
+     'comex_brokerage_type',
+    'comex_brokerage',
+    'minimum_lots_single_comex',
+    'maximum_lots_comex',
+    'maximum_lots_allowed',
+    'max_size_all_comex',
+    'intraday_exposure_margin_comex',
+    'holding_exposure_margin_comex',
+    'orders_price_comex',
+
+    // Forex
+    'forex_trading_enabled',
+    'forex_brokerage_type',
+    'forex_brokerage',
+    'minimum_lots_single_forex',
+    'maximum_lots_forex',
+    'maximum_lots_allowed_forex',
+    'max_size_all_forex',
+    'intraday_exposure_margin_forex',
+    'holding_exposure_margin_forex',
+    'orders_price_forex',
+
+    // Crypto
+    'crypto_trading_enabled',
+    'crypto_brokerage_type',
+    'crypto_brokerage',
+    'minimum_lots_single_crypto',
+    'maximum_lots_crypto',
+    'maximum_lots_allowed_crypto',
+    'max_size_all_crypto',
+    'intraday_exposure_margin_crypto',
+    'holding_exposure_margin_crypto',
+    'orders_price_crypto',
+    'device_id',
 ];
     
     protected $casts = [
@@ -305,6 +341,126 @@ protected $fillable = [
 
         public function broker()
     {
-       return $this->belongsTo(Broker::class, 'broker_id', 'BrokerId');
+       return $this->belongsTo(AdminLogin::class, 'broker_id', 'PK_ID');
+    }
+
+       public function reset()
+    {
+        // General
+        $this->funds = 0;
+         $this->deposits = 0;
+        $this->withdrawals = 0;
+        $this->net_p_l = 0;
+        $this->broker_id = 0;
+        $this->MCXBrokerage = 0;
+
+        $this->broker_id = 0;
+        $this->Notes = null;
+        $this->IsDemo = 0;
+        $this->StopTrade = 0;
+        $this->IsActive = 1;
+        $this->AutoSquareOff = 0;
+        $this->TradeEquityAsUnits = 0;
+        $this->AllowOrdersBeyondHighLow = 0;
+        $this->AllowOrdersBetweenHighLow = 0;
+
+        // Risk management
+        $this->AutoSquareOffPercentage = 90;
+        $this->NotifyPercentage = 70;
+        $this->ProfitBookInterval = 120;
+
+        // MCX
+        $this->MCXEnabled = 0;
+        $this->MCXMinLotPerTrade = 0;
+        $this->MCXMaxLotPerTrade = 20;
+        $this->MCXMaxLotPerScrip = 50;
+        $this->MaxCommodityLots = 100;
+        $this->mcx_brokerage_type = 'per_turnover';
+        $this->MCXBrokerage = 0;
+        $this->MCXExposureType = 'per_turnover';
+        $this->MCXIntradayMargin = 0;
+        $this->MCXHoldingMargin = 0;
+        $this->MCXLotMarginJSON = json_encode([]);
+        $this->MCXLotBrokerageJSON = json_encode([]);
+        $this->MCXBidGapJSON = json_encode([]);
+
+        // NSE Futures
+        $this->NSEFuturesEnabled = 0;
+        $this->NSEFuturesBrokerage = 0;
+        $this->NSEFuturesMinLotPerTrade = 0;
+        $this->NSEFuturesMaxLotPerTrade = 50;
+        $this->NSEIndexMinLotPerTrade = 0;
+        $this->NSEIndexMaxLotPerTrade = 20;
+        $this->NSEFuturesMaxLotPerScrip = 100;
+        $this->NSEIndexMaxLotPerScrip = 100;
+        $this->MaxNSEFuturesLots = 100;
+        $this->MaxNSEIndexLots = 100;
+        $this->NSEFuturesIntradayMargin = 500;
+        $this->NSEFuturesHoldingMargin = 100;
+        $this->NSEBidGapPercentage = 0;
+
+        // NSE Options
+        $this->NSEOptionsEnabled = 0;
+        $this->EquityOptionsEnabled = 0;
+        $this->OptionsBrokerageType = 'per_lot';
+        $this->OptionsBrokerage = 25;
+        $this->OptionsEquityBrokerageType = 'per_lot';
+        $this->OptionsEquityBrokerage = 40;
+        $this->OptionsMinimumBid = 2;
+        $this->OptionsShortSellingAllowed = 1;
+        $this->OptionsEquityShortSellingAllowed = 0;
+        $this->OptionsEquityMinLotPerTrade = 1;
+        $this->OptionsEquityMaxLotPerTrade = 10;
+        $this->OptionsIndexMinLotPerTrade = 1;
+        $this->OptionsIndexMaxLotPerTrade = 20;
+        $this->OptionsEquityMaxLotPerScrip = 10;
+        $this->OptionsIndexMaxLotPerScrip = 20;
+        $this->MaxOptionsEquityLots = 10;
+        $this->MaxOptionsIndexLots = 10;
+        $this->OptionsIntradayMargin = 7;
+        $this->OptionsHoldingMargin = 3;
+        $this->OptionsEquityIntradayMargin = 10;
+        $this->OptionsEquityHoldingMargin = 3;
+        $this->OptionsBidGapPercentage = 0;
+
+        // MCX Options
+        $this->MCXOptionsEnabled = 0;
+        $this->OptionsMCXBrokerageType = 'per_lot';
+        $this->OptionsMCXBrokerage = 50;
+        $this->OptionsMCXShortSellingAllowed = 0;
+        $this->OptionsMCXMinLotPerTrade = 1;
+        $this->OptionsMCXMaxLotPerTrade = 20;
+        $this->OptionsMCXMaxLotPerScrip = 10;
+        $this->MaxOptionsMCXLots = 10;
+        $this->OptionsMCXIntradayMargin = 10;
+        $this->OptionsMCXHoldingMargin = 3;
+
+        // Options Shortselling Config
+        $this->OptionsSSBrokerageType = 'per_lot';
+        $this->OptionsSSBrokerage = 50;
+        $this->OptionsSSEquityBrokerageType = 'per_lot';
+        $this->OptionsSSEquityBrokerage = 20;
+        $this->OptionsSSMCXBrokerageType = 'per_lot';
+        $this->OptionsSSMCXBrokerage = 20;
+        $this->OptionsSSEquityMinLotPerTrade = 0;
+        $this->OptionsSSEquityMaxLotPerTrade = 2;
+        $this->OptionsSSMCXMinLotPerTrade = 1;
+        $this->OptionsSSMCXMaxLotPerTrade = 3;
+        $this->OptionsSSIndexMinLotPerTrade = 0;
+        $this->OptionsSSIndexMaxLotPerTrade = 10;
+        $this->OptionsSSEquityMaxLotPerScrip = 5;
+        $this->OptionsSSIndexMaxLotPerScrip = 10;
+        $this->OptionsSSMCXMaxLotPerScrip = 7;
+        $this->MaxOptionsSSEquityLots = 10;
+        $this->MaxOptionsSSIndexLots = 10;
+        $this->MaxOptionsSSMCXLots = 30;
+        $this->OptionsSSIntradayMargin = 2;
+        $this->OptionsSSHoldingMargin = 1;
+        $this->OptionsSSEquityIntradayMargin = 3;
+        $this->OptionsSSEquityHoldingMargin = 2;
+        $this->OptionsSSMCXIntradayMargin = 5;
+        $this->OptionsSSMCXHoldingMargin = 3;
+
+        return $this;
     }
 }

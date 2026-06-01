@@ -2,7 +2,8 @@
 
 @section('title', 'Accounts')
 @section('content')
-<div class="container-fluid">
+<style></style>
+<div class="container-fluid" style="background-color: #202940!important;">
     <div class="row">
         <div class="col-12">
             <div class="card">
@@ -26,90 +27,74 @@
                             </div>
                             <div class="row mt-3">
                                 <h3 class="col-md-12" style="color: white;"></h3>
-                                <div style="font-size: 24px; color: white; text-align: center; font-weight: bold; margin: auto;"></div>
-                                <table class="table table-striped table-bordered">
-                                    <thead>
-                                        <tr>
-                                            <th>Receivable / Payable</th>
-                                            <th>Broker:</th>
-                                            <th>SUM of Client PL</th>
-                                            <th>SUM of Client Brokerage</th>
-                                            <th>SUM of Client Net</th>
-                                            <th>PL Share</th>
-                                            <th>Brokerage Share</th>
-                                            <th>Net Share</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr style="font-weight: bold;">
-                                            <td></td>
-                                            <td>Total</td>
-                                            <td>-515405</td>
-                                            <td>93206.05</td>
-                                            <td>-608611.05</td>
-                                            <td>-1042605</td>
-                                            <td>80550.45</td>
-                                            <td>1123155.45</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Rs. 12655.6 is payable to PL </td>
-                                            <td>578: ban01</td>
-                                            <td>527200</td>
-                                            <td>25311.2</td>
-                                            <td>501888.8</td>
-                                            <td>0</td>
-                                            <td>12655.6</td>
-                                            <td>12655.6</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Rs. 0 is to receive from Deep </td>
-                                            <td>586: dc101</td>
-                                            <td>0</td>
-                                            <td>0</td>
-                                            <td>0</td>
-                                            <td>0</td>
-                                            <td>0</td>
-                                            <td>0</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Rs. 0 is to receive from LG Guru</td>
-                                            <td>619: lg01</td>
-                                            <td>0</td>
-                                            <td>0</td>
-                                            <td>0</td>
-                                            <td>0</td>
-                                            <td>0</td>
-                                            <td>0</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Rs. 0 is payable to Parent Admin</td>
-                                            <td>0: Admin</td>
-                                            <td>-1042605</td>
-                                            <td>67894.85</td>
-                                            <td>-1110499.85</td>
-                                            <td>-1042605</td>
-                                            <td>67894.85</td>
-                                            <td>1110499.85</td>
-                                        </tr>
+                                <div class="table-responsive">
+                            <table class="table table-striped table-bordered table-hover table-dark align-middle mb-0">
+                            <thead class="table-secondary text-dark">
+                                <tr>
+                                <th class="text-nowrap">Receivable / Payable</th>
+                                <th class="text-nowrap">Broker</th>
+                                <th class="text-nowrap">SUM of Client PL</th>
+                                <th class="text-nowrap">SUM of Client Brokerage</th>
+                                <th class="text-nowrap">SUM of Client Net</th>
+                                <th class="text-nowrap">PL Share</th>
+                                <th class="text-nowrap">Brokerage Share</th>
+                                <th class="text-nowrap">Net Share</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            
+                                    @php
+                                        $total_profit   = $accounts->sum('total_profit');
+                                        $total_brokrage = $accounts->sum('total_brokrage');
+                                        $total_net_pl   = $total_profit + $total_brokrage;
+                                         $total_all_profit  = $accounts->sum('pl_share');      // sum of all pl_share
+                                        $total_all_brokrage = $accounts->sum('payable');      // sum of all payable
+                                        $total_all_net_pl  = $accounts->sum('net_pl_share');
+                                    @endphp
 
-                                    </tbody>
-                                </table>
-                            </div>
+                                    <tr class="fw-bold">
+                                        <td></td>
+                                        <td>Total</td>
+                                        <td class="text-nowrap">{{ $total_profit }}</td>
+                                        <td class="text-nowrap">{{ $total_brokrage }}</td>
+                                        <td class="all_profit">{{ $total_net_pl }}</td>
+                                        <td class="all_brokrage">{{ $total_all_profit }}</td>
+                                        <td class="all_net_pl">{{ $total_all_brokrage }}</td>
+                                        <td class="text-nowrap">{{ $total_all_net_pl }}</td>
+                                    </tr>
+
+                                    @foreach($accounts as $val)
+                                    <tr class="fw-bold">
+                                        <td> Rs. {{ $val->payable }} is to receive from Parent Admin </td>
+                                        <td> <a href="{{ route('admin.sub.accounts', $val->broker_id) }}">{{ $val->UserName }}</a> </td>
+                                        <td>{{ $val->total_profit }}</td>
+                                        <td>{{ $val->total_brokrage }}</td>
+                                        <td>{{ $val->total_profit - $val->total_brokrage }}</td>
+                                        <td class="text-nowrap">{{ $val->pl_share }}</td>
+                                        <td class="text-nowrap">{{ $val->payable }}</td>
+                                        <td class="text-nowrap">{{ $val->net_pl_share }}</td>
+                                    </tr>
+                                    @endforeach
+
+                            
+                            </tbody>
+                            </table>
+                        </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    
+
 </div>
 @endsection
 
 @section('scripts')
 <script>
-    $(document).ready(function() {
-        // Initialize DataTables
-        $('.table').DataTable();
-    });
+    // $(document).ready(function() {
+    //     // Initialize DataTables
+    //     $('.table').DataTable();
+    // });
 </script>
 @endsection

@@ -13,7 +13,7 @@ class DepositeMaster extends Model
     
     protected $fillable = [
         'UserId', 'Amount', 'ScreenShot', 'Approve_Status', 'Approve_date',
-        'Timestamp', 'LastModify', 'PaymentMethod','Mobile','AccountHolder','AccountNo','IFSC','Isactive','type','notes'
+        'Timestamp', 'LastModify', 'PaymentMethod','Mobile','AccountHolder','AccountNo','IFSC','Isactive','type','notes','isAdmin'
     ];
     
     protected $casts = [

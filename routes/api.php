@@ -2,7 +2,8 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\User\HomeController;
+use App\Http\Controllers\Api\ApiController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -14,6 +15,11 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
+
+Route::post('/update-pending-order/{id}', [ApiController::class, 'updatePendingOrder']);
+Route::get('/update-pending-order-test/{id}', [ApiController::class, 'updatePendingOrder']);
+
+Route::get('/update-initial-amount', [ApiController::class, 'updateInitialAmount']);
+
+
+//  $homeControl->trnsectionDeatil($user->id, $user, '', '', 1);

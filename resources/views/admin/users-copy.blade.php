@@ -16,14 +16,28 @@
     <script src="https://esaytraders.live/admin/js/jquery.js"></script>
     <script>
         function toggle_exposure() {
-            if (document.getElementById("exposure_per_lot").style.display == "none")
+            var select = document.querySelector('select[name="mcx_exposure_type"]');
+        var selectedValue = select.value;
+      
+    
+            if(selectedValue=='per_lot'){
+                 
                 document.getElementById("exposure_per_lot").style.display = "flex";
-            else
-                document.getElementById("exposure_per_lot").style.display = "none";
-            if (document.getElementById("exposure_per_turnover").style.display == "none")
-                document.getElementById("exposure_per_turnover").style.display = "flex";
-            else
                 document.getElementById("exposure_per_turnover").style.display = "none";
+            }else{
+                 
+                document.getElementById("exposure_per_lot").style.display = "none";
+                 document.getElementById("exposure_per_turnover").style.display = "flex";
+            }
+
+            // if (document.getElementById("exposure_per_lot").style.display == "none")
+            //     document.getElementById("exposure_per_lot").style.display = "flex";
+            // else
+            //     document.getElementById("exposure_per_lot").style.display = "none";
+            // if (document.getElementById("exposure_per_turnover").style.display == "none")
+            //     document.getElementById("exposure_per_turnover").style.display = "flex";
+            // else
+            //     document.getElementById("exposure_per_turnover").style.display = "none";
         }
 
         function toggle_brokerage_type() {
@@ -72,10 +86,10 @@
         <div class="card-body">
             <form class="form" action="{{ route('admin.store.trade.user') }}" method="POST">
                 @csrf
-                <input type="hidden" name="copy" value="1">
                 <div class="mx-2">
                     <fieldset class="row">
                         <legend>Personal Details: </legend>
+                        <input type="hidden" name="copy" value="1">
                         <div class="col-md-6">
                             <div class="form-group field-mcxusers-name">
                                 <label class="control-label" for="mcxusers-name">Name</label>
@@ -104,24 +118,23 @@
                                 <div class="help-block"></div>
                             </div>
                         </div>
-                        <div class="col-md-6">
+                            <div class="col-md-6">
                             <div class="form-group field-mcxusers-phone">
                                 <label class="control-label" for="mcxusers-phone">Password</label>
                                 <input type="text" id="mcxusers-phone" class="form-control" name="password"
-                                    value="">
-                                <div class="hint-block">Leave blank to keep current password</div>
+                                    value="{{ old('password') }}">
+                                <div class="hint-block">password for loggin-in with, is case sensitive.</div>
                                 <div class="help-block"></div>
                             </div>
                         </div>
-                        <div class="col-md-6">
+                         <div class="col-md-6">
                             <div class="form-group field-mcxusers-credits">
                                 <label class="control-label" for="mcxusers-credits">Initial Funds</label>
                                 <input type="number" id="mcxusers-credits" class="form-control" name="funds"
-                                    value="{{ old('funds', $user->funds ?? 0) }}">
+                                    value="{{ old('funds') }}">
                                 <div class="help-block"></div>
                             </div>
                         </div>
-
                         <div class="col-md-6">
                             <div class="form-group field-mcxusers-city">
                                 <label class="control-label" for="mcxusers-city">City</label>
@@ -145,6 +158,21 @@
                                     <input type="checkbox" id="mcxusers-demo" class="form-check-input" name="Mcxusers[demo]"
                                         value="1" {{ old('Mcxusers.demo', $user->IsDemo) ? 'checked' : '' }}>
                                     Demo account?
+                                    <span class="form-check-sign"><span class="check"></span></span>
+                                </label>
+                                <div class="help-block"></div>
+                            </div>
+                        </div>
+                        <div class="px-3 form-check col-md-6">
+                            <div class="form-group field-mcxusers-demo">
+                                <!-- Hidden input for unchecked state -->
+                                <input type="hidden" name="stop_trade" value="0">
+
+                                <!-- Checkbox for checked state -->
+                                <label>
+                                    <input type="checkbox" id="stop_trade" class="form-check-input" name="stop_trade"
+                                        value="1" {{ old('stop_trade', $user->StopTrade) ? 'checked' : '' }}>
+                                    Stop Trade ?
                                     <span class="form-check-sign"><span class="check"></span></span>
                                 </label>
                                 <div class="help-block"></div>
@@ -235,7 +263,7 @@
                         <div class="col-md-6">
                             <div class="form-group field-mcxusers-auto_square_notify_at">
                                 <label class="control-label" for="mcxusers-auto_square_notify_at">Min. Time to book profit
-                                    (No. of Seconds)</label>
+                                    (No. of Minutes)</label>
                                 <input type="number" id="profit_book_interval" class="form-control"
                                     name="profit_book_interval"
                                     value="{{ old('profit_book_interval', $user->ProfitBookInterval) }}">
@@ -250,7 +278,7 @@
                         <legend>MCX Futures: </legend>
                         <div class="px-3 form-check col-md-6">
                             <div class="form-group field-mcxusers-commodity">
-                                <input type="hidden" name="Mcxusers[commodity]" value="0"><label><input
+                                <input type="hidden" name="mcx_enabled" value="0"><label><input
                                         type="checkbox" id="mcxusers-commodity" class="form-check-input"
                                         name="mcx_enabled" value="1"
                                         {{ old('mcx_enabled', $user->MCXEnabled) ? 'checked' : '' }}> MCX Trading <span
@@ -307,10 +335,10 @@
                                         onchange="toggle_brokerage_type();">
                                         <option value="">Select Brokerage Calculation type</option>
                                         <option value="per_crore"
-                                            {{ old('mcx_brokerage_type', $user->MCXBrokerageType) == 'per_crore' ? 'selected' : '' }}>
+                                            {{ old('mcx_brokerage_type', $user->mcx_brokerage_type) == 'per_crore' ? 'selected' : '' }}>
                                             Per Crore Basis</option>
                                         <option value="per_lot"
-                                            {{ old('mcx_brokerage_type', $user->MCXBrokerageType) == 'per_lot' ? 'selected' : '' }}>
+                                            {{ old('mcx_brokerage_type', $user->mcx_brokerage_type) == 'per_lot' ? 'selected' : '' }}>
                                             Per Lot Basis</option>
                                     </select>
                                 </div>
@@ -340,6 +368,13 @@
                                             Per Lot Basis</option>
                                     </select>
                                 </div>
+                                 {{-- <div class="dropdown">
+                                    <select name="mcx_exposure_type" onchange="toggle_exposure();">
+                                        <option value="">Select Margin/Exposure Calculation type</option>
+                                        <option value="per_turnover" selected="">Per Turnover Basis</option>
+                                        <option value="per_lot">Per Lot Basis</option>
+                                    </select>
+                                </div> --}}
                                 <div class="help-block"></div>
                             </div>
                         </div>
@@ -435,7 +470,7 @@
                             <div class="form-group field-mcxusers-equity">
                                 <input type="hidden" name="Mcxusers[equity]" value="0"><label><input
                                         type="checkbox" id="mcxusers-equity" class="form-check-input" name="nse_enabled"
-                                        value="1" {{ old('nse_enabled', $user->NSEEnabled) ? 'checked' : '' }}>
+                                        value="1" {{ old('nse_enabled', $user->NSEFuturesEnabled) ? 'checked' : '' }}>
                                     Equity Trading <span class="form-check-sign"><span
                                             class="check"></span></span></label>
                                 <div class="help-block"></div>
@@ -447,7 +482,7 @@
                                 <label class="control-label" for="mcxusers-equity_brokerage">Equity brokerage Per
                                     Crore</label>
                                 <input type="text" id="mcxusers-equity_brokerage" class="form-control"
-                                    name="nse_brokerage" value="{{ old('nse_brokerage', $user->NSEBrokerage) }}">
+                                    name="nse_brokerage" value="{{ old('nse_brokerage', $user->NSEFuturesBrokerage) }}">
                                 <div class="help-block"></div>
                             </div>
                         </div>
@@ -457,7 +492,7 @@
                                         class="quantity_lot">lot</span> size required per single trade of Equity</label>
                                 <input type="text" id="mcxusers-min_size_trade_equity" class="form-control"
                                     name="nse_equity_min_lot_per_trade"
-                                    value="{{ old('nse_equity_min_lot_per_trade', $user->NSEEquityMinLotPerTrade) }}">
+                                    value="{{ old('nse_equity_min_lot_per_trade', $user->NSEFuturesMinLotPerTrade) }}">
                                 <div class="help-block"></div>
                             </div>
                         </div>
@@ -467,7 +502,7 @@
                                         class="quantity_lot">lot</span> size allowed per single trade of Equity</label>
                                 <input type="text" id="mcxusers-max_size_trade_equity" class="form-control"
                                     name="nse_equity_max_lot_per_trade"
-                                    value="{{ old('nse_equity_max_lot_per_trade', $user->NSEEquityMaxLotPerTrade) }}">
+                                    value="{{ old('nse_equity_max_lot_per_trade', $user->NSEFuturesMaxLotPerTrade) }}">
                                 <div class="help-block"></div>
                             </div>
                         </div>
@@ -500,7 +535,7 @@
                                     open at a time</label>
                                 <input type="text" id="mcxusers-max_size_script_equity" class="form-control"
                                     name="nse_equity_max_lot_per_scrip"
-                                    value="{{ old('nse_equity_max_lot_per_scrip', $user->NSEEquityMaxLotPerScrip) }}">
+                                    value="{{ old('nse_equity_max_lot_per_scrip', $user->NSEFuturesMaxLotPerScrip) }}">
                                 <div class="help-block"></div>
                             </div>
                         </div>
@@ -521,7 +556,7 @@
                                     Size All Equity</label>
                                 <input type="text" id="mcxusers-max_size_all_equity" class="form-control"
                                     name="max_nse_equity_lots"
-                                    value="{{ old('max_nse_equity_lots', $user->MaxNSEEquityLots) }}">
+                                    value="{{ old('max_nse_equity_lots', $user->MaxNSEFuturesLots) }}">
                                 <div class="help-block"></div>
                             </div>
                         </div>
@@ -541,7 +576,7 @@
                                     Equity</label>
                                 <input type="text" id="mcxusers-exposure_equity" class="form-control"
                                     name="nse_intraday_margin"
-                                    value="{{ old('nse_intraday_margin', $user->NSEIntradayMargin) }}">
+                                    value="{{ old('nse_intraday_margin', $user->NSEFuturesIntradayMargin) }}">
                                 <div class="hint-block">Exposure auto calculates the margin money required for any new
                                     trade entry. Calculation : turnover of a trade devided by Exposure is required margin.
                                     eg. if gold having lotsize of 100 is trading @ 45000 and exposure is 200, (45000 X 100)
@@ -555,7 +590,7 @@
                                     Exposure/Margin Equity</label>
                                 <input type="text" id="mcxusers-holding_exposure_equity" class="form-control"
                                     name="nse_holding_margin"
-                                    value="{{ old('nse_holding_margin', $user->NSEHoldingMargin) }}">
+                                    value="{{ old('nse_holding_margin', $user->NSEFuturesHoldingMargin) }}">
                                 <div class="hint-block">Holding Exposure auto calculates the margin money required to hold
                                     a position overnight for the next market working day. Calculation : turnover of a trade
                                     divided by Exposure is required margin. eg. if gold having lot size of 100 is trading @
@@ -584,7 +619,7 @@
                                 <input type="hidden" name="options_enabled" value="0">
                                 <label><input type="checkbox" id="mcxusers-equity" class="form-check-input"
                                         name="options_enabled" value="1"
-                                        {{ old('options_enabled', $user->OptionsEnabled) ? 'checked' : '' }}> Index Options
+                                        {{ old('options_enabled', $user->NSEOptionsEnabled) ? 'checked' : '' }}> Index Options
                                     Trading
                                     <span class="form-check-sign"><span class="check"></span></span></label>
                                 <div class="help-block"></div>
@@ -619,9 +654,7 @@
                                 <div class="dropdown">
                                     <select name="options_brokerage_type">
                                         <option value="">Select Brokerage Calculation type</option>
-                                        <option value="per_crore"
-                                            {{ old('options_brokerage_type', $user->OptionsBrokerageType) == 'per_crore' ? 'selected' : '' }}>
-                                            Per Crore Basis</option>
+                                     
                                         <option value="per_lot"
                                             {{ old('options_brokerage_type', $user->OptionsBrokerageType) == 'per_lot' ? 'selected' : '' }}>
                                             Per Lot Basis</option>
@@ -647,9 +680,7 @@
                                 <div class="dropdown">
                                     <select name="options_equity_brokerage_type">
                                         <option value="">Select Brokerage Calculation type</option>
-                                        <option value="per_crore"
-                                            {{ old('options_equity_brokerage_type', $user->OptionsEquityBrokerageType) == 'per_crore' ? 'selected' : '' }}>
-                                            Per Crore Basis</option>
+                                        
                                         <option value="per_lot"
                                             {{ old('options_equity_brokerage_type', $user->OptionsEquityBrokerageType) == 'per_lot' ? 'selected' : '' }}>
                                             Per Lot Basis</option>
@@ -675,9 +706,7 @@
                                 <div class="dropdown">
                                     <select name="options_mcx_brokerage_type">
                                         <option value="">Select Brokerage Calculation type</option>
-                                        <option value="per_crore"
-                                            {{ old('options_mcx_brokerage_type', $user->OptionsMCXBrokerageType) == 'per_crore' ? 'selected' : '' }}>
-                                            Per Crore Basis</option>
+                                        
                                         <option value="per_lot"
                                             {{ old('options_mcx_brokerage_type', $user->OptionsMCXBrokerageType) == 'per_lot' ? 'selected' : '' }}>
                                             Per Lot Basis</option>
@@ -1306,10 +1335,10 @@
                                 <div class="dropdown">
                                     <select name="broker_id" id="broker_id">
                                         <option value="0">Select User</option>
-                                        @foreach ($brokers as $broker)
-                                            <option value="{{ $broker->BrokerId }}"
-                                                {{ old('broker_id', $user->broker_id) == $broker->BrokerId ? 'selected' : '' }}>
-                                                {{ $broker->BrokerId }} : {{ $broker->username }}
+                                            @foreach ($brokers as $broker)
+                                            <option value="{{ $broker->PK_ID }}"
+                                                {{ old('broker_id', $user->broker_id) == $broker->PK_ID ? 'selected' : '' }}>
+                                                {{ $broker->PK_ID }} : {{ $broker->UserName }}
                                             </option>
                                         @endforeach
                                     </select>

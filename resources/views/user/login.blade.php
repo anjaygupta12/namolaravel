@@ -2,151 +2,208 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Namo Traders - Login</title>
-    <meta name="description" content="Namo Traders - Trading Platform">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Namo Traders - Login</title>
 
-    <link rel="shortcut icon" href="{{ asset('assets/img/favicon.png') }}" type="image/x-icon">
+<link rel="shortcut icon" href="{{ asset('assets/img/favicon.png') }}">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <!-- Bootstrap & Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+<style>
 
-    <!-- Custom Styles -->
-    <style>
-        body {
-            background: linear-gradient(135deg, #2d2d2d, #1a1a1a);
-            color: #fff;
-            font-family: 'Segoe UI', sans-serif;
-        }
+/* Hide everything initially */
+body{
+visibility:hidden;
+background: linear-gradient(135deg,#2d2d2d,#1a1a1a);
+color:#fff;
+font-family:'Segoe UI',sans-serif;
+}
 
-        .login-container {
-            max-width: 400px;
-            margin: 5% auto;
-            background: #2c2f33;
-            padding: 2rem;
-            border-radius: 15px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
-        }
+/* Full screen loader */
+#loader{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:#fff;
+display:flex;
+justify-content:center;
+align-items:center;
+z-index:999999;
+visibility:visible;
+}
 
-        .logo {
-            width: 120px;
-        }
+.spinner{
+border:4px solid #f3f3f3;
+border-top:4px solid #007bff;
+border-radius:50%;
+width:60px;
+height:60px;
+animation:spin .8s linear infinite;
+}
 
-        .form-control {
-            background: #1e1e1e;
-            color: #fff;
-            border: none;
-        }
+@keyframes spin{
+100%{transform:rotate(360deg);}
+}
 
-        .form-control:focus {
-            border-color: #007bff;
-            box-shadow: none;
-        }
+.login-container{
+max-width:400px;
+margin:5% auto;
+background:#2c2f33;
+padding:2rem;
+border-radius:15px;
+display:none;
+}
 
-        .btn-primary {
-            background: #007bff;
-            border: none;
-        }
+</style>
 
-        .btn-primary:hover {
-            background: #0056b3;
-        }
-
-        .form-links a {
-            color: #ccc;
-            text-decoration: underline;
-        }
-
-        .modal-content {
-            background: #2c2f33;
-            color: #fff;
-        }
-
-        .modal-header,
-        .modal-footer {
-            border: none;
-        }
-
-        .clear-input ion-icon {
-            position: absolute;
-            top: 50%;
-            right: 10px;
-            transform: translateY(-50%);
-            cursor: pointer;
-        }
-    </style>
 </head>
 
 <body>
-    <div class="login-container text-center">
-        <img src="{{ asset('assets/img/logo.png') }}" alt="logo" class="logo mb-3">
-        <h4 class="mb-1">Namo Traders</h4>
-        {{-- @if ($errors->has('email'))
-            <div class="alert alert-danger">
-                {{ $errors->first('email') }}
-            </div>
-        @endif --}}
-       @if(session('error'))
-    <div class="alert alert-danger">
-        {{ session('error') }}
-    </div>
+
+
+<!-- Loader -->
+<div id="loader">
+<div class="spinner"></div>
+</div>
+
+
+
+<!-- Login Form -->
+<div class="login-container text-center" id="loginForm">
+
+<img src="{{ asset('assets/img/logo.png') }}" width="120" class="mb-3">
+
+<h4>Namo Traders</h4>
+
+@if (session('error'))
+<div class="alert alert-danger">
+{{ session('error') }}
+</div>
 @endif
 
+<p class="mb-4">Log in to your account</p>
 
-        <p class="mb-4 ">Log in to your account</p>
+<form action="{{ route('user.login') }}" method="POST">
+@csrf
 
-        <form action="{{ route('user.login') }}" method="POST">
-            @csrf
-            <div class="form-floating mb-3">
-                <input type="text" class="form-control" id="username" name="login" placeholder="Username"
-                    required>
-                <label for="email">Username or phone</label>
-            </div>
+<div class="form-floating mb-3">
+<input type="text" class="form-control" name="login" required>
+<label>Username or phone</label>
+</div>
 
-            <div class="form-floating mb-3">
-                <input type="password" class="form-control" id="password" name="password" placeholder="Password"
-                    required>
-                <label for="password">Password</label>
-            </div>
+<input type="hidden" id="device_id" name="device_id">
 
-            <div class="d-flex justify-content-between mb-3 form-links">
-                {{-- <a href="{{route('register')}}" >Register</a> --}}
-                <a href="#" >Forgot Password?</a>
-            </div>
+<div class="form-floating mb-3">
+<input type="password" class="form-control" name="password" required>
+<label>Password</label>
+</div>
 
-            <button type="submit" class="btn btn-primary w-100">Log In</button>
-        </form>
-    </div>
+<button type="submit" class="btn btn-primary w-100">
+Log In
+</button>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        $(document).ready(function() {
-            $('.modal-footer .btn-primary').on('click', function() {
-                var modal = $(this).closest('.modal');
-                var form = modal.find('form')[0];
+</form>
 
-                if (form.checkValidity()) {
-                    if (modal.attr('id') === 'registerModal') {
-                        var pwd = $('#newPassword').val();
-                        var confirmPwd = $('#confirmPassword').val();
-                        if (pwd !== confirmPwd) {
-                            alert('Passwords do not match!');
-                            return false;
-                        }
-                        alert('Registration successful!');
-                    } else {
-                        alert('Password reset link sent!');
-                    }
-                    modal.modal('hide');
-                } else {
-                    form.reportValidity();
-                }
-            });
-        });
-    </script>
+</div>
+
+
+
+<script>
+
+function initDeviceCheck(){
+
+const loader=document.getElementById('loader');
+const login=document.getElementById('loginForm');
+
+// keep loader visible
+loader.style.display="flex";
+login.style.display="none";
+
+let deviceId=localStorage.getItem('device_id');
+
+if(!deviceId){
+
+deviceId='xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){
+const r=Math.random()*16|0;
+const v=c==='x'?r:(r&0x3|0x8);
+return v.toString(16);
+});
+
+localStorage.setItem('device_id',deviceId);
+
+}
+
+document.getElementById('device_id').value=deviceId;
+
+
+fetch('/set-device-id?device_id='+encodeURIComponent(deviceId))
+.then(res=>res.json())
+.then(data=>{
+
+if(data.redirect){
+
+window.location.replace(data.redirect);
+
+}else{
+
+loader.style.display="none";
+login.style.display="block";
+document.body.style.visibility="visible";
+
+}
+
+})
+.catch(()=>{
+
+loader.style.display="none";
+login.style.display="block";
+document.body.style.visibility="visible";
+
+});
+
+}
+
+
+
+// First Load
+document.addEventListener("DOMContentLoaded",function(){
+initDeviceCheck();
+});
+
+
+
+// Mobile Back Button (Very Important)
+window.addEventListener("pageshow",function(event){
+
+if(event.persisted){
+initDeviceCheck();
+}
+
+});
+
+
+
+// Android WebView Fix
+window.addEventListener("focus",function(){
+initDeviceCheck();
+});
+
+
+
+// App Resume Fix
+document.addEventListener("visibilitychange",function(){
+
+if(!document.hidden){
+initDeviceCheck();
+}
+
+});
+
+</script>
+
+
 </body>
 
 </html>

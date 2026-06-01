@@ -3,6 +3,25 @@
 @section('title', 'Trades')
 
 @section('content')
+    <style>
+        a {
+            color: #ffffff;
+            text-decoration: none;
+        }
+
+        a:hover {
+            color: #241f1f;
+            text-decoration: none;
+        }
+
+        table.dataTable tbody tr {
+            background-color: #202940;
+        }
+
+        .text-primary tr th {
+            color: white !important;
+        }
+    </style>
     <div class="container-fluid">
         <div class="row">
             <div class="col-12">
@@ -110,10 +129,8 @@
                             </div>
                         </form>
 
-
-
                         <div class="table-responsive">
-                            <table class="table">
+                            <table class="table ">
                                 <thead class="text-primary">
                                     <tr>
                                         {{-- <th class="action-column">
@@ -126,49 +143,105 @@
                                         </th> --}}
                                         <th>Actions</th>
                                         <th>ID</th>
-                                        <th>Mode</th>
                                         <th>Scrip</th>
                                         <th>Segment</th>
                                         <th>User ID</th>
                                         <th>Buy Rate</th>
                                         <th>Sell Rate</th>
-                                        <th>Lots / Units</th>
+                                        <th class="w-110">Lots / Units</th>
                                         <th>Bought at</th>
-                                        <th>Sold at</th>
+                                        <th>Sold at</a></th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach ($trades as $val)
-                                        <tr data-key="{{$val->Pk_id}}">
-                                            {{-- <td>
-                                                <label class="checkcontainer"><input name="trades[]" type="checkbox"
-                                                        value="20094"><span class="checkmark"></span></label>
-                                            </td> --}}
-                                            <td class="text-nowrap">
+                                    @foreach ($trades as $trade)
+                                        @php
 
-                                                <a href="{{ route('admin.trade.edit', $val->Pk_id) }}" style="color: black;"
-                                                    title="Edit" aria="" -="" label="Update" data=""
-                                                    pjax="0"><svg aria-hidden="true"
-                                                        style="display: inline-block; font-size: inherit; height: 1em; overflow: visible; vertical-align: -.125em; width: 1em"
-                                                        xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-                                                        <path fill="currentColor"
-                                                            d="M498 142l-46 46c-5 5-13 5-17 0L324 77c-5-5-5-12 0-17l46-46c19-19 49-19 68 0l60 60c19 19 19 49 0 68zm-214-42L22 362 0 484c-3 16 12 30 28 28l122-22 262-262c5-5 5-13 0-17L301 100c-4-5-12-5-17 0zM124 340c-5-6-5-14 0-20l154-154c6-5 14-5 20 0s5 14 0 20L144 340c-6 5-14 5-20 0zm-36 84h48v36l-64 12-32-31 12-65h36v48z">
-                                                        </path>
-                                                    </svg>
+                                            $lotSize = round($trade->Lots * $trade->LotSize, 2);
+
+                                            $buyRate = (float) $trade->BuyPrice;
+                                            $sellRate = (float) $trade->SalePrice;
+                                            $lots = (float) $trade->Lots;
+                                            $buyTurnover = $buyRate * $lotSize;
+                                            $sellTurnover = $sellRate * $lotSize;
+                                            if ($trade->Mode == 'SELL') {
+                                                $profitLoss = $buyTurnover - $sellTurnover;
+                                            } else {
+                                                $profitLoss = $sellTurnover - $buyTurnover;
+                                            }
+                                            $brokerage = $trade->brokrage;
+
+                                            $buyDate = \Carbon\Carbon::parse($trade->created_at)->format(
+                                                'Y-m-d H:i:s A',
+                                            );
+                                            $sellDate = \Carbon\Carbon::parse($trade->updated_at)->format(
+                                                'Y-m-d H:i:s',
+                                            );
+
+                                            $sameDate = $buyDate === $sellDate ? '✔️' : '❌';
+                                            $buyDate = \Carbon\Carbon::parse($trade->created_at)->format(
+                                                'd-M-Y h:i:s A',
+                                            );
+                                            $sellDate = \Carbon\Carbon::parse($trade->updated_at)->format(
+                                                'd-M-Y h:i:s A',
+                                            );
+                                        @endphp
+                                        <tr id="row-{{ $trade->Pk_id }}">
+                                            <td>
+                                                <a href="{{ route('admin.trade-view', ['id' => $trade->Pk_id, 'userid' => $trade->UserId]) }}"
+                                                    style="margin-right:10px">
+                                                    <i class="fa fa-eye" aria-hidden="true"></i>
                                                 </a>
+                                                <a href="{{ route('admin.trade-edit', ['id' => $trade->Pk_id, 'userid' => $trade->UserId]) }}"
+                                                    style="margin-right:10px">
+                                                    <i class="fa fa-pencil" aria-hidden="true"></i>
+                                                </a>
+                                                <a href="{{ route('admin.trade-delete', ['id' => $trade->Pk_id, 'userid' => $trade->UserId]) }}"
+                                                    onclick="return confirm('Are you sure you want to delete this item?');">
+                                                    <i class="fa fa-trash" aria-hidden="true"></i>
+                                                </a>
+
                                             </td>
-                                            <td class="text-nowrap"> {{ $val->Pk_id }}</td>
-                                            <td class="text-nowrap"> {{ $val->Mode }}</td>
-                                            <td class="text-nowrap"> {{ $val->Symbol }}</td>
-                                            <td class="text-nowrap"> {{ $val->segent }} </td>
-                                            <td class="text-nowrap"> {{ $val->UserId }}</td>
-                                            <td class="text-nowrap"> {{ $val->SalePrice }}</td>
-                                            <td class="text-nowrap"> {{ $val->BuyPrice }}</td>
-                                            <td class="text-nowrap">{{ $val->LotSize }}</td>
-                                            <td class="text-nowrap">
-                                                {{ \Carbon\Carbon::parse($val->created_at)->format('n/j/Y h:i:s A') }}</td>
-                                            <td class="text-nowrap">
-                                                {{ \Carbon\Carbon::parse($val->updated_at)->format('n/j/Y h:i:s A') }}</td>
+                                            <td><a style="color: white;"
+                                                    href="{{ route('admin.trade-view', ['id' => $trade->Pk_id, 'userid' => $trade->UserId]) }}">{{ $trade->trade_id }}</a>
+                                            </td>
+
+                                            <td>{{ explode(':', $trade->Symbol)[1] ?? $trade->Symbol }}</td>
+                                            <td>{{ $trade->TransactionMode }}</td>
+                                            <td>
+                                                {{ !empty($trade->user->user_id) && !empty($trade->user->FullName)
+                                                    ? $trade->user->user_id . ': ' . $trade->user->FullName
+                                                    : '' }}
+                                            </td>
+                                            <td> {{ $trade->Mode == 'BUY' ? number_format($buyRate, 2) : number_format($sellRate, 2) }}
+                                            </td>
+                                            <td>{{ $trade->Mode == 'SELL' ? number_format($buyRate, 2) : number_format($sellRate, 2) }}
+                                            </td>
+
+
+                                            <td>{{ $lots }}/ {{ $trade->is_qty == 1 ? $trade->quentity : $lotSize }}
+                                            </td>
+                                            </td>
+                                            <td>
+                                                {{ $trade->Isactive == 1
+                                                    ? ($trade->Mode == 'BUY'
+                                                        ? $buyDate
+                                                        : '')
+                                                    : ($trade->Mode == 'BUY'
+                                                        ? $buyDate
+                                                        : $sellDate) }}
+                                            </td>
+                                            <td>
+                                                {{ $trade->Isactive == 1
+                                                    ? ($trade->Mode == 'SELL'
+                                                        ? $buyDate
+                                                        : '')
+                                                    : ($trade->Mode == 'SELL'
+                                                        ? $buyDate
+                                                        : $sellDate) }}
+                                            </td>
+
+                                            <!-- If you have a separate SellIp, replace this -->
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -183,9 +256,9 @@
 
 @section('scripts')
     <script>
-        $(document).ready(function() {
-            // Initialize DataTables
-            $('.table').DataTable();
-        });
+        // $(document).ready(function() {
+        //     // Initialize DataTables
+        //     $('.table').DataTable();
+        // });
     </script>
 @endsection

@@ -15,7 +15,7 @@ class ForexOption extends Model
         'TradingSession', 'ExpiryDate', 'InstrumentToken', 'ExchangeInstrument',
         'LotSize', 'InstrumentType', 'FyToken', 'Underlying', 'Multiplier',
         'StrikePrice', 'OptionType', 'FyTokenUnderlying', 'LastUpdateDate',
-        'Isactive', 'ExName', 'SymbolShortName', 'DataDate', 'instrument'
+        'Isactive', 'ExName', 'SymbolShortName', 'DataDate', 'instrument','banned'
     ];
     
     protected $casts = [

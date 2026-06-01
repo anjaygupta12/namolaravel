@@ -40,10 +40,11 @@
                     <div class="col-md-6">
                         <div class="form-group field-trades-commodity required">
                             <label class="control-label">Scrip</label>
-                            <select name="scrip_id" class="scrip_id chosen-select form-control" required>
+                            <select name="Symbol" class="scrip_id chosen-select form-control" required>
                                 <option value="">Select Scrip</option>
-                                @foreach($forexOption as $val)
-                                    <option value="{{ $val->Symbol }}">{{ $val->Symbol }}</option>
+                                @foreach ($forexOption as $val)
+                                    <option value="{{ $val->Symbol }}" shortName="{{ $val->SymbolShortName }}">
+                                        {{ explode(':', $val->Symbol)[1] ?? $val->Symbol }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -57,7 +58,7 @@
                                 @foreach ($tradeUser as $item)
                                     <option value="{{ $item->id }}"
                                         {{ old('userid', $trade->userid ?? '') == $item->id ? 'selected' : '' }}>
-                                        {{ $item->AccountHolderName }} ({{ $item->FullName }}) : {{ $item->id }}
+                                        {{ $item->Username }} ({{ $item->FullName }}) : {{ $item->user_id }}
                                     </option>
                                 @endforeach
                             </select>
@@ -65,6 +66,24 @@
                     </div>
 
                     <div class="col-md-6">
+
+                    <div class="form-group field-trades-lots min-mega" style="display: none;">
+
+                        <div class="d-flex align-items-center">
+
+                            <label class="mr-3 mb-0">
+                                <input type="radio" name="min_mega" value="1">
+                                Min
+                            </label>
+
+                            <label class="mb-0">
+                                <input type="radio" name="min_mega" value="0" checked>
+                                Mega
+                            </label>
+
+                        </div>
+
+                    </div>
                         <div class="form-group field-trades-lots required">
                             <label class="control-label">Lots / Units</label>
                             <input type="text" name="lots" class="form-control"
@@ -88,7 +107,7 @@
                         </div>
                     </div>
 
-                    <div class="col-md-6">
+                    {{-- <div class="col-md-6">
                         <div class="form-group field-tradessearch-segment">
                             <label class="control-label" for="tradessearch-segment">Segment</label>
                            <select name="segment" id="tradessearch-segment" class="form-control">
@@ -99,7 +118,7 @@
                         </select>
                             <div class="help-block"></div>
                         </div>
-                    </div>
+                    </div> --}}
                     <div class="col-md-6">
                         <div class="form-group field-trades-transaction_password required">
                             <label class="control-label">Transaction Password</label>
@@ -117,4 +136,27 @@
             </form>
         </div>
     </div>
+
+@endsection
+
+@section('scripts')
+    <script>
+        $('.scrip_id').on('change', function() {
+
+            let shortName = $(this).find('option:selected').attr('shortName');
+            
+            if (
+                shortName == 'GOLD' ||
+                shortName == 'COPPER' ||
+                shortName == 'CRUDEOIL' ||
+                shortName == 'SILVER'
+            ) {
+                $(".min-mega").css('display', 'block');
+            } else {
+                $(".min-mega").css('display', 'none');
+            }
+
+
+        });
+    </script>
 @endsection

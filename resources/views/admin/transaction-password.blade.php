@@ -65,27 +65,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-header ">
-                        <h4 class="card-title">Security Notice</h4>
-                        <p class="card-category">Important information</p>
-                    </div>
-                    <div class="card-body">
-                        <p>The transaction password is used for:</p>
-                        <ul>
-                            <li>Approving fund transfers</li>
-                            <li>Confirming withdrawals</li>
-                            <li>Authorizing large trades</li>
-                            <li>Changing account settings</li>
-                        </ul>
-                        <p class="text-warning">
-                            <strong>Note:</strong> Keep your transaction password different from your login password for
-                            enhanced security.
-                        </p>
-                    </div>
-                </div>
-            </div>
+     
         </div>
     </div>
 @endsection

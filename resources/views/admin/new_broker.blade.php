@@ -64,85 +64,83 @@
                         <form method="post" action="{{ route('admin.brokers-store') }}" class="form"
                             onsubmit="return validateForm()">
                             @csrf
+
+                            @php
+                                $segment = request()->segment(count(request()->segments()));
+                                $isEdit = isset($broker) && $segment == 'edit';
+                                $isCopy = $segment == 'copy';
+                            @endphp
+
+                            @php
+                                $segment = request()->segment(count(request()->segments()));
+                            @endphp
+
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group field-mcxusers-name">
-                                        <label class="control-label" for="mcxusers-name">First Name</label>
-                                        <input type="text" id="mcxusers-name" class="form-control" name="first_name"
-                                          value="{{ old('first_name', $broker->first_name ?? '') }}">
+                                        <label class="control-label" for="mcxusers-name">Full Name</label>
+                                        <input type="hidden" name="id"
+                                            value="{{ $segment == 'edit' ? $broker->PK_ID : '' }}">
+
+                                        <input type="text" id="mcxusers-name" class="form-control" name="name"
+                                            value="{{ old('name', $broker->Name ?? '') }}">
                                         <div class="hint-block">Insert Real name of the broker. Will be visible in
                                             website</div>
                                         <div class="help-block"></div>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="form-group field-mcxusers-name">
-                                        <label class="control-label" for="mcxusers-name">Last Name</label>
-                                        <input type="text" id="mcxusers-name" class="form-control" name="last_name"
-                                            value="{{ old('last_name', $broker->last_name ?? '') }}">
-                                        <div class="hint-block">Insert Real name of the broker. Will be visible in
-                                            website</div>
-                                        <div class="help-block"></div>
-                                    </div>
-                                </div>
+
                                 <div class="col-md-6">
                                     <div class="form-group field-mcxusers-phone">
                                         <label class="control-label" for="mcxusers-phone">Username</label>
                                         <input type="text" id="username" class="form-control" name="username"
-                                            value="{{ old('username', $broker->username ?? '') }}">
+                                            value="{{ old('username', $broker->UserName ?? '') }}">
+
                                         <div class="hint-block">username for loggin-in with, is not case sensitive.
                                             must be unique for every trader. should not contain symbols.</div>
                                         <div class="help-block"></div>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="form-group field-mcxusers-phone">
-                                        <label class="control-label" for="mcxusers-phone">Password</label>
-                                        <input type="text" id="password" class="form-control" name="password"
-                                            value="{{ old('password', $broker->password ?? '') }}">
-                                        <div class="hint-block">password for loggin-in with, is case sensitive.
+
+                               
+                                    <div class="col-md-6">
+                                        <div class="form-group field-mcxusers-phone">
+                                            <label class="control-label" for="mcxusers-phone">Password</label>
+                                            <input type="text" id="password" class="form-control" name="password"
+                                                value="{{ old('password') }}">
+                                            <div class="hint-block">password for loggin-in with, is case sensitive.
+                                            </div>
+                                            <div class="help-block"></div>
                                         </div>
-                                        <div class="help-block"></div>
                                     </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group field-mcxusers-credits">
-                                        <label class="control-label" for="mcxusers-credits">Transaction Password to
-                                            set</label>
-                                        <input type="text" id="mcxusers-credits" class="form-control"
-                                            name="transaction_password" value="{{ old('transaction_password', $broker->transaction_password ?? '') }}">
-                                        <div class="help-block"></div>
+                                     @if (!isset($broker) || $segment == 'copy')
+                                    <div class="col-md-6">
+                                        <div class="form-group field-mcxusers-phone">
+                                            <label class="control-label" for="mcxusers-phone">Transaction Password</label>
+                                            <input type="text" id="tra_password" class="form-control" name="tra_password"
+                                                value="{{ old('tra_password') }}">
+                                            <div class="help-block"></div>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group field-mcxusers-phone">
-                                        <label class="control-label" for="mcxusers-phone">Ref. Code</label>
-                                        <input type="text" id="mcxusers-phone" class="form-control" name="ref_code"
-                                            value="{{ old('ref_code', $broker->ref_code ?? '') }}">
-                                        <div class="help-block"></div>
-                                    </div>
-                                </div>
+                                @endif
                                 <div class="col-md-6">
                                     <div class="form-group field-user-type">
                                         <label class="control-label" for="user-type">Type</label>
                                         <div class="dropdown">
-                                            <select name="usertype">
-                                                <option value="">Select User type</option>
-                                                <option value="Broker"
-                                                    {{ ($broker->user_type ?? '') == 'Broker' ? 'selected' : '' }}>
-                                                    Broker
-                                                </option>
-                                                <option value="Staff"
-                                                    {{ ($broker->user_type ?? '') == 'Staff' ? 'selected' : '' }}>
-                                                    Office Staff
-                                                </option>
-                                            </select>
+                                            <select name="role_id" class="form-control" required>
+                                                        <option value="" {{ old('role_id', $broker->role_id ?? '') == '' ? 'selected' : '' }}>--Select Role--</option>
+                                                        @foreach ($roles as $role)
+                                                            <option value="{{ $role->id }}"
+                                                                {{ old('role_id', $broker->role_id ?? '') == $role->id ? 'selected' : '' }}>
+                                                                {{ $role->name }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
 
                                         </div>
                                         <div class="help-block"></div>
                                     </div>
                                 </div>
-
                             </div>
                             <hr>
                             <div class="row">
@@ -152,10 +150,9 @@
 
                                 <div class="px-3 form-check col-md-6">
                                     <div class="form-group field-mcxusers-status">
-                                           <input type="hidden" name="status" value="0">
-                                        <input type="checkbox" class=""
-                                            name="status"
-                                            {{ old('status', $broker->account_status ?? 1) ? 'checked' : '' }}>
+                                        <input type="checkbox" name="status"
+                                            {{ old('status', $broker->account_status ?? 1) ? 'checked' : '' }}
+                                            value="1">
                                         <label>Account Status</label>
 
                                         <div class="help-block"></div>
@@ -166,8 +163,10 @@
                                         <label class="control-label" for="mcxusers-auto_square_close_at">auto-Close all
                                             active trades when
                                             the losses reach % of Ledger-balance</label>
-                                        <input type="text" id="mcxusers-auto_square_close_at" class="form-control"
-                                            name="auto_square_off_percentage" value="90.00">
+                                       <input type="text" id="mcxusers-auto_square_close_at" class="form-control"
+                                    name="auto_square_off_percentage"
+                                    value="{{ old('auto_square_off_percentage', $broker->auto_square_off_percentage ?? '') }}">
+
                                         <div class="hint-block">Example: 95, will close when losses reach 95% of
                                             ledger balance</div>
                                         <div class="help-block"></div>
@@ -178,7 +177,7 @@
                                         <label class="control-label" for="mcxusers-auto_square_notify_at">Notify
                                             client when the losses reach % of Ledger-balance</label>
                                         <input type="text" id="mcxusers-auto_square_notify_at" class="form-control"
-                                            name="notify_percentage" value="70">
+                                            name="notify_percentage" value="{{ old('notify_percentage', $broker->notify_percentage ?? '') }}">
                                         <div class="hint-block">Example: 70, will send notification to customer
                                             every 5-minutes until losses cross 70% of ledger balance</div>
                                         <div class="help-block"></div>
@@ -189,7 +188,7 @@
                                         <label class="control-label" for="mcxusers-auto_square_notify_at">Profit/Loss
                                             Share in %</label>
                                         <input type="text" id="mcxusers-auto_square_notify_at" class="form-control"
-                                            name="profit_share" value="0">
+                                            name="profit_share" value="{{ old('profit_share', $broker->profit_share ?? '') }}">
                                         <div class="hint-block">Example: 30, will give broker 30% of total
                                             brokerage collected from clients</div>
                                         <div class="help-block"></div>
@@ -200,7 +199,7 @@
                                         <label class="control-label" for="mcxusers-auto_square_notify_at">Brokerage Share
                                             in %</label>
                                         <input type="text" id="mcxusers-auto_square_notify_at" class="form-control"
-                                            name="brokerage_share" value="50">
+                                            name="brokerage_share" value="{{ old('brokerage_share', $broker->brokerage_share ?? '') }}">
                                         <div class="hint-block">Example: 30, will give broker 30% of total
                                             brokerage collected from clients</div>
                                         <div class="help-block"></div>
@@ -211,7 +210,7 @@
                                         <label class="control-label" for="mcxusers-auto_square_close_at">Trading
                                             Clients Limit</label>
                                         <input type="text" id="mcxusers-auto_square_close_at" class="form-control"
-                                            name="clients_limit" value="10">
+                                            name="clients_limit" value="{{ old('clients_limit', $broker->clients_limit ?? '') }}">
                                         <div class="hint-block">Max. no. of Trading Clients</div>
                                         <div class="help-block"></div>
                                     </div>
@@ -221,7 +220,7 @@
                                         <label class="control-label" for="mcxusers-auto_square_close_at">Sub
                                             Brokers Limit</label>
                                         <input type="text" id="mcxusers-auto_square_close_at" class="form-control"
-                                            name="sub_brokers_limit" value="1">
+                                            name="sub_brokers_limit" value="{{ old('clients_limit', $broker->sub_brokers_limit ?? '') }}">
                                         <div class="hint-block">Max. no. of Sub-brokers</div>
                                         <div class="help-block"></div>
                                     </div>
@@ -402,15 +401,13 @@
                                 </div>
                                 <div class="px-3 form-check col-md-6">
                                     <div class="form-group field-mcxusers-equity">
-                                        <input type="hidden" name="Mcxusers[equity]" value="0"><label><input
-                                                type="checkbox" id="mcxusers-equity" class="form-check-input"
-                                                name="nse_enabled" value="1" checked="">
-                                            Equity Trading <span class="form-check-sign"><span
-                                                    class="check"></span></span></label>
+                                        <input type="checkbox" name="nse_enabled" id="mcxusers-equity"
+                                            {{ old('status', $broker->account_status ?? 1) ? 'checked' : '' }}
+                                            value="1">
+                                        <label>Equity Trading</label>
                                         <div class="help-block"></div>
                                     </div>
                                 </div>
-
                                 <div class="col-md-6">
                                     <div class="form-group field-mcxusers-equity_brokerage" style="opacity: 1;">
                                         <label class="control-label" for="mcxusers-equity_brokerage">Equity
@@ -458,8 +455,7 @@
 
                             <div class="col-md-6">
                                 <div class="form-group field-mcxusers-credits">
-                                    <label class="control-label" for="mcxusers-credits">Transaction Password to
-                                        set</label>
+                                    <label class="control-label" for="mcxusers-credits">Transaction Password</label>
                                     <input type="password" id="mcxusers-credits" class="form-control"
                                         name="transaction_password" value="">
                                     <div class="help-block"></div>
@@ -506,32 +502,15 @@
             }
 
             // Name validation (letters, spaces, and hyphens only)
-            const nameFields = ['first_name', 'last_name'];
-            nameFields.forEach(fieldName => {
-                const field = document.getElementsByName(fieldName)[0];
-                if (field.value && !/^[a-zA-Z\s-]+$/.test(field.value)) {
-                    showError(field, 'Name must contain only letters, spaces, and hyphens');
-                    isValid = false;
-                }
-            });
+
 
             // Password validation only if provided (optional in edit mode)
             const password = document.getElementsByName('password')[0];
-            if (password && password.value && !validatePassword(password.value)) {
-                showError(password,
-                    'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character'
-                );
-                isValid = false;
-            }
+
 
             // Broker Transaction Password validation if provided
             const brokerTransPass = document.getElementsByName('broker_transaction_password')[0];
-            if (brokerTransPass && brokerTransPass.value && !validatePassword(brokerTransPass.value)) {
-                showError(brokerTransPass,
-                    'Transaction Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character'
-                );
-                isValid = false;
-            }
+
 
             // Admin Transaction Password validation
             const adminTransPass = document.getElementsByName('transaction_password')[0];
@@ -633,8 +612,7 @@
 
         function validatePassword(password) {
             // At least 8 characters, 1 uppercase, 1 lowercase, 1 number, 1 special character
-            const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-            return passwordRegex.test(password);
+
         }
 
         function showError(field, message) {
@@ -664,11 +642,7 @@
             const inputs = form.querySelectorAll('input, select');
 
             // Disable username field if it exists (edit mode)
-            const usernameField = document.getElementsByName('username')[0];
-            if (usernameField) {
-                usernameField.disabled = true;
-                usernameField.style.backgroundColor = '#e9ecef';
-            }
+
 
             // Convert password fields to type="password"
             const passwordFields = ['password', 'broker_transaction_password', 'transaction_password'];
